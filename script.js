@@ -8,7 +8,7 @@ async function getPlayerData(id) {
 }
 try {
 (async () => {
-    alert(JSON.stringify(await getPlayerData("wPHaVYX4")))
+    alert(await getPlayerData("wPHaVYX4"))
 })();
 } catch (e) {
   alert(e)
