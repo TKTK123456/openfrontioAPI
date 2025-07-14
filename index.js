@@ -1,15 +1,21 @@
 import { createServer } from "node:http";
-import process from "node:process";
 
 const server = createServer(async (req, res) => {
-  let message 
   try {
-  let response = await fetch("https://api.openfront.io/player/wPHaVYX4");
-  message = await response.json()
+    const response = await fetch("https://api.openfront.io/player/wPHaVYX4");
+
+    // Forward status code & content-type
+    res.statusCode = response.status;
+    res.setHeader("Content-Type", response.headers.get("Content-Type") || "application/json");
+    res.setHeader("Access-Control-Allow-Origin", "*"); // Enable CORS for clients
+
+    const data = await response.text(); // Use text() to forward raw data
+    res.end(data);
   } catch (e) {
-    res.end(e)
+    res.statusCode = 500;
+    res.setHeader("Content-Type", "text/plain");
+    res.end("Error: " + e.message);
   }
-  res.end(JSON.stringify(message));
 });
 
-server.listen(8080);
+server.listen(8080)
