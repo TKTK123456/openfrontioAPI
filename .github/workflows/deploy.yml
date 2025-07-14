@@ -35,7 +35,7 @@ jobs:
         uses: denoland/deployctl@v1
         with:
           project: "tktk123456-openfrontio-51"
-          entrypoint: "https://deno.land/std@0.188.0/http/file_server.ts"
+          entrypoint: "index.js"
           root: ""
           
           
