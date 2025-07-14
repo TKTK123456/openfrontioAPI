@@ -6,6 +6,10 @@ async function getPlayerData(id) {
     let output = await response.json()
     return output
 }
+try {
 (async () => {
     alert(JSON.stringify(await getPlayerData("wPHaVYX4")))
 })();
+} catch (e) {
+  alert(e)
+}
