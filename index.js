@@ -29,7 +29,7 @@ app.get("/", async (req, res) => {
     res.end("Error: " + e.message);
   }
 });
-app.get("/player" async (req, res) => {
+app.get("/player", async (req, res) => {
   let id = req.query.id
   try {
     const response = await fetch(`https://api.openfront.io/player/${id}`);
