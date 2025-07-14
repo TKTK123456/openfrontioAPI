@@ -1,12 +1,10 @@
 import { createServer } from "node:http";
 import process from "node:process";
 
-const server = createServer((req, res) => {
+const server = createServer(async (req, res) => {
   let message 
-  fetch("https://api.openfront.io/player/wPHaVYX4")
-  .then(res => res.json())
-  .then((json) => message = JSON.stringify(json))
-  .catch((e) => message = e);
+  let response = await fetch("https://api.openfront.io/player/wPHaVYX4");
+  message = JSON.stringify(response.json())
   res.end(message);
 });
 
