@@ -43,7 +43,7 @@ let toggleFormat = 0
 let jsonData;
 function updateJSON(data = jsonData) {
   if (toggleFormat) {
-    outJSON.textContent = JSON.stringify(data)
+    outJSON.textContent = JSON.stringify(data, undefined, 0)
   } else {
     outJSON.textContent = JSON.stringify(data, undefined, 2)
   }
