@@ -9,7 +9,7 @@ async function fetchInfo(id, type = "player") {
   }
 }
 let outJSON = document.getElementById("json")
-let gameStats
+let stats = {}
 //(async () => outJSON.textContent = JSON.stringify(await fetchInfo("wPHaVYX4", "player"), undefined, 2))();
 function getTotalGold(game) {
   let totalGold = 0
