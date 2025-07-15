@@ -15,7 +15,7 @@ app.use(bodyParser.text());
 app.use(bodyParser.raw());
 app.get("/", async (req, res) => {
   try {
-    res.sendFile(__dirname + "index.html")
+    res.sendFile(__dirname + "/index.html")
   } catch (e) {
     res.statusCode = 500;
     res.setHeader("Content-Type", "text/plain");
