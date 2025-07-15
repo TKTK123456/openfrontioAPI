@@ -29,11 +29,11 @@ function getTotalGold(game) {
   stats.game.totals.gold.amount = 0
     alert("ho")
   game.info.players.forEach((player) => {
-    alert(player.stats.gold)
-    if (!player.stats.gold) return
-    player.stats.gold.forEach((amount) => {
-      stats.game.totals.gold.amount+=parseInt(amount)
-    })
+    try {
+      player.stats.gold.forEach((amount) => {
+        stats.game.totals.gold.amount+=parseInt(amount)
+      })
+    } catch (e) {}
   })
   //alert(stats.game.totals.gold.amount)
   stats.game.totals.gold.elm.textContent = stats.game.totals.gold.amount
