@@ -21,6 +21,7 @@ let stats = {
     }
   }
 }
+
 function getTotalGold(game) {
   let totalGold = 0
   game.players.forEach((player) => {
