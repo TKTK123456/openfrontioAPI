@@ -21,12 +21,25 @@ let outJSON = document.getElementById("json")
   }
 }
 */
-class statsHolder {
+class statsNode {
   constructor(name = "stats", {type = "holder", prefixText = null, startAmount = 0, context = this, element = null} = {}) {
-    
+    this.defaultName = name
+    context[name] = {}
+    let item = context[name]
+    item.element = element
+    if (type === "holder") {
+      item.prefixText = prefixText
+    }
+    if (type === "amount") {
+      item.amount = startAmount
+    }
+    return item
+  };
+  add(name, {type = "holder", prefixText = null, startAmount = 0} = {}) {
+    name = `${this.defaultName}.${name}`
+    let context = this
   }
 }
-//(async () => outJSON.textContent = JSON.stringify(await fetchInfo("wPHaVYX4", "player"), undefined, 2))();
 function getTotalGold(game) {
   let totalGold = 0
   game.players.forEach((player) => {
