@@ -25,9 +25,7 @@ let stats = {
 
 function getTotalGold(game) {
   try {
-  alert("hi")
   stats.game.totals.gold.amount = 0
-    alert("ho")
   game.info.players.forEach((player) => {
     try {
       player.stats.gold.forEach((amount) => {
@@ -35,18 +33,27 @@ function getTotalGold(game) {
       })
     } catch (e) {}
   })
-  //alert(stats.game.totals.gold.amount)
   stats.game.totals.gold.elm.textContent = stats.game.totals.gold.amount
   return stats.game.totals.gold.amount
   } catch (e) {
     alert(e)
   }
 }
+let toggleFormat = 0
+let jsonData;
+function updateJSON(data = jsonData) {
+  if (toggleFormat) {
+    outJSON.textContent = JSON.stringify(data)
+  } else {
+    outJSON.textContent = JSON.stringify(data, undefined, 2)
+  }
+}
 document.getElementById("runGet").addEventListener("click", async () => {
   let type = document.getElementById("getType").value
   let id = document.getElementById("getID").value
   let data = await fetchInfo(id, type)
-  outJSON.textContent = JSON.stringify(data, undefined, 2)
+  jsonData = data
+  updateJSON(data)
   stats.game.elm.hidden = true;
   if (type == "game") {
     stats.game.elm.hidden = false;
@@ -56,5 +63,13 @@ document.getElementById("runGet").addEventListener("click", async () => {
 document.addEventListener("keydown", (e) => {
   if (e.key === "j") {
     outJSON.hidden = !outJSON.hidden
+  }
+  if (e.key === "f") {
+    if (toggleFormat) {
+      toggleFormat = 0
+    } else {
+      toggleFormat = 1
+    }
+    updateJSON()
   }
 })
