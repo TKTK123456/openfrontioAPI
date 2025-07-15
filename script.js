@@ -9,7 +9,23 @@ async function fetchInfo(id, type = "player") {
   }
 }
 let outJSON = document.getElementById("json")
-let stats = {}
+/*let stats = {
+  game: {
+    element: document.getElementById("stats.game"),
+    totals: {
+      gold: {
+        element: document.getElementById("stats.game.totals.gold"),
+        amount: 0
+      }
+    }
+  }
+}
+*/
+class statsHolder {
+  constructor(name = "stats", {type = "holder", prefixText = null, startAmount = 0, context = this, createNewElement = false} = {}) {
+    
+  }
+}
 //(async () => outJSON.textContent = JSON.stringify(await fetchInfo("wPHaVYX4", "player"), undefined, 2))();
 function getTotalGold(game) {
   let totalGold = 0
