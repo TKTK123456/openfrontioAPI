@@ -53,3 +53,8 @@ document.getElementById("runGet").addEventListener("click", async () => {
     getTotalGold(data)
   }
 })
+document.addEventListener("keydown", (e) => {
+  if (e.key === "j") {
+    outJSON.hidden = !outJSON.hidden
+  }
+})
