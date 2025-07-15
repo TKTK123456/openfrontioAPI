@@ -28,6 +28,7 @@ function getTotalGold(game) {
   //alert("hi")
   stats.game.totals.gold.amount = 0
   game.info.players.forEach((player) => {
+    alert(player.stats.gold)
     if (!player.stats.gold) return
     player.stats.gold.forEach((amount) => {
       stats.game.totals.gold.amount+=parseInt(amount)
