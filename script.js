@@ -5,6 +5,7 @@ async function fetchInfo(id, type = "player") {
     res = await res.json()
     return res
   } catch(e) {
+    alert(`${e} ${id} ${type} ${getURL}`)
     return `${e} ${id} ${type} ${getURL}`
   }
 }
@@ -23,6 +24,7 @@ let stats = {
 }
 
 function getTotalGold(game) {
+  try {
   //alert("hi")
   stats.game.totals.gold.amount = 0
   game.info.players.forEach((player) => {
@@ -34,6 +36,9 @@ function getTotalGold(game) {
   //alert(stats.game.totals.gold.amount)
   stats.game.totals.gold.elm.textContent = stats.game.totals.gold.amount
   return stats.game.totals.gold.amount
+  } catch (e) {
+    alert(e)
+  }
 }
 document.getElementById("runGet").addEventListener("click", async () => {
   let type = document.getElementById("getType").value
