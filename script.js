@@ -9,7 +9,7 @@ async function fetchInfo(id, type = "player") {
   }
 }
 let outJSON = document.getElementById("json")
-/*let stats = {
+let stats = {
   game: {
     element: document.getElementById("stats.game"),
     totals: {
@@ -18,26 +18,6 @@ let outJSON = document.getElementById("json")
         amount: 0
       }
     }
-  }
-}
-*/
-class statsNode {
-  constructor(name = "stats", {type = "holder", prefixText = null, startAmount = 0, context = this, element = null} = {}) {
-    this.defaultName = name
-    context[name] = {}
-    let item = context[name]
-    item.element = element
-    if (type === "holder") {
-      item.prefixText = prefixText
-    }
-    if (type === "amount") {
-      item.amount = startAmount
-    }
-    return item
-  };
-  add(name, {type = "holder", prefixText = null, startAmount = 0} = {}) {
-    name = `${this.defaultName}.${name}`
-    let context = this
   }
 }
 function getTotalGold(game) {
