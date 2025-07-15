@@ -1,14 +1,17 @@
-async function fetchInfo(id, from = "player") {
+async function fetchInfo(id, type = "player") {
   try {
-    if (from==="player") {
-      let res = await fetch(`https://tktk123456-openfrontio-51.deno.dev/player?id=${id}`)
-      res = await res.json()
-      return res
-    }
+    let getURL = `https://tktk123456-openfrontio-51.deno.dev/${type}?id=${id}`
+    let res = await fetch(getURL)
+    res = await res.json()
+    return res
   } catch(e) {
     return e
   }
 }
 let outJSON = document.getElementById("json")
 //(async () => outJSON.textContent = JSON.stringify(await fetchInfo("wPHaVYX4", "player"), undefined, 2))();
-document.getElementById("")
+document.getElementById("runGet").addEventListener("click", async () => {
+  let type = document.getElementById("getType").value
+  let id = document.getElementById("getID").value
+  outJSON.textContent = JSON.stringify(await fetchInfo(id, type), undefined, 2)
+})
