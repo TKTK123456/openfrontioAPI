@@ -23,14 +23,14 @@ let stats = {
 }
 
 function getTotalGold(game) {
-  alert("hi")
+  //alert("hi")
   stats.game.totals.gold.amount = 0
-  game.players.forEach((player) => {
+  game.info.players.forEach((player) => {
     player.stats.gold.forEach((amount) => {
       stats.game.totals.gold.amount+=parseInt(amount)
     })
   })
-  alert(stats.game.totals.gold.amount)
+  //alert(stats.game.totals.gold.amount)
   stats.game.totals.gold.elm.textContent = stats.game.totals.gold.amount
   return stats.game.totals.gold.amount
 }
