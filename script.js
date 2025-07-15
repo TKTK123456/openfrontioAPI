@@ -10,12 +10,12 @@ async function fetchInfo(id, type = "player") {
 }
 let outJSON = document.getElementById("json")
 let stats = {
-  element: document.getElementById("stats"),
+  elm: document.getElementById("stats"),
   game: {
-    element: document.getElementById("stats.game"),
+    elm: document.getElementById("stats.game"),
     totals: {
       gold: {
-        element: document.getElementById("stats.game.totals.gold"),
+        elm: document.getElementById("stats.game.totals.gold"),
         amount: 0
       }
     }
@@ -23,19 +23,23 @@ let stats = {
 }
 
 function getTotalGold(game) {
-  let totalGold = 0
+  stats.game.totals.gold.amount = 0
   game.players.forEach((player) => {
     player.stats.gold.forEach((amount) => {
-      totalGold+=parseInt(amount)
+      stats.game.totals.gold.amount+=parseInt(amount)
     })
   })
-  return totalGold
+  stats.game.totals.gold.elm.textContent = stats.game.totals.gold.amount
+  return stats.game.totals.gold.amount
 }
 document.getElementById("runGet").addEventListener("click", async () => {
   let type = document.getElementById("getType").value
   let id = document.getElementById("getID").value
-  outJSON.textContent = JSON.stringify(await fetchInfo(id, type), undefined, 2)
+  let data = await fetchInfo(id, type)
+  outJSON.textContent = JSON.stringify(data, undefined, 2)
+  stats.game.elm.hidden = true;
   if (type == "game") {
-    
+    stats.game.elm.hidden = false;
+    getTotalGold(data)
   }
 })
