@@ -4,6 +4,7 @@ import express from 'express'
 import path from 'node:path'
 const __dirname = path.resolve();
 const app = express()
+app.use(express.static(__dirname));
 app.use(bodyParser.json());
 // Parse application/x-www-form-urlencoded
 app.use(bodyParser.urlencoded({ extended: true }));
