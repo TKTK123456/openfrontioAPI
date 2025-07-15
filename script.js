@@ -9,4 +9,4 @@ async function fetchInfo(id, from = "player") {
     return e
   }
 }
-document.getElementById("outputJson").textContent = await fetchInfo("wPHaVYX4", "player")
+(async () => document.getElementById("outputJson").textContent = JSON.stringify(await fetchInfo("wPHaVYX4", "player")))();
