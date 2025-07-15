@@ -25,8 +25,9 @@ let stats = {
 
 function getTotalGold(game) {
   try {
-  //alert("hi")
+  alert("hi")
   stats.game.totals.gold.amount = 0
+    alert("ho")
   game.info.players.forEach((player) => {
     alert(player.stats.gold)
     if (!player.stats.gold) return
