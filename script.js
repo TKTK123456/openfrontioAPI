@@ -5,17 +5,26 @@ async function fetchInfo(id, type = "player") {
     res = await res.json()
     return res
   } catch(e) {
-    alert(e)
-    alert(id)
-    alert(type)
-    alert(getURL)
-    return e
+    return `${e} ${id} ${type} ${getURL}`
   }
 }
 let outJSON = document.getElementById("json")
+let gameStats
 //(async () => outJSON.textContent = JSON.stringify(await fetchInfo("wPHaVYX4", "player"), undefined, 2))();
+function getTotalGold(game) {
+  let totalGold = 0
+  game.players.forEach((player) => {
+    player.stats.gold.forEach((amount) => {
+      totalGold+=parseInt(amount)
+    })
+  })
+  return totalGold
+}
 document.getElementById("runGet").addEventListener("click", async () => {
   let type = document.getElementById("getType").value
   let id = document.getElementById("getID").value
   outJSON.textContent = JSON.stringify(await fetchInfo(id, type), undefined, 2)
+  if (type == "game") {
+    
+  }
 })
