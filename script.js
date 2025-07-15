@@ -10,6 +10,7 @@ async function fetchInfo(id, type = "player") {
 }
 let outJSON = document.getElementById("json")
 let stats = {
+  element: document.getElementById("stats"),
   game: {
     element: document.getElementById("stats.game"),
     totals: {
