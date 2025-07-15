@@ -5,6 +5,7 @@ async function fetchInfo(id, type = "player") {
     res = await res.json()
     return res
   } catch(e) {
+    alert(e)
     return e
   }
 }
