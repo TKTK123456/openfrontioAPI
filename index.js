@@ -40,6 +40,23 @@ app.get("/player", async (req, res) => {
     res.end("Error: " + e.message);
   }
 })
+app.get("/game", async (req, res) => {
+  let id = req.query.id
+  try {
+    const response = await fetch(`https://api.openfront.io/game/${id}`);
+    // Forward status code & content-type
+    res.statusCode = response.status;
+    res.setHeader("Content-Type", response.headers.get("Content-Type") || "application/json");
+    res.setHeader("Access-Control-Allow-Origin", "*"); // Enable CORS for clients
+
+    const data = await response.text(); // Use text() to forward raw data
+    res.end(data);
+  } catch (e) {
+    res.statusCode = 500;
+    res.setHeader("Content-Type", "text/plain");
+    res.end("Error: " + e.message);
+  }
+})
 app.listen(8080)
 /*const server = createServer(async (req, res) => {
   
