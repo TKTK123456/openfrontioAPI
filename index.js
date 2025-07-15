@@ -1,9 +1,10 @@
 import { createServer } from "node:http";
 import bodyParser from "body-parser";
 import express from 'express'
+import path from 'node:path'
+const __dirname = path.resolve();
 const app = express()
 app.use(bodyParser.json());
-
 // Parse application/x-www-form-urlencoded
 app.use(bodyParser.urlencoded({ extended: true }));
 
@@ -14,7 +15,7 @@ app.use(bodyParser.text());
 app.use(bodyParser.raw());
 app.get("/", async (req, res) => {
   try {
-    res.sendFile("index.html")
+    res.sendFile(__dirname + "index.html")
   } catch (e) {
     res.statusCode = 500;
     res.setHeader("Content-Type", "text/plain");
