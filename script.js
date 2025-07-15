@@ -22,7 +22,7 @@ let outJSON = document.getElementById("json")
 }
 */
 class statsHolder {
-  constructor(name = "stats", {type = "holder", prefixText = null, startAmount = 0, context = this, createNewElement = false} = {}) {
+  constructor(name = "stats", {type = "holder", prefixText = null, startAmount = 0, context = this, element = null} = {}) {
     
   }
 }
