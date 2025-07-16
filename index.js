@@ -3,6 +3,9 @@ import bodyParser from "body-parser";
 import express from 'express'
 import path from 'node:path'
 const __dirname = path.resolve();
+const kv = await Deno.openKv();
+kv.set(["ids", "players"], [])
+kv.set(["ids", "games"], [])
 const app = express()
 app.use(express.static(__dirname));
 app.use(bodyParser.json());
