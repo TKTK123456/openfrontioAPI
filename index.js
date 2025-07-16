@@ -4,8 +4,8 @@ import express from 'express'
 import path from 'node:path'
 const __dirname = path.resolve();
 const kv = await Deno.openKv();
-kv.set(["ids", "players"], new Set())
-kv.set(["ids", "games"], new Set())
+kv.delete()
+kv.set(["games", "ids"], new Set())
 const app = express()
 app.use(express.static(__dirname));
 app.use(bodyParser.json());
@@ -53,6 +53,7 @@ app.get("/game", async (req, res) => {
     res.setHeader("Access-Control-Allow-Origin", "*"); // Enable CORS for clients
 
     const data = await response.text(); // Use text() to forward raw data
+    kv.get()
     res.end(data);
   } catch (e) {
     res.statusCode = 500;
