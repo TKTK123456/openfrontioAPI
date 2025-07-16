@@ -4,8 +4,8 @@ import express from 'express'
 import path from 'node:path'
 const __dirname = path.resolve();
 const kv = await Deno.openKv();
-kv.set(["ids", "players"], [])
-kv.set(["ids", "games"], [])
+kv.set(["ids", "players"], new Set())
+kv.set(["ids", "games"], new Set())
 const app = express()
 app.use(express.static(__dirname));
 app.use(bodyParser.json());
