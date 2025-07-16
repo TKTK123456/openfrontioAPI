@@ -4,7 +4,8 @@ import express from 'express'
 import path from 'node:path'
 const __dirname = path.resolve();
 const kv = await Deno.openKv();
-kv.delete()
+kv.delete(["ids","games"])
+kv.delete(["ids","players"])
 kv.set(["games", "ids"], new Set())
 const app = express()
 app.use(express.static(__dirname));
