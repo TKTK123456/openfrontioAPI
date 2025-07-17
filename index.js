@@ -53,9 +53,6 @@ app.get("/game", async (req, res) => {
     res.setHeader("Access-Control-Allow-Origin", "*");
 
     const data = await response.text();
-    if (response.status === 200) {
-      setHelpers.add(["info", "games", "ids"], id)
-    }
     res.end(data);
   } catch (e) {
     res.statusCode = 500;
