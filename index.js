@@ -16,6 +16,7 @@ app.use(bodyParser.text());
 
 // Parse binary data
 app.use(bodyParser.raw());
+
 app.get("/", async (req, res) => {
   try {
     res.sendFile(__dirname + "/index.html")
