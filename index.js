@@ -69,6 +69,7 @@ app.get("/info/games/ids", async (req, res) => {
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.end(JSON.stringify(ids))
 })
+//setInterval()
 app.listen(8080)
 /*const server = createServer(async (req, res) => {
   
