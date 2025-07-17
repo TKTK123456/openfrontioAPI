@@ -53,7 +53,7 @@ app.get("/game", async (req, res) => {
     res.setHeader("Access-Control-Allow-Origin", "*");
 
     const data = await JSON.stringify(response);
-    if (response.status = 200) kv.set(["games", "ids"], await kv.get(["games", "ids"]).value.add(id))
+    if (response.status = 200) kv.set(["games", "ids"], await kv.get(["games", "ids"]).add(id))
     res.end(data);
   } catch (e) {
     res.statusCode = 500;
