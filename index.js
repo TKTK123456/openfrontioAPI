@@ -53,7 +53,7 @@ app.get("/game", async (req, res) => {
     res.setHeader("Access-Control-Allow-Origin", "*");
 
     const data = await JSON.stringify(response);
-    if (response.status = 200) kv.set(["games", "ids"], kv.get(["games", "ids"]).add(id))
+    if (response.status = 200) kv.set(["games", "ids"], await kv.get(["games", "ids"]).value.add(id))
     res.end(data);
   } catch (e) {
     res.statusCode = 500;
@@ -63,7 +63,7 @@ app.get("/game", async (req, res) => {
   }
 })
 app.get("/info/games/ids", async (req, res) => {
-  let ids = await kv.get(["games", "ids"])
+  let ids = await kv.get(["games", "ids"]).value
   ids =  ids.values().toArray()
   res.setHeader("Content-Type", "application/json")
   res.setHeader("Access-Control-Allow-Origin", "*");
