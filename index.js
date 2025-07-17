@@ -24,6 +24,7 @@ app.get("/", async (req, res) => {
   } catch (e) {
     res.statusCode = 500;
     res.setHeader("Content-Type", "text/plain");
+    console.log(e)
     res.end("Error: " + e.message);
   }
 });
@@ -40,6 +41,7 @@ app.get("/player", async (req, res) => {
   } catch (e) {
     res.statusCode = 500;
     res.setHeader("Content-Type", "text/plain");
+    console.log(e)
     res.end("Error: " + e.message);
   }
 })
@@ -56,6 +58,7 @@ app.get("/game", async (req, res) => {
   } catch (e) {
     res.statusCode = 500;
     res.setHeader("Content-Type", "text/plain");
+    console.log(e)
     res.end("Error: " + e.message);
   }
 })
