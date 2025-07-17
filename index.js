@@ -2,6 +2,7 @@ import { createServer } from "node:http";
 import bodyParser from "body-parser";
 import express from 'express'
 import path from 'node:path'
+import {} from 'fetchers.js'
 const __dirname = path.resolve();
 const kv = await Deno.openKv();
 kv.set(["games", "ids"], new Set())
