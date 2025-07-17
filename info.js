@@ -1,4 +1,4 @@
-import { findGameWebSocket, findPublicLobbyWebSocket, getPlayer, getGame } from './fetchers.js'
+import { findGameWebSocket, findPublicLobby, getPlayer, getGame } from './fetchers.js'
 const kv = await Deno.openKv();
 export const setHelpers = {
   add: async function(key, value) {
@@ -51,4 +51,4 @@ async function updateGameInfo(auto) {
     }
   }
 }
-findPublicLobbyWebSocket().then(console.log)
+findPublicLobby().then(console.log)
