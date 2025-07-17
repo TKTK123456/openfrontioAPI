@@ -17,10 +17,10 @@ export async function findPublicLobbyWebSocket(webSocketAmount = 20) {
   lobbies = await lobbies.json()
   lobbies = lobbies.lobbies
   let output = []
-  await lobbies.forEach(async (lobby) => {
-    let wsNum = await findGameWebSocket(lobby.gameID, webSocketAmount)
-    output.push(wsNum)
+  lobbies.forEach((lobby) => {
+    output.push(findGameWebSocket(lobby.gameID, webSocketAmount))
   });
+  output = await Promise.all(output)
   return output
 }
 export async function getPlayer(id) {
