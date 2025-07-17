@@ -55,7 +55,7 @@ app.get("/game", async (req, res) => {
     const data = await response.text();
     if (response.status === 200) {
       let currentIDs = await kv.get(["games", "ids"])
-      currentIDs = currentIDs.values
+      currentIDs = currentIDs.value
       console.log(currentIDs)
       //kv.set(["games", "ids"], )
     }
