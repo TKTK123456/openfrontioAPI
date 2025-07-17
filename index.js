@@ -35,7 +35,7 @@ app.get("/player", async (req, res) => {
     res.setHeader("Content-Type", "application/json");
     res.setHeader("Access-Control-Allow-Origin", "*");
 
-    const data = await JSON.stringify(response);
+    const data = await response.text();
     console.log(data)
     res.end(data);
   } catch (e) {
@@ -52,7 +52,7 @@ app.get("/game", async (req, res) => {
     res.setHeader("Content-Type", "application/json");
     res.setHeader("Access-Control-Allow-Origin", "*");
 
-    const data = await JSON.stringify(response);
+    const data = await response.text();
     if (response.status === 200) {
       let currentIDs = await kv.get(["games", "ids"])
       currentIds = currentIDs.values
