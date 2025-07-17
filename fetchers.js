@@ -1,3 +1,4 @@
+import { setHelpers } from './info.js'
 const kv = await Deno.openKv();
 //kv.set(["info", "games", "active", "ids"], new Set())
 //kv.set(["info", "games", "active", "wsNum"], new Set())
@@ -15,15 +16,9 @@ export async function findPublicLobbyWebSocket(webSocketAmount = 20) {
   lobbies = lobbies.lobbies
   let output = []
   await lobbies.forEach(async (lobby) => {
-    let currentIDs = await kv.get(["info", "games", "active", "ids"])
-    currentIDs = currentIDs.value
-    currentIDs.add(lobby.gameID)
-    kv.set(["info", "games", "active", "ids"], currentIDs)
+    setHelpers.add(["info", "games", "active", "ids"], lobby.gameID)
     let wsNum = await findGameWebSocket(lobby.gameID, webSocketAmount)
-    currentIDs = await kv.get(["info", "games", "active", "wsNum"])
-    currentIDs = currentIDs.value
-    currentIDs.add(wsNum)
-    kv.set(["info", "games", "active", "wsNum"], currentIDs)
+    setHelpers.add(["info", "games", "active", "wsNum"], wsNum)
     output.push(wsNum)
   });
   return output
