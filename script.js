@@ -2,6 +2,9 @@ async function fetchInfo(id, type = "player") {
   let getURL = `https://tktk123456-openfrontio-51.deno.dev/${type}?id=${id}`
   try {
     let res = await fetch(getURL)
+    if (res.status === 500) {
+      return { Error: await res.text() }
+    }
     res = await res.json()
     return res
   } catch(e) {
