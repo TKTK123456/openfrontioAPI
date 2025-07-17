@@ -18,4 +18,7 @@ export async function findPublicLobbyWebSocket(webSocketAmount = 20) {
   output = await Promise.all(output)
   return output
 }
+export async function getPlayer(id) {
+  let player = await fetch(`https://api.openfront.io/players/${id}`)
+}
 
