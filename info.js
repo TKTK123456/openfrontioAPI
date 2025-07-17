@@ -26,13 +26,17 @@ export const mapHelpers = {
       output = new Map();
     }
     return output.value;
+  },
+  get: async function(key, mapKey) {
+    let fullMap = await this.getMap(key)
+    return fullMap.get(mapKey)
   }
 }
 async function updateGameInfo() {
   await findPublicLobbyWebSocket()
   let active = {
     ids: (async () => {let out = await setHelpers.getSet(["info", "games", "active", "ids"]);return out;})(),
-    ws: (async () => {let out = await setHelpers.getSet(["info", "games", "active", "ws"]);return out;})()
+    ws: (async () => {let out = await setHelpers.getMap(["info", "games", "active", "ws"]);return out;})()
   }
   for (let i = 0;i<active.ids.length;i++) {
     
