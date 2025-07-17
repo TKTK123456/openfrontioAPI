@@ -5,7 +5,8 @@ import path from 'node:path'
 import { findGameWebSocket, findPublicLobbyWebSocket, getPlayer, getGame } from './fetchers.js'
 const __dirname = path.resolve();
 const kv = await Deno.openKv();
-//kv.set(["games", "ids"], new Set(["d9oFrfjL"]))
+kv.delete(["games", "ids"])
+kv.set(["info", "games", "ids"], new Set(["d9oFrfjL"]))
 const app = express()
 app.use(express.static(__dirname));
 app.use(bodyParser.json());
@@ -54,11 +55,11 @@ app.get("/game", async (req, res) => {
 
     const data = await response.text();
     if (response.status === 200) {
-      let currentIDs = await kv.get(["games", "ids"])
+      let currentIDs = await kv.get(["info", "games", "ids"])
       currentIDs = currentIDs.value
       currentIDs.add(id)
       console.log(currentIDs)
-      kv.set(["games", "ids"], currentIDs)
+      kv.set(["info", "games", "ids"], currentIDs)
     }
     res.end(data);
   } catch (e) {
@@ -69,7 +70,7 @@ app.get("/game", async (req, res) => {
   }
 })
 app.get("/info/games/ids", async (req, res) => {
-  let ids = await kv.get(["games", "ids"])
+  let ids = await kv.get(["info", "games", "ids"])
   ids = ids.value
   ids = ids.values().toArray()
   res.setHeader("Content-Type", "application/json")
