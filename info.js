@@ -1,25 +1,17 @@
 const kv = await Deno.openKv();
-export async function addToKvSet(key, value) {
-  let allVals = await kv.get(key)
-  allVals = allVals.value
-  if (!allVals) {
-    allVals = new Set()
-  }
-  allVals.add(value)
-  kv.set(key, allVals)
-}
 export const sets = {
   add: async function(key, value) {
-    let allVals = await kv.get(key)
-    allVals = allVals.value
+    let allVals = await kv.get(key);
+    allVals = allVals.value;
     if (!allVals) {
-      allVals = new Set()
+      allVals = new Set();
     }
-    allVals.add(value)
-    kv.set(key, allVals)
+    allVals.add(value);
+    kv.set(key, allVals);
   },
-  get: async function(key, value) {
-    
+  get: async function(key) {
+    let output = await kv.get(key);
+    return output.value;
   }
 }
 async function updateGameInfo() {
