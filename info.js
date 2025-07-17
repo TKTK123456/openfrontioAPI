@@ -35,7 +35,7 @@ export const mapHelpers = {
   }
 }
 async function updateGameInfo(auto) {
-  await findPublicLobbyWebSocket()
+  await findPublicLobby()
   let active = {
     ids: (async () => {let out = await setHelpers.getSet(["info", "games", "active", "ids"]);return out;})(),
     ws: (async () => {let out = await setHelpers.getMap(["info", "games", "active", "ws"]);return out;})()
