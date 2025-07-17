@@ -32,13 +32,21 @@ export const mapHelpers = {
     return fullMap.get(mapKey)
   }
 }
-async function updateGameInfo() {
+async function updateGameInfo(auto) {
   await findPublicLobbyWebSocket()
   let active = {
     ids: (async () => {let out = await setHelpers.getSet(["info", "games", "active", "ids"]);return out;})(),
     ws: (async () => {let out = await setHelpers.getMap(["info", "games", "active", "ws"]);return out;})()
   }
+  console.log(active.ids)
   for (let i = 0;i<active.ids.length;i++) {
-    
+    let currentId = active.ids.values().next()
+    let isArchived = await fetch(`https://blue.openfront.io/api/w${active.ws.get(currentId)}/archived_game/${currentId}`)
+    isArchived = await isArchived.json();
+    isArchived = isArchived.exists
+    if (isArchived) {
+      
+    }
   }
 }
+findPublicLobbyWebSocket().then(console.log)
