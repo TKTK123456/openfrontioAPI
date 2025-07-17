@@ -22,12 +22,10 @@ export async function findPublicLobbyWebSocket(webSocketAmount = 20) {
 }
 export async function getPlayer(id) {
   let player = await fetch(`https://api.openfront.io/player/${id}`)
-  player = await player.json()
   return player
 }
 export async function getGame(id) {
   let player = await fetch(`https://api.openfront.io/game/${id}`)
-  player = await player.json()
   return player
 }
 
