@@ -18,8 +18,8 @@ export const setHelpers = {
 async function updateGameInfo() {
   await findPublicLobbyWebSocket()
   let active = {
-    ids: (async function() => {let out = await setHelpers.get(["info", "games", "active", "ids"]);return out;})(),
-    ws: (async function() => {let out = await setHelpers.get(["info", "games", "active", "ws"]);return out;})()
+    ids: (async () => {let out = await setHelpers.get(["info", "games", "active", "ids"]);return out;})(),
+    ws: (async () => {let out = await setHelpers.get(["info", "games", "active", "ws"]);return out;})()
   }
 }
 updateGameInfo()
