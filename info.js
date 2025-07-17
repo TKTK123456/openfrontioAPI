@@ -71,7 +71,7 @@ async function getDataDump(date = (()=>{
 })()) {
   date = date.toISOString().split("T")[0].split("-").join("")
   let compressedData = await fetch(`https://ofstats.fra1.digitaloceanspaces.com/games/openfront-${date}.tar.bz2`)
-  compressedData = await compressedData.buffer()
+  compressedData = await compressedData.arrayBuffer()
   const decompressedData = Bunzip.decode(compressedData)
   const jsonString = decompressedData.toString('utf8');
   const jsonData = JSON.parse(jsonString);
