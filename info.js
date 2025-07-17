@@ -3,6 +3,7 @@ const kv = await Deno.openKv();
 export const setHelpers = {
   add: async function(key, value) {
     let fullSet = await this.getSet(key)
+    if (fullSet.has(value)) return
     fullSet.add(value);
     kv.set(key, fullSet);
   },
@@ -18,6 +19,7 @@ export const setHelpers = {
 export const mapHelpers = {
   set: async function(key, mapKey, value) {
     let fullMap = await this.getMap(key)
+    if (fullMap.has(mapKey)) return
     fullMap.set(mapKey, value)
     kv.set(key, fullMap)
   },
@@ -51,4 +53,4 @@ async function updateGameInfo(auto) {
     }
   }
 }
-findPublicLobby().then(console.log)
+fetch("https://ofstats.fra1.digitaloceanspaces.com/games/openfront-20250716").then(console.log)
