@@ -28,7 +28,10 @@ export async function getPlayer(id) {
   return player
 }
 export async function getGame(id) {
-  let player = await fetch(`https://api.openfront.io/game/${id}`)
-  return player
+  let game = await fetch(`https://api.openfront.io/game/${id}`)
+  if (game.status === 200) {
+    setHelpers.add(["info", "games", "ids"], id)
+  }
+  return game
 }
 
