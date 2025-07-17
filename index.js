@@ -2,7 +2,7 @@ import { createServer } from "node:http";
 import bodyParser from "body-parser";
 import express from 'express'
 import path from 'node:path'
-import { findGameWebSocket, findPublicLobbyWebSocket } from 'fetchers.js'
+import { findGameWebSocket, findPublicLobbyWebSocket, getPlayer, getGame } from 'fetchers.js'
 const __dirname = path.resolve();
 const kv = await Deno.openKv();
 kv.set(["games", "ids"], new Set())
@@ -30,13 +30,11 @@ app.get("/", async (req, res) => {
 app.get("/player", async (req, res) => {
   let id = req.query.id
   try {
-    const response = await fetch(`https://api.openfront.io/player/${id}`);
-    // Forward status code & content-type
-    res.statusCode = response.status;
+    const response = await getPlayer(id)
     res.setHeader("Content-Type", response.headers.get("Content-Type") || "application/json");
-    res.setHeader("Access-Control-Allow-Origin", "*"); // Enable CORS for clients
+    res.setHeader("Access-Control-Allow-Origin", "*");
 
-    const data = await response.text(); // Use text() to forward raw data
+    const data = await JSON.stringify(response);
     res.end(data);
   } catch (e) {
     res.statusCode = 500;
@@ -47,14 +45,12 @@ app.get("/player", async (req, res) => {
 app.get("/game", async (req, res) => {
   let id = req.query.id
   try {
-    const response = await fetch(`https://api.openfront.io/game/${id}`);
-    // Forward status code & content-type
-    res.statusCode = response.status;
+    const response = await getGame(id)
     res.setHeader("Content-Type", response.headers.get("Content-Type") || "application/json");
-    res.setHeader("Access-Control-Allow-Origin", "*"); // Enable CORS for clients
+    res.setHeader("Access-Control-Allow-Origin", "*");
 
-    const data = await response.text(); // Use text() to forward raw data
-    kv.set(["games", "ids"], kv.get(["games", "ids"]).add(id))
+    const data = await JSON.stringify(response);
+    if (response.status = 200) kv.set(["games", "ids"], kv.get(["games", "ids"]).add(id))
     res.end(data);
   } catch (e) {
     res.statusCode = 500;
