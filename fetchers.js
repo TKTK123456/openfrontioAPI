@@ -12,15 +12,14 @@ export async function findGameWebSocket(id, webSocketAmount = 20) {
     }
   }
 }
-export async function findPublicLobbyWebSocket(webSocketAmount = 20) {
+export async function findPublicLobby(webSocketAmount = 20) {
   let lobbies = await fetch(`https://blue.openfront.io/api/public_lobbies`)
   lobbies = await lobbies.json()
   lobbies = lobbies.lobbies
-  let output = []
-  lobbies.forEach((lobby) => {
-    output.push(findGameWebSocket(lobby.gameID, webSocketAmount))
-  });
-  output = await Promise.all(output)
+  let output = new Map()
+  await Promise.all(lobbies.map((lobby) => {
+    output.set(lobby.gameID, await findGameWebSocket(lobby.gameID, webSocketAmount))
+  }));
   return output
 }
 export async function getPlayer(id) {
