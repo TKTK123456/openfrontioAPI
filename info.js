@@ -1,4 +1,5 @@
 import { findGameWebSocket, findPublicLobby, getPlayer, getGame } from './fetchers.js'
+import Bunzip from 'seek-bzip'
 const kv = await Deno.openKv();
 export const setHelpers = {
   add: async function(key, value) {
