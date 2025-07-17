@@ -1,5 +1,5 @@
 const kv = await Deno.openKv();
-export const sets = {
+export const setHelpers = {
   add: async function(key, value) {
     let allVals = await kv.get(key);
     allVals = allVals.value;
