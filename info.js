@@ -53,4 +53,4 @@ async function updateGameInfo(auto) {
     }
   }
 }
-fetch("https://ofstats.fra1.digitaloceanspaces.com/games/openfront-20250716").then(console.log)
+fetch("https://ofstats.fra1.digitaloceanspaces.com/games/openfront-20250716.tar.bz2").then(console.log)
