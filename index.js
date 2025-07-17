@@ -62,6 +62,13 @@ app.get("/game", async (req, res) => {
     res.end("Error: " + e.message);
   }
 })
+app.get("/info/games/ids", async (req, res) => {
+  let ids = await kv.get(["games", "ids"])
+  ids =  ids.values().toArray()
+  res.setHeader("Content-Type", "application/json")
+  res.setHeader("Access-Control-Allow-Origin", "*");
+  res.end(JSON.stringify(ids))
+})
 app.listen(8080)
 /*const server = createServer(async (req, res) => {
   
