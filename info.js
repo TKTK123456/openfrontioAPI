@@ -1,5 +1,8 @@
 import { findGameWebSocket, findPublicLobby, getPlayer, getGame } from './fetchers.js'
-import Bunzip from 'seek-bzip'
+import Bunzip from 'seek-bzip';
+import tar from 'tar-stream';
+import { Buffer } from 'node:buffer';
+import { Readable } from 'node:stream';
 const kv = await Deno.openKv();
 export const setHelpers = {
   add: async function(key, value) {
@@ -64,24 +67,55 @@ async function updateGameInfo(auto) {
     }
   }
 }
-async function getDataDump(date = (()=>{
+async function getDataDump(date = (() => {
   let date = new Date();
-  date.setUTCDate(date.getUTCDate()-1)
-  return date
+  date.setUTCDate(date.getUTCDate() - 1);
+  return date;
 })()) {
-  console.log(date)
-  date = date.toISOString().split("T")[0].split("-").join("")
-  console.log(date)
-  let compressedData = await fetch(`https://ofstats.fra1.digitaloceanspaces.com/games/openfront-${date}.tar.bz2`)
-  console.log(compressedData)
-  compressedData = await compressedData.arrayBuffer()
-  console.log(compressedData)
-  const decompressedData = Bunzip.decode(compressedData)
-  console.log(decompressedData)
-  const jsonString = decompressedData.toString('utf8');
-  console.log(jsonString)
-  const jsonData = JSON.parse(jsonString);
-  console.log(jsonData)
-  return jsonData
+  date = date.toISOString().split("T")[0].split("-").join("");
+  const url = `https://ofstats.fra1.digitaloceanspaces.com/games/openfront-${date}.tar.bz2`;
+
+  // Fetch the .tar.bz2 file
+  const response = await fetch(url);
+  const compressedData = new Uint8Array(await response.arrayBuffer());
+
+  // Decompress the .bz2
+  const tarBuffer = Bunzip.decode(compressedData); // returns Uint8Array
+
+  // Extract the .tar
+  const extract = tar.extract();
+  const entries = [];
+
+  // Handle each file in the tar (assuming one JSON file inside)
+  extract.on('entry', (header, stream, next) => {
+    let data = '';
+    stream.on('data', (chunk) => {
+      data += chunk.toString('utf8');
+    });
+    stream.on('end', () => {
+      entries.push({
+        name: header.name,
+        content: data,
+      });
+      next(); // move to next entry
+    });
+    stream.resume(); // drain the stream
+  });
+
+  await new Promise((resolve, reject) => {
+    extract.on('finish', resolve);
+    extract.on('error', reject);
+
+    // Create a readable stream from the tarBuffer
+    const stream = Readable.from(Buffer.from(tarBuffer));
+    stream.pipe(extract);
+  });
+
+  // Assuming there's only one JSON file
+  const jsonEntry = entries.find(e => e.name.endsWith('.json'));
+  if (!jsonEntry) throw new Error("No JSON file found in archive");
+
+  const jsonData = JSON.parse(jsonEntry.content);
+  return jsonData;
 }
-getDataDump()
+getDataDump();
