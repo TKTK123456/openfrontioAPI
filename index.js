@@ -2,7 +2,7 @@ import { createServer } from "node:http";
 import bodyParser from "body-parser";
 import express from 'express'
 import path from 'node:path'
-import { addToKvSet } from './info.js'
+import { setHelpers } from './info.js'
 import { findGameWebSocket, findPublicLobbyWebSocket, getPlayer, getGame } from './fetchers.js'
 const __dirname = path.resolve();
 const kv = await Deno.openKv();
@@ -54,7 +54,7 @@ app.get("/game", async (req, res) => {
 
     const data = await response.text();
     if (response.status === 200) {
-      addToKvSet(["info", "games", "ids"], id)
+      setHelpers.add(["info", "games", "ids"], id)
     }
     res.end(data);
   } catch (e) {
@@ -65,8 +65,7 @@ app.get("/game", async (req, res) => {
   }
 })
 app.get("/info/games/ids", async (req, res) => {
-  let ids = await kv.get(["info", "games", "ids"])
-  ids = ids.value
+  let ids = await setHelpers.get(["info", "games", "ids"])
   ids = ids.values().toArray()
   res.setHeader("Content-Type", "application/json")
   res.setHeader("Access-Control-Allow-Origin", "*");
