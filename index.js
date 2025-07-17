@@ -56,6 +56,7 @@ app.get("/game", async (req, res) => {
     if (response.status === 200) {
       let currentIDs = await kv.get(["games", "ids"])
       currentIDs = currentIDs.value
+      currentIDs.add(id)
       console.log(currentIDs)
       //kv.set(["games", "ids"], )
     }
