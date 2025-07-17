@@ -64,6 +64,7 @@ app.get("/game", async (req, res) => {
 })
 app.get("/info/games/ids", async (req, res) => {
   let ids = await kv.get(["games", "ids"]).value
+  console.log(ids)
   ids =  ids.values().toArray()
   res.setHeader("Content-Type", "application/json")
   res.setHeader("Access-Control-Allow-Origin", "*");
