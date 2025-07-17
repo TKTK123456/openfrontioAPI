@@ -14,6 +14,11 @@ export const setHelpers = {
       output = new Set();
     }
     return output;
+  },
+  delete: async function(key, setKey) {
+    let fullSet = await this.getSet(key)
+    fullSet.delete(setKey);
+    kv.set(key, fullSet);
   }
 }
 export const mapHelpers = {
@@ -34,6 +39,11 @@ export const mapHelpers = {
   get: async function(key, mapKey) {
     let fullMap = await this.getMap(key)
     return fullMap.get(mapKey)
+  },
+  delete: async function(key, mapKey) {
+    let fullMap = await this.getMap(key)
+    fullMap.delete(mapKey);
+    kv.set(key, fullMap);
   }
 }
 async function updateGameInfo(auto) {
@@ -42,15 +52,14 @@ async function updateGameInfo(auto) {
     ids: (async () => {let out = await setHelpers.getSet(["info", "games", "active", "ids"]);return out;})(),
     ws: (async () => {let out = await setHelpers.getMap(["info", "games", "active", "ws"]);return out;})()
   }
-  console.log(active.ids)
   for (let i = 0;i<active.ids.length;i++) {
     let currentId = active.ids.values().next()
-    let isArchived = await fetch(`https://blue.openfront.io/api/w${active.ws.get(currentId)}/archived_game/${currentId}`)
-    isArchived = await isArchived.json();
-    isArchived = isArchived.exists
-    if (isArchived) {
-      
+    let archived = await fetch(`https://blue.openfront.io/api/w${active.ws.get(currentId)}/archived_game/${currentId}`)
+    archived = await archived.json();
+    if (archived.exists) {
+      await setHelpers.add(["info", "games", "ids"], currentId)
+      await mapHelpers.delete(["info", "games", "active", "ws"], currentId)
+      await setHelpers.delete(["info", "games", "active", "ids"], currentId)
     }
   }
 }
-fetch("https://ofstats.fra1.digitaloceanspaces.com/games/openfront-20250716.tar.bz2").then(console.log)
