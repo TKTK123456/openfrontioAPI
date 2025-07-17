@@ -1,6 +1,6 @@
 import { setHelpers } from './info.js'
 const kv = await Deno.openKv();
-kv.delete(["info", "games", "active", "ws"])
+//kv.delete(["info", "games", "active", "ws"])
 
 export async function findGameWebSocket(id, webSocketAmount = 20) {
   for (let i = 0; i < webSocketAmount; i++) {
