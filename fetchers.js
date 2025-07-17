@@ -1,5 +1,4 @@
-
-async function findGameWebSocket(id, webSocketAmount = 20) {
+export async function findGameWebSocket(id, webSocketAmount = 20) {
   for (let i = 0; i < webSocketAmount; i++) {
     const response = await fetch(`https://blue.openfront.io/w${i}/api/game/${id}`);
     if (response.status === 200) {
@@ -8,7 +7,7 @@ async function findGameWebSocket(id, webSocketAmount = 20) {
     }
   }
 }
-async function findPublicLobbyWebSocket(webSocketAmount = 20) {
+export async function findPublicLobbyWebSocket(webSocketAmount = 20) {
   let lobbies = await fetch(`https://blue.openfront.io/api/public_lobbies`)
   lobbies = await lobbies.json()
   lobbies = lobbies.lobbies
@@ -19,4 +18,4 @@ async function findPublicLobbyWebSocket(webSocketAmount = 20) {
   output = await Promise.all(output)
   return output
 }
-findPublicLobbyWebSocket().then(console.log)
+
