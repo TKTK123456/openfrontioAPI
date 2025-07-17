@@ -1,5 +1,6 @@
 import { setHelpers } from './info.js'
 const kv = await Deno.openKv();
+kv.delete(["info", "games", "active", "wsNum"])
 export async function findGameWebSocket(id, webSocketAmount = 20) {
   for (let i = 0; i < webSocketAmount; i++) {
     const response = await fetch(`https://blue.openfront.io/w${i}/api/game/${id}`);
@@ -16,7 +17,7 @@ export async function findPublicLobbyWebSocket(webSocketAmount = 20) {
   await lobbies.forEach(async (lobby) => {
     setHelpers.add(["info", "games", "active", "ids"], lobby.gameID)
     let wsNum = await findGameWebSocket(lobby.gameID, webSocketAmount)
-    setHelpers.add(["info", "games", "active", "wsNum"], wsNum)
+    setHelpers.add(["info", "games", "active", "ws"], wsNum)
     output.push(wsNum)
   });
   return output
