@@ -2,10 +2,10 @@ import { createServer } from "node:http";
 import bodyParser from "body-parser";
 import express from 'express'
 import path from 'node:path'
+import { addToKvSet } from './info.js'
 import { findGameWebSocket, findPublicLobbyWebSocket, getPlayer, getGame } from './fetchers.js'
 const __dirname = path.resolve();
 const kv = await Deno.openKv();
-//kv.set(["info", "games", "ids"], new Set(["d9oFrfjL"]))
 const app = express()
 app.use(express.static(__dirname));
 app.use(bodyParser.json());
@@ -54,11 +54,7 @@ app.get("/game", async (req, res) => {
 
     const data = await response.text();
     if (response.status === 200) {
-      let currentIDs = await kv.get(["info", "games", "ids"])
-      currentIDs = currentIDs.value
-      currentIDs.add(id)
-      console.log(currentIDs)
-      kv.set(["info", "games", "ids"], currentIDs)
+      addToKvSet(["info", "games", "ids"], id)
     }
     res.end(data);
   } catch (e) {
