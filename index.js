@@ -5,8 +5,7 @@ import path from 'node:path'
 import { findGameWebSocket, findPublicLobbyWebSocket, getPlayer, getGame } from './fetchers.js'
 const __dirname = path.resolve();
 const kv = await Deno.openKv();
-kv.delete(["games", "ids"])
-kv.set(["info", "games", "ids"], new Set(["d9oFrfjL"]))
+//kv.set(["info", "games", "ids"], new Set(["d9oFrfjL"]))
 const app = express()
 app.use(express.static(__dirname));
 app.use(bodyParser.json());
