@@ -64,3 +64,17 @@ async function updateGameInfo(auto) {
     }
   }
 }
+async function getDataDump(date = (()=>{
+  let date = new Date();
+  date.setUTCDate(date.getUTCDate()-1)
+  return date
+})()) {
+  date = date.toISOString().split("T")[0].split("-").join("")
+  let compressedData = await fetch(`https://ofstats.fra1.digitaloceanspaces.com/games/openfront-${date}.tar.bz2`)
+  const decompressedData = Bunzip.decode(compressedData)
+  const jsonString = decompressedData.toString('utf8');
+  const jsonData = JSON.parse(jsonString);
+  console.log(jsonData)
+  return jsonData
+}
+getDataDump()
