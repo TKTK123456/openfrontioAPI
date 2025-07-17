@@ -63,7 +63,7 @@ app.get("/game", async (req, res) => {
   }
 })
 app.get("/info/games/ids", async (req, res) => {
-  let ids = await kv.get(["games", "ids"]).value
+  let ids = await kv.get(["games", "ids"])
   console.log(ids)
   ids =  ids.values().toArray()
   res.setHeader("Content-Type", "application/json")
