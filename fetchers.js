@@ -13,7 +13,7 @@ export async function findPublicLobbyWebSocket(webSocketAmount = 20) {
   lobbies = await lobbies.json()
   lobbies = lobbies.lobbies
   let output = []
-  lobbies.forEach((lobby) => {
+  lobbies.forEach(async (lobby) => {
     kv.set(["games", "ids"], await kv.get(["games", "ids"]).value.add(id))
     output.push(findGameWebSocket(lobby.gameID, webSocketAmount))
   });
