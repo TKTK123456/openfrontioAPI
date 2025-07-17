@@ -118,4 +118,4 @@ async function getDataDump(date = (() => {
   const jsonData = JSON.parse(jsonEntry.content);
   return jsonData;
 }
-getDataDump();
+getDataDump().then(console.log)
