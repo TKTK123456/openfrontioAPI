@@ -8,10 +8,11 @@ export const setHelpers = {
   },
   getSet: async function(key) {
     let output = await kv.get(key);
+    output = output.value
     if (!output) {
       output = new Set();
     }
-    return output.value;
+    return output;
   }
 }
 export const mapHelpers = {
@@ -22,10 +23,11 @@ export const mapHelpers = {
   },
   getMap: async function(key) {
     let output = await kv.get(key);
+    output = output.value
     if (!output) {
       output = new Map();
     }
-    return output.value;
+    return output;
   },
   get: async function(key, mapKey) {
     let fullMap = await this.getMap(key)
