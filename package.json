@@ -14,6 +14,7 @@
     "@types/node": "^22.13.11",
     "body-parser": "^2.2.0",
     "express": "^5.1.0",
-    "seek-bzip": "^2.0.0"
+    "seek-bzip": "^2.0.0",
+    "tar-stream": "^3.1.7"
   }
 }
