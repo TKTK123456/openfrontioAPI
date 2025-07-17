@@ -32,7 +32,7 @@ app.get("/player", async (req, res) => {
   let id = req.query.id
   try {
     const response = await getPlayer(id)
-    res.setHeader("Content-Type", response.headers.get("Content-Type") || "application/json");
+    res.setHeader("Content-Type", "application/json");
     res.setHeader("Access-Control-Allow-Origin", "*");
 
     const data = await JSON.stringify(response);
@@ -49,7 +49,7 @@ app.get("/game", async (req, res) => {
   let id = req.query.id
   try {
     const response = await getGame(id)
-    res.setHeader("Content-Type", response.headers.get("Content-Type") || "application/json");
+    res.setHeader("Content-Type", "application/json");
     res.setHeader("Access-Control-Allow-Origin", "*");
 
     const data = await JSON.stringify(response);
