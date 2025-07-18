@@ -32,11 +32,19 @@ async function run() {
     let chunks = [];
     stream.on('data', (chunk) => chunks.push(chunk));
     stream.on('end', async () => {
-      const fileBuffer = Buffer.concat(chunks);
+      const fileBuffer = Buffer.concat(chunks)
+      const content = fileBuffer.toString('utf8');
 
+    let data;
+    try {
+      data = JSON.parse(content);
+    } catch {
+      console.warn("Skipping non-JSON or corrupt file:", header.name);
+      return next();
+    }
       // Write JSON files to disk (creating 'json' folder)
       await fs.mkdir('json', { recursive: true })
-      let gameID = fileBuffer.toJSON().info.gameID
+      let gameID = data.info.gameID
       const filepath = `json/${gameID}.json`
       await fs.writeFile(filepath, fileBuffer);
       console.log("Extracted:", filepath);
