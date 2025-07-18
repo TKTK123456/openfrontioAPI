@@ -14,7 +14,7 @@ export async function findGameWebSocket(id, webSocketAmount = 20) {
   }
 }
 export async function findPublicLobby(webSocketAmount = 20) {
-  let lobbies = await fetch(`https://blue.openfront.io/api/public_lobbies`)
+  let lobbies = await fetch(`https://${config.prefix.use}${config.domain}/api/public_lobbies`)
   lobbies = await lobbies.json()
   lobbies = lobbies.lobbies
   let output = new Map()
@@ -24,11 +24,11 @@ export async function findPublicLobby(webSocketAmount = 20) {
   return output
 }
 export async function getPlayer(id) {
-  let player = await fetch(`https://api.openfront.io/player/${id}`)
+  let player = await fetch(`https://${config.prefix.api}${config.domain}/player/${id}`)
   return player
 }
 export async function getGame(id) {
-  let game = await fetch(`https://api.openfront.io/game/${id}`)
+  let game = await fetch(`https://${config.prefix.api}${config.domain}/game/${id}`)
   if (game.status === 200) {
     setHelpers.add(["info", "games", "ids"], id)
   }
