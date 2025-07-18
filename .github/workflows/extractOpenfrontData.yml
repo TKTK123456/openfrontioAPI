@@ -1,4 +1,4 @@
-name: Extract OpenFront Data
+name: Extract and Publish OpenFront Data
 
 on:
   workflow_dispatch:
@@ -12,15 +12,15 @@ jobs:
   extract:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout repository
+      - name: Checkout main branch
         uses: actions/checkout@v3
         with:
-          fetch-depth: 0  # fetch full history so we can manage branches
+          fetch-depth: 0
           token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Setup Node.js
         uses: actions/setup-node@v3
-
+          
       - name: Install dependencies
         run: npm i
 
@@ -31,32 +31,15 @@ jobs:
           else
             echo "DATE=${{ github.event.inputs.date }}" >> $GITHUB_ENV
           fi
-      
-      - name: Run extractor
+
+      - name: Run extractor script
         run: node extract.js
-        
-      - name: Switch to or create gh-pages branch
-        run: |
-          git fetch origin gh-pages || true
-          if git show-ref --verify --quiet refs/remotes/origin/gh-pages; then
-            git checkout gh-pages
-          else
-            git checkout --orphan gh-pages
-            git reset --hard
-          fi
 
-      - name: Move JSON data to gh-pages
-        run: |
-          rm -rf json
-          cp -r ../json ./  # Assumes extract.js outputs to ./json
+      - name: Upload json/ to gh-pages
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./json
+          publish_branch: gh-pages
+          destination_dir: json
 
-      - name: Commit and push changes
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-
-          git add json/*.json
-          git diff --cached --quiet && echo "No changes to commit" && exit 0
-
-          git commit -m "Update openfront JSON for $DATE"
-          git push origin gh-pages
