@@ -32,8 +32,8 @@ jobs:
             echo "DATE=${{ github.event.inputs.date }}" >> $GITHUB_ENV
           fi
       
-      - name: Save extraction script
-        run: cp extract.js /tmp/extract.js
+      - name: Run extractor
+        run: node extract.js
         
       - name: Switch to or create gh-pages branch
         run: |
@@ -45,8 +45,10 @@ jobs:
             git reset --hard
           fi
 
-      - name: Extract OpenFront JSON
-        run: node /tmp/extract.js
+      - name: Move JSON data to gh-pages
+        run: |
+          rm -rf json
+          cp -r ../json ./  # Assumes extract.js outputs to ./json
 
       - name: Commit and push changes
         run: |
