@@ -5,7 +5,7 @@ const kv = await Deno.openKv();
 
 export async function findGameWebSocket(id, webSocketAmount = 20) {
   for (let i = 0; i < webSocketAmount; i++) {
-    const response = await fetch(`https://blue.openfront.io/w${i}/api/game/${id}`);
+    const response = await fetch(`https://${config.prefix.use}${config.domain}/w${i}/api/game/${id}`);
     if (response.status === 200) {
       setHelpers.add(["info", "games", "active", "ids"], id)
       mapHelpers.set(["info", "games", "active", "ws"], id, i)
