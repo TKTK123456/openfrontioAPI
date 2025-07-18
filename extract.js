@@ -37,7 +37,7 @@ async function run() {
       // Write JSON files to disk (creating 'json' folder)
       await fs.mkdir('json', { recursive: true });
 
-      const filepath = `json/${header.name}`;
+      const filepath = `json/${dateStr}`;
       await fs.writeFile(filepath, fileBuffer);
       console.log("Extracted:", filepath);
 
