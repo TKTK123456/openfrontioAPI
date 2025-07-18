@@ -147,7 +147,7 @@ try {
   if (!response.ok) {
     throw new Error(`Fetch failed: ${response.status}`);
   }
-
+  console.log(response)
   console.log("Fetching OK...");
   const arrayBuffer = await response.arrayBuffer();
   console.log("ArrayBuffer length:", arrayBuffer.byteLength);
