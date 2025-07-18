@@ -31,4 +31,4 @@ export default async function getDumpData(date) {
 }
 
 // Example usage: trigger workflow for July 15, 2025
-getDumpData('20250715').catch(console.error);
+//getDumpData('20250715').catch(console.error);
