@@ -72,54 +72,58 @@ async function getDataDump(date = (() => {
   date.setUTCDate(date.getUTCDate() - 1);
   return date;
 })()) {
-  try {
   date = date.toISOString().split("T")[0].split("-").join("");
   const url = `https://ofstats.fra1.digitaloceanspaces.com/games/openfront-${date}.tar.bz2`;
 
-  // Fetch the .tar.bz2 file
   const response = await fetch(url);
-  const compressedData = new Uint8Array(await response.arrayBuffer());
-  console.log(compressedData)
-  // Decompress the .bz2
-  const tarBuffer = Bunzip.decode(compressedData); // returns Uint8Array
 
-  // Extract the .tar
+  // Step 1: check response
+  if (!response.ok) {
+    throw new Error(`Failed to fetch: ${response.status} ${response.statusText}`);
+  }
+
+  const buffer = new Uint8Array(await response.arrayBuffer());
+
+  // Step 2: check the magic bytes
+  const magic = buffer.slice(0, 2);
+  if (magic[0] !== 0x42 || magic[1] !== 0x5A) {
+    // 0x42 = 'B', 0x5A = 'Z'
+    console.error("Magic bytes:", buffer.slice(0, 10));
+    throw new Error("Not a valid bzip2 file");
+  }
+
+  // Step 3: decompress .bz2 to get .tar
+  const tarBuffer = Bunzip.decode(buffer);
+
+  // Step 4: extract the .tar contents
   const extract = tar.extract();
   const entries = [];
 
-  // Handle each file in the tar (assuming one JSON file inside)
   extract.on('entry', (header, stream, next) => {
-    let data = '';
-    stream.on('data', (chunk) => {
-      data += chunk.toString('utf8');
-    });
+    let chunks = [];
+    stream.on('data', chunk => chunks.push(chunk));
     stream.on('end', () => {
       entries.push({
         name: header.name,
-        content: data,
+        content: Buffer.concat(chunks).toString('utf8'),
       });
-      next(); // move to next entry
+      next();
     });
-    stream.resume(); // drain the stream
+    stream.resume();
   });
 
   await new Promise((resolve, reject) => {
     extract.on('finish', resolve);
     extract.on('error', reject);
 
-    // Create a readable stream from the tarBuffer
     const stream = Readable.from(Buffer.from(tarBuffer));
     stream.pipe(extract);
   });
 
-  // Assuming there's only one JSON file
   const jsonEntry = entries.find(e => e.name.endsWith('.json'));
-  if (!jsonEntry) throw new Error("No JSON file found in archive");
+  if (!jsonEntry) throw new Error("No .json file found in the tar archive");
 
   const jsonData = JSON.parse(jsonEntry.content);
   return jsonData;
-  } catch (e) {
-    console.log(e)
-  }
 }
 getDataDump().then(console.log)
