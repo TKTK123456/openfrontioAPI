@@ -3,6 +3,7 @@ import Bunzip from 'seek-bzip';
 import tar from 'tar-stream';
 import { Buffer } from 'node:buffer';
 import { Readable } from 'node:stream';
+import getDumpData from './getDumpData.js'
 const kv = await Deno.openKv();
 export const setHelpers = {
   add: async function(key, value) {
@@ -67,6 +68,7 @@ async function updateGameInfo(auto) {
     }
   }
 }
+/*
 async function getDataDump(date = (() => {
   let date = new Date();
   date.setUTCDate(date.getUTCDate() - 1);
@@ -155,3 +157,4 @@ try {
   console.error("Error:", e);
 }
 })()
+*/
