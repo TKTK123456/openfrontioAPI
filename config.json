@@ -2,6 +2,6 @@
   "domain": "openfront.io",
   "prefixs": {
     "api": "api.",
-    "use": false
+    "use": ""
   }
 }
