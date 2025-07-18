@@ -1,4 +1,5 @@
 import { setHelpers, mapHelpers } from './info.js'
+import config from './config.js'
 const kv = await Deno.openKv();
 //kv.delete(["info", "games", "active", "ws"])
 
