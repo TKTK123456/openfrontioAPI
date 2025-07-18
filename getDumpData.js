@@ -1,12 +1,12 @@
 const GITHUB_TOKEN = process.env.GITHUB_TOKEN; // Set this in your environment securely
-const OWNER = 'your-github-username';
-const REPO = 'your-repo-name';
-const WORKFLOW_ID = 'extract-openfront.yml'; // Workflow filename
+const OWNER = 'TKTK123456';
+const REPO = 'openfrontioAPI';
+const WORKFLOW_ID = 'extractOpenfrontData.yml'; // Workflow filename
 const REF = 'main'; // Branch name where workflow lives
 
 export default async function getDumpData(date) {
   const url = `https://api.github.com/repos/${OWNER}/${REPO}/actions/workflows/${WORKFLOW_ID}/dispatches`;
-
+  
   const body = {
     ref: REF,
     inputs: {
