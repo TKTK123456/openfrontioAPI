@@ -74,6 +74,7 @@ async function getDataDump(date = (() => {
 })()) {
   try {
   date = date.toISOString().split("T")[0].split("-").join("");
+  console.log(date)
   const url = `https://ofstats.fra1.digitaloceanspaces.com/games/openfront-${date}.tar.bz2`;
 
   const response = await fetch(url);
