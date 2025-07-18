@@ -23,7 +23,7 @@ jobs:
           node-version: '18'
 
       - name: Install dependencies
-        run: npm install seek-bzip tar-stream
+        run: npm i
 
       - name: Extract and commit JSON
         env:
