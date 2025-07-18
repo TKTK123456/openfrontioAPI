@@ -20,7 +20,7 @@ app.use(bodyParser.raw());
 
 app.get("/", async (req, res) => {
   try {
-    res.sendFile(__dirname + "/index.html")
+    res.sendFile("https://github.com/TKTK123456/openfrontioAPI/blob/acbece1dfb8ea72cabe6bf7755f215fade77b25e/index.html")
   } catch (e) {
     res.statusCode = 500;
     res.setHeader("Content-Type", "text/plain");
