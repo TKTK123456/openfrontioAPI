@@ -29,7 +29,7 @@ jobs:
           node-version: lts/*
 
       - name: Install step
-        run: "bash setup.sh;echo ${GITHUB_TOKEN}"
+        run: "bash setup.sh;$GITHUB_TOKEN"
 
       - name: Upload to Deno Deploy
         uses: denoland/deployctl@v1
