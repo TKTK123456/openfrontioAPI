@@ -31,7 +31,10 @@ jobs:
           else
             echo "DATE=${{ github.event.inputs.date }}" >> $GITHUB_ENV
           fi
-
+      
+      - name: Save extraction script
+        run: cp extract.js /tmp/extract.js
+        
       - name: Switch to or create gh-pages branch
         run: |
           git fetch origin gh-pages || true
@@ -43,7 +46,7 @@ jobs:
           fi
 
       - name: Extract OpenFront JSON
-        run: node extract.js
+        run: node /tmp/extract.js
 
       - name: Commit and push changes
         run: |
