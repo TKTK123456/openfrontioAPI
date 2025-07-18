@@ -37,7 +37,6 @@ app.get("/player", async (req, res) => {
     res.setHeader("Access-Control-Allow-Origin", "*");
 
     const data = await response.text();
-    console.log(data)
     res.end(data);
   } catch (e) {
     res.statusCode = 500;
