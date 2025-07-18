@@ -4,7 +4,7 @@ const REPO = 'your-repo-name';
 const WORKFLOW_ID = 'extract-openfront.yml'; // Workflow filename
 const REF = 'main'; // Branch name where workflow lives
 
-export default async function triggerWorkflow(date) {
+export default async function getDumpData(date) {
   const url = `https://api.github.com/repos/${OWNER}/${REPO}/actions/workflows/${WORKFLOW_ID}/dispatches`;
 
   const body = {
@@ -33,4 +33,4 @@ export default async function triggerWorkflow(date) {
 }
 
 // Example usage: trigger workflow for July 15, 2025
-triggerWorkflow('20250715').catch(console.error);
+getDumpData('20250715').catch(console.error);
