@@ -72,6 +72,7 @@ async function getDataDump(date = (() => {
   date.setUTCDate(date.getUTCDate() - 1);
   return date;
 })()) {
+  try {
   date = date.toISOString().split("T")[0].split("-").join("");
   const url = `https://ofstats.fra1.digitaloceanspaces.com/games/openfront-${date}.tar.bz2`;
 
@@ -125,5 +126,8 @@ async function getDataDump(date = (() => {
 
   const jsonData = JSON.parse(jsonEntry.content);
   return jsonData;
+  } catch(e) {
+    console.log(e)
+  }
 }
 getDataDump().then(console.log)
