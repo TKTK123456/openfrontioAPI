@@ -138,4 +138,20 @@ async function getDataDump(date = (() => {
     console.log(e)
   }
 }
-getDataDump().then(console.log)
+//getDataDump().then(console.log)
+(async () => {
+  const url = "https://ofstats.fra1.digitaloceanspaces.com/games/openfront-20250716.tar.bz2";
+
+try {
+  const response = await fetch(url);
+  if (!response.ok) {
+    throw new Error(`Fetch failed: ${response.status}`);
+  }
+
+  console.log("Fetching OK...");
+  const arrayBuffer = await response.arrayBuffer();
+  console.log("ArrayBuffer length:", arrayBuffer.byteLength);
+} catch (e) {
+  console.error("Error:", e);
+}
+})
