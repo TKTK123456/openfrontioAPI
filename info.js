@@ -4,6 +4,7 @@ import tar from 'tar-stream';
 import { Buffer } from 'node:buffer';
 import { Readable } from 'node:stream';
 import getDumpData from './getDumpData.js'
+import config from './config.js'
 const kv = await Deno.openKv();
 export const setHelpers = {
   add: async function(key, value) {
