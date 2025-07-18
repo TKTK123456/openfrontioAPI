@@ -4,6 +4,7 @@ import express from 'express'
 import path from 'node:path'
 import { setHelpers, mapHelpers } from './info.js'
 import { findGameWebSocket, findPublicLobby, getPlayer, getGame } from './fetchers.js'
+import config from './config.js'
 const __dirname = path.resolve();
 const kv = await Deno.openKv();
 const app = express()
