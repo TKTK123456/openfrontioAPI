@@ -1,7 +1,9 @@
 name: Extract and Publish OpenFront Data
 
 on:
-  workflow_dispatch:
+ schedule:
+  - cron: '0 6 * * *'
+ workflow_dispatch:
     inputs:
       date:
         description: 'Date to extract (YYYYMMDD), e.g. 20250715'
