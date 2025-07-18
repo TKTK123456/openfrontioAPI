@@ -35,12 +35,11 @@ async function run() {
       const fileBuffer = Buffer.concat(chunks);
 
       // Write JSON files to disk (creating 'json' folder)
-      await fs.mkdir('json', { recursive: true });
-
-      const filepath = `json/${header};
+      await fs.mkdir('json', { recursive: true })
+      let gameID = fileBuffer.toJSON().info.gameID
+      const filepath = `json/${gameID}.json`
       await fs.writeFile(filepath, fileBuffer);
       console.log("Extracted:", filepath);
-
       next();
     });
     stream.resume();
