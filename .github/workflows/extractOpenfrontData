@@ -1,0 +1,39 @@
+name: Extract OpenFront Data
+
+on:
+  workflow_dispatch:
+    inputs:
+      date:
+        description: 'Date to extract (YYYYMMDD), e.g. 20250715'
+        required: false
+        default: ''
+
+jobs:
+  extract:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+        with:
+          ref: gh-pages
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+
+      - name: Install dependencies
+        run: npm install seek-bzip tar-stream
+
+      - name: Extract and commit JSON
+        env:
+          DATE: ${{ github.event.inputs.date }}
+        run: node extract.js
+
+      - name: Commit and push changes
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add .
+          git commit -m "Update openfront JSON for $DATE"
+          git push origin gh-pages || echo "No changes to commit"
