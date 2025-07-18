@@ -1,4 +1,5 @@
 import { Octokit } from "@octokit/rest";
+import config from './config.js'
 const GITHUB_TOKEN = process.env.GITHUB_TOKEN; // Set this in your environment securely
 const OWNER = 'TKTK123456';
 const REPO = 'openfrontioAPI';
