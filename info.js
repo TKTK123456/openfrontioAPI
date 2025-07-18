@@ -71,8 +71,9 @@ async function getDataDump(date = (() => {
   let date = new Date();
   date.setUTCDate(date.getUTCDate() - 1);
   return date;
-})()) {
+})(), cantFetchTryPrevDay = true) {
   try {
+  let prevDate = date
   date = date.toISOString().split("T")[0].split("-").join("");
   console.log(date)
   const url = `https://ofstats.fra1.digitaloceanspaces.com/games/openfront-${date}.tar.bz2`;
@@ -81,6 +82,12 @@ async function getDataDump(date = (() => {
 
   // Step 1: check response
   if (!response.ok) {
+    if (cantFetchTryPrevDay) {
+      date = prevDate
+      date.setUTCDate(date.getUTCDate() - 1);
+      let out = await getDataDump(date, false);
+      return out
+    }
     throw new Error(`Failed to fetch: ${response.status} ${response.statusText}`);
   }
 
