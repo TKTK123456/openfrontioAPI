@@ -27,7 +27,7 @@ async function run() {
   const tarBuffer = Bunzip.decode(compressed);
 
   const extract = tar.extract();
-
+  let fullJson = {}
   extract.on('entry', async (header, stream, next) => {
     let chunks = [];
     stream.on('data', (chunk) => chunks.push(chunk));
@@ -42,12 +42,9 @@ async function run() {
       console.warn("Skipping non-JSON or corrupt file:", header.name);
       return next();
     }
-      // Write JSON files to disk (creating 'json' folder)
-      await fs.mkdir('json', { recursive: true })
       let gameID = data.info.gameID
-      const filepath = `json/${gameID}.json`
-      await fs.writeFile(filepath, fileBuffer);
-      console.log("Extracted:", filepath);
+      fullJson[gameID] = data
+      
       next();
     });
     stream.resume();
@@ -59,6 +56,10 @@ async function run() {
 
     Readable.from(tarBuffer).pipe(extract);
   });
+  await fs.mkdir('json', { recursive: true })
+  const filepath = `json/${dateStr}.json`
+  await fs.writeFile(filepath, JSON.stringify(fullJson));
+  console.log("Extracted:", filepath);
 }
 
 run().catch((e) => {
