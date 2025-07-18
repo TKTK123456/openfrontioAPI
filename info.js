@@ -90,9 +90,9 @@ async function getDataDump(date = (() => {
     }
     throw new Error(`Failed to fetch: ${response.status} ${response.statusText}`);
   }
-
+  console.log(response)
   const buffer = new Uint8Array(await response.arrayBuffer());
-
+  console.log(buffer)
   // Step 2: check the magic bytes
   const magic = buffer.slice(0, 2);
   if (magic[0] !== 0x42 || magic[1] !== 0x5A) {
@@ -100,14 +100,14 @@ async function getDataDump(date = (() => {
     console.error("Magic bytes:", buffer.slice(0, 10));
     throw new Error("Not a valid bzip2 file");
   }
-
+  console.log(magic)
   // Step 3: decompress .bz2 to get .tar
   const tarBuffer = Bunzip.decode(buffer);
-
+  console.log(tarBuffer)
   // Step 4: extract the .tar contents
   const extract = tar.extract();
   const entries = [];
-
+  console.log(extract)
   extract.on('entry', (header, stream, next) => {
     let chunks = [];
     stream.on('data', chunk => chunks.push(chunk));
