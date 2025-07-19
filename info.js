@@ -85,7 +85,7 @@ async function updateGameInfo(autoSetNextRun = true) {
   });
 
   if (listErr) throw new Error(`Failed to list files: ${listErr.message}`);
-
+  console.log(list)
   const fileExists = list.some(f => f.name === filename);
   if (!fileExists) {
     console.log(filename)
