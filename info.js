@@ -1,4 +1,4 @@
-                                          import { findGameWebSocket, findPublicLobby, getPlayer, getGame } from './fetchers.js'
+import { findGameWebSocket, findPublicLobby, getPlayer, getGame } from './fetchers.js'
 import Bunzip from 'seek-bzip';
 import tar from 'tar-stream';
 import { Buffer } from 'node:buffer'; 
@@ -88,8 +88,13 @@ async function updateGameInfo(autoSetNextRun = true) {
 
   const fileExists = list.some(f => f.name === filename);
   if (!fileExists) {
-    // Only create if archive exists (per your earlier message)
-    throw new Error(`Archive file ${filename} does not exist.`);
+    const { error } = await supabase.storage.from("logs").upload(filename, new Blob([""]), {
+      upsert: true,
+      contentType: "application/x-ndjson",
+    });
+    if (error) {
+      console.error(error)
+    }
   }
 
   // Download the file
