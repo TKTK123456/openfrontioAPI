@@ -5,7 +5,7 @@ import { Buffer } from 'node:buffer';
 import { Readable } from 'node:stream';
 import getDumpData from './getDumpData.js'
 import config from './config.js'
-import { createClient } from 'jsr:@supabase/supabase-js@2'
+import { createClient } from '@supabase/supabase-js'
 const supabase = createClient("https://ebnqhovfhgfrfxzexdxj.supabase.co")
 const kv = await Deno.openKv();
 export const setHelpers = {
@@ -75,7 +75,7 @@ async function updateGameInfo(autoSetNextRun = true) {
   };
   
   // Helper: load or create .ndjson file for a given date string (YYYY-MM-DD)
-  async function loadOrCreateFile(dateStr: string) {
+  async function loadOrCreateFile(dateStr) {
     const filename = `logs/${dateStr}.ndjson`;
     const { data, error } = await supabase.storage.from("logs").download(filename);
     if (error && error.status === 404) {
