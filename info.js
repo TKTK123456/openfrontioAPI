@@ -73,7 +73,7 @@ async function getHuristicTime() {
 }
 async function updateGameInfo(autoSetNextRun = true) {
   let publicLobbies = await findPublicLobby();
-  
+  publicLobbies = publicLobbies.values().toArray()
   let startTime = Date.now()
   let active = {
     ids: await setHelpers.getSet(["info", "games", "active", "ids"]),
@@ -176,8 +176,7 @@ async function updateGameInfo(autoSetNextRun = true) {
     existingArrays = existingArrays.values().toArray()
     await saveFile(dateStr, existingArrays);
   }
-  console.log(publicLobbies.values().toArray()[0].msUntilStart)
-  //if (autoSetNextRun) setTimeout(updateGameInfo, Math.min(getHuristicTime(), publicLobbies.values().toArray()[publicLobbies.length-1].msUntilStart-(startTime-Date.now())>0 ? publicLobbies.values().toArray()[publicLobbies.length-1].msUntilStart-(startTime-Date.now()) : 500))
+  //if (autoSetNextRun) setTimeout(updateGameInfo, Math.min(getHuristicTime(), publicLobbies[publicLobbies.length-1].msUntilStart-(startTime-Date.now())>0 ? publicLobbies[publicLobbies.length-1].msUntilStart-(startTime-Date.now()) : 500))
 }
 findPublicLobby().then(console.log);
 updateGameInfo()
