@@ -5,6 +5,8 @@ import { Buffer } from 'node:buffer';
 import { Readable } from 'node:stream';
 import getDumpData from './getDumpData.js'
 import config from './config.js'
+import { createClient } from 'jsr:@supabase/supabase-js@2'
+const supabase = createClient("https://ebnqhovfhgfrfxzexdxj.supabase.co")
 const kv = await Deno.openKv();
 export const setHelpers = {
   add: async function(key, value) {
@@ -66,7 +68,7 @@ async function getHuristicTime() {
   return avrgTime
 }
 async function updateGameInfo(autoSetNextRun = true) {
-  await findPublicLobby();
+  let publicLobbies = await findPublicLobby();
   let active = {
     ids: await setHelpers.getSet(["info", "games", "active", "ids"]),
     ws: await setHelpers.getMap(["info", "games", "active", "ws"]),
@@ -102,7 +104,7 @@ async function updateGameInfo(autoSetNextRun = true) {
   }
 
   // Map date string => array of archived game IDs to append
-  const dateToNewIds = new Map<string, string[]>();
+  const dateToNewIds = new Map();
 
   for (const currentId of active.ids) {
     const wsValue = active.ws.get(currentId);
