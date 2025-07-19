@@ -108,9 +108,9 @@ async function updateGameInfo(autoSetNextRun = true) {
 
   // Helper: save the updated daily arrays back to Supabase
   async function saveFile(dateStr, arrays) {
-    const filename = `logs/${dateStr}.ndjson`;
+    const filename = `${dateStr}.ndjson`; // ✅ FIXED (was: logs/${dateStr}.ndjson)
     const content = arrays.map(arr => JSON.stringify(arr)).join("\n") + "\n";
-    console.log(content)
+    console.log(content);
     const { error } = await supabase.storage.from("logs").upload(filename, new Blob([content]), {
       upsert: true,
       contentType: "application/x-ndjson",
@@ -118,6 +118,7 @@ async function updateGameInfo(autoSetNextRun = true) {
     if (error) {
       console.error(`Error uploading log file ${filename}:`, error);
     }
+    console.log(`Uploaded file: ${filename}`)
   }
 
   // Map date string => array of archived game IDs to append
