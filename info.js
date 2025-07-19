@@ -176,10 +176,12 @@ export async function updateGameInfo(autoSetNextRun = true) {
     existingArrays = existingArrays.values().toArray()
     await saveFile(dateStr, existingArrays);
   }
+  let waitTime = getHuristicTime()
   if (autoSetNextRun) {
-    let nextTime = getHuristicTime()
     console.log(`Runing again in ${nextTime}`)
-    setTimeout(updateGameInfo, nextTime)
+    setTimeout(updateGameInfo, waitTime)
+  } else {
+    return waitTime
   }
 }
 findPublicLobby().then(console.log);
