@@ -68,6 +68,7 @@ async function getHuristicTime() {
   return avrgTime
 }
 async function updateGameInfo(autoSetNextRun = true) {
+  try {
   let publicLobbies = await findPublicLobby();
   let active = {
     ids: await setHelpers.getSet(["info", "games", "active", "ids"]),
@@ -172,6 +173,9 @@ async function updateGameInfo(autoSetNextRun = true) {
     console.log(existingArrays)
     existingArrays.push(newIds);
     await saveFile(dateStr, existingArrays);
+  }
+  } catch (e) {
+    console.error(e)
   }
 }
 findPublicLobby().then(console.log);
