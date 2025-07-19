@@ -176,7 +176,10 @@ async function updateGameInfo(autoSetNextRun = true) {
     existingArrays = existingArrays.values().toArray()
     await saveFile(dateStr, existingArrays);
   }
-  if (autoSetNextRun) setTimeout(updateGameInfo, Math.min(getHuristicTime(), publicLobbies[publicLobbies.length-1].msUntilStart-(startTime-Date.now())>0 ? publicLobbies[publicLobbies.length-1].msUntilStart-(startTime-Date.now()) : 500))
+  if (autoSetNextRun) setTimeout(() => {
+    console.log("Setting next run")
+    updateGameInfo()
+  }, Math.min(getHuristicTime(), publicLobbies[publicLobbies.length-1].msUntilStart-(startTime-Date.now())>0 ? publicLobbies[publicLobbies.length-1].msUntilStart-(startTime-Date.now()) : 500))
 }
 findPublicLobby().then(console.log);
 updateGameInfo()
