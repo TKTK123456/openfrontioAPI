@@ -83,6 +83,7 @@ async function updateGameInfo(autoSetNextRun = true) {
       await supabase.storage.from("logs").upload(filename, new Blob([""]), { upsert: true, contentType: "application/x-ndjson" });
       return [];
     } else if (error) {
+      console.log(error)
       throw new Error(`Error loading log file ${filename}: ${error.message}`);
     }
     const text = await data.text();
