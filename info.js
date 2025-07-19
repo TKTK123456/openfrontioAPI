@@ -75,17 +75,28 @@ async function updateGameInfo(autoSetNextRun = true) {
   };
   
   // Helper: load or create .ndjson file for a given date string (YYYY-MM-DD)
-  async function loadOrCreateFile(dateStr) {
+    async function loadOrCreateFile(dateStr) {
     const filename = `logs/${dateStr}.ndjson`;
     const { data, error } = await supabase.storage.from("logs").download(filename);
-    if (error && error.status === 400) {
-      // create empty file
-      await supabase.storage.from("logs").upload(filename, new Blob([""]), { upsert: true, contentType: "application/x-ndjson" });
-      return [];
-    } else if (error) {
-      console.log(error)
-      throw new Error(`Error loading log file ${filename}: ${error.message}`);
+
+    if (error) {
+      if (error.status === 404) {
+        // File doesn't exist — create empty one
+        const { error: uploadErr } = await supabase.storage.from("logs").upload(
+          filename,
+          new Blob([""]),
+          { upsert: true, contentType: "application/x-ndjson" }
+        );
+        if (uploadErr) {
+          throw new Error(`Failed to create empty log file ${filename}: ${uploadErr.message}`);
+        }
+        return [];
+      } else {
+        // Unknown error — throw with detail
+        throw new Error(`Error loading log file ${filename}: ${JSON.stringify(error)}`);
+      }
     }
+
     const text = await data.text();
     if (!text.trim()) return [];
     return text.trim().split("\n").map(line => JSON.parse(line));
