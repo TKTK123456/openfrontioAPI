@@ -74,7 +74,6 @@ async function updateGameInfo(autoSetNextRun = true) {
     ids: await setHelpers.getSet(["info", "games", "active", "ids"]),
     ws: await mapHelpers.getMap(["info", "games", "active", "ws"]),
   };
-  
   // Helper: load or create .ndjson file for a given date string (YYYY-MM-DD)
     async function loadOrCreateFile(dateStr) {
       console.log(dateStr)
@@ -127,7 +126,7 @@ async function updateGameInfo(autoSetNextRun = true) {
   // Map date string => array of archived game IDs to append
   const dateToNewIds = new Map();
 
-  for (const currentId of active.ids) {
+  for (const currentId of active.ids.values().toArray()) {
     const wsValue = active.ws.get(currentId);
     if (!wsValue) continue;
 
