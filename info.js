@@ -54,21 +54,87 @@ export const mapHelpers = {
     kv.set(key, fullMap);
   }
 }
-async function updateGameInfo(auto) {
-  await findPublicLobby()
+async function updateGameInfo(autoSetNextRun = true) {
+  await findPublicLobby();
   let active = {
-    ids: (async () => {let out = await setHelpers.getSet(["info", "games", "active", "ids"]);return out;})(),
-    ws: (async () => {let out = await setHelpers.getMap(["info", "games", "active", "ws"]);return out;})()
+    ids: await setHelpers.getSet(["info", "games", "active", "ids"]),
+    ws: await setHelpers.getMap(["info", "games", "active", "ws"]),
+  };
+  
+  // Helper: load or create .ndjson file for a given date string (YYYY-MM-DD)
+  async function loadOrCreateFile(dateStr: string) {
+    const filename = `logs/${dateStr}.ndjson`;
+    const { data, error } = await supabase.storage.from("logs").download(filename);
+    if (error && error.status === 404) {
+      // create empty file
+      await supabase.storage.from("logs").upload(filename, new Blob([""]), { upsert: true, contentType: "application/x-ndjson" });
+      return [];
+    } else if (error) {
+      throw new Error(`Error loading log file ${filename}: ${error.message}`);
+    }
+    const text = await data!.text();
+    if (!text.trim()) return [];
+    return text.trim().split("\n").map(line => JSON.parse(line));
   }
-  for (let i = 0;i<active.ids.length;i++) {
-    let currentId = active.ids.values().next()
-    let archived = await fetch(`https://blue.openfront.io/api/w${active.ws.get(currentId)}/archived_game/${currentId}`)
-    archived = await archived.json();
-    if (archived.exists) {
-      await setHelpers.add(["info", "games", "ids"], currentId)
-      await mapHelpers.delete(["info", "games", "active", "ws"], currentId)
-      await setHelpers.delete(["info", "games", "active", "ids"], currentId)
+
+  // Helper: save the updated daily arrays back to Supabase
+  async function saveFile(dateStr: string, arrays: string[][]) {
+    const filename = `logs/${dateStr}.ndjson`;
+    const content = arrays.map(arr => JSON.stringify(arr)).join("\n") + "\n";
+    const { error } = await supabase.storage.from("logs").upload(filename, new Blob([content]), {
+      upsert: true,
+      contentType: "application/x-ndjson",
+    });
+    if (error) {
+      console.error(`Error uploading log file ${filename}:`, error);
     }
   }
-};
+
+  // Map date string => array of archived game IDs to append
+  const dateToNewIds = new Map<string, string[]>();
+
+  for (const currentId of active.ids) {
+    const wsValue = active.ws.get(currentId);
+    if (!wsValue) continue;
+
+    const res = await fetch(`https://blue.openfront.io/api/w${wsValue}/archived_game/${currentId}`);
+    const archived = await res.json();
+
+    if (archived.exists) {
+      // Parse end date from archived.gameRecord.info.end
+      // Assuming ISO string or timestamp
+      const endDateRaw = archived.gameRecord?.info?.end;
+      if (!endDateRaw) {
+        console.warn(`Missing end date for archived game ${currentId}`);
+        continue;
+      }
+
+      const endDate = new Date(endDateRaw);
+      if (isNaN(endDate.getTime())) {
+        console.warn(`Invalid end date for archived game ${currentId}: ${endDateRaw}`);
+        continue;
+      }
+
+      const dateStr = endDate.toISOString().slice(0, 10); // YYYY-MM-DD UTC date
+
+      // Add currentId to dateToNewIds map
+      if (!dateToNewIds.has(dateStr)) {
+        dateToNewIds.set(dateStr, []);
+      }
+      dateToNewIds.get(dateStr)!.push(currentId);
+
+      // Update your sets/maps as before
+      await setHelpers.add(["info", "games", "ids"], currentId);
+      await mapHelpers.delete(["info", "games", "active", "ws"], currentId);
+      await setHelpers.delete(["info", "games", "active", "ids"], currentId);
+    }
+  }
+
+  // For each date, load existing file, append new IDs, and save
+  for (const [dateStr, newIds] of dateToNewIds.entries()) {
+    const existingArrays = await loadOrCreateFile(dateStr);
+    existingArrays.push(newIds);
+    await saveFile(dateStr, existingArrays);
+  }
+}
 findPublicLobby().then(console.log);
