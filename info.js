@@ -59,6 +59,7 @@ export const mapHelpers = {
 let previousStartTimes = []
 let maxPreviousStartTimesLength = 5
 function getHuristicTime() {
+  console.log(previousStartTimes)
   if (previousStartTimes.length<2) return 10000
   while (previousStartTimes.length>maxPreviousStartTimesLength) {
     previousStartTimes.shift()
