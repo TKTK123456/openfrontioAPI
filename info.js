@@ -182,13 +182,7 @@ async function updateGameInfo({autoSetNextRun = true, served = null} = {}) {
   if (autoSetNextRun) {
     let nextTime = getHuristicTime()
     console.log(`Runing again in ${nextTime}`)
-    const ac = new AbortController();
-    Deno.serve({signal: ac.signal}, async () => {
-      //await updateGameInfo(); // with autoSetNextRun: false
-      setTimeout(updateGameInfo, nextTime, {served: ac})
-      return new Response("Updated");
-    });
-    //setTimeout(updateGameInfo, nextTime)
+    setTimeout(updateGameInfo, nextTime)
   }
 }
 findPublicLobby().then(console.log);
