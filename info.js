@@ -178,11 +178,10 @@ export async function updateGameInfo(autoSetNextRun = true) {
   }
   let waitTime = getHuristicTime()
   if (autoSetNextRun) {
-    console.log(`Runing again in ${nextTime}`)
+    console.log(`Runing again in ${waitTime}`)
     setTimeout(updateGameInfo, waitTime)
-  } else {
-    return waitTime
   }
+  return waitTime
 }
 findPublicLobby().then(console.log);
 updateGameInfo()
