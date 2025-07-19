@@ -34,4 +34,4 @@ export async function getGame(id) {
   }
   return game
 }
-
+Deno.write
