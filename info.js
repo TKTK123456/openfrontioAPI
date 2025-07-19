@@ -54,6 +54,17 @@ export const mapHelpers = {
     kv.set(key, fullMap);
   }
 }
+let lastFewStartTime = []
+async function getHuristicTime() {
+  if (lastFewStartTime.length<2) return 10000
+  let timeDifference = []
+  for (let i = 1;i<lastFewStartTime.length;i++) {
+    timeDifference.push(lastFewStartTime[i]-lastFewStartTime[i-1])
+  }
+  let totalTime = timeDifference.reduce((accumulator, currentValue) => accumulator + currentValue, 0);
+  let avrgTime = totalTime/timeDifference.length
+  return avrgTime
+}
 async function updateGameInfo(autoSetNextRun = true) {
   await findPublicLobby();
   let active = {
