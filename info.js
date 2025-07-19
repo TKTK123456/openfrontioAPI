@@ -148,7 +148,8 @@ async function updateGameInfo(autoSetNextRun = true) {
 
   // For each date, load existing file, append new IDs, and save
   for (const [dateStr, newIds] of dateToNewIds.entries()) {
-    const existingArrays = await loadOrCreateFile(dateStr);
+    const existingArrays = await loadOrCreateFile(dateStr)
+    console.log(existingArrays)
     existingArrays.push(newIds);
     await saveFile(dateStr, existingArrays);
   }
