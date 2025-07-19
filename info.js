@@ -106,6 +106,7 @@ async function updateGameInfo(autoSetNextRun = true) {
   async function saveFile(dateStr, arrays) {
     const filename = `logs/${dateStr}.ndjson`;
     const content = arrays.map(arr => JSON.stringify(arr)).join("\n") + "\n";
+    console.log(content)
     const { error } = await supabase.storage.from("logs").upload(filename, new Blob([content]), {
       upsert: true,
       contentType: "application/x-ndjson",
