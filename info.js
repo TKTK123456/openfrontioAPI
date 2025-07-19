@@ -6,7 +6,7 @@ import { Readable } from 'node:stream';
 import getDumpData from './getDumpData.js'
 import config from './config.js'
 import { createClient } from '@supabase/supabase-js'
-const supabase = createClient("https://ebnqhovfhgfrfxzexdxj.supabase.co", process.env.SUPABASE_TOKEM)
+const supabase = createClient("https://ebnqhovfhgfrfxzexdxj.supabase.co", process.env.SUPABASE_TOKEN)
 const kv = await Deno.openKv();
 export const setHelpers = {
   add: async function(key, value) {
