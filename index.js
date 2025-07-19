@@ -69,9 +69,9 @@ app.get("/info/games/ids", async (req, res) => {
   res.end(JSON.stringify(ids))
 })
 app.get("/update", async (req, res) => {
-  let autoRun = req.query?.autoRun
-  if (!autoRun) autoRun = true
-  let out = await updateGameInfo(autoRun);
+  //let autoRun = req.query?.autoRun
+  //if (!autoRun) autoRun = true
+  let out = await updateGameInfo(false);
   res.end(out)
 })
 //setInterval()
