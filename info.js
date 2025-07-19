@@ -85,7 +85,7 @@ async function updateGameInfo(autoSetNextRun = true) {
     } else if (error) {
       throw new Error(`Error loading log file ${filename}: ${error.message}`);
     }
-    const text = await data!.text();
+    const text = await data.text();
     if (!text.trim()) return [];
     return text.trim().split("\n").map(line => JSON.parse(line));
   }
