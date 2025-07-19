@@ -56,12 +56,16 @@ export const mapHelpers = {
     kv.set(key, fullMap);
   }
 }
-let lastFewStartTime = []
+let previousStartTimes = []
+let maxPreviousStartTimesLength = 5
 async function getHuristicTime() {
-  if (lastFewStartTime.length<2) return 10000
+  if (previousStartTimes.length<2) return 10000
+  while (previousStartTimes.length>maxPreviousStartTimesLength) {
+    previousStartTimes.shift()
+  }
   let timeDifference = []
-  for (let i = 1;i<lastFewStartTime.length;i++) {
-    timeDifference.push(lastFewStartTime[i]-lastFewStartTime[i-1])
+  for (let i = 1;i<previousStartTimes.length;i++) {
+    timeDifference.push(previousStartTimes[i]-previousStartTimes[i-1])
   }
   let totalTime = timeDifference.reduce((accumulator, currentValue) => accumulator + currentValue, 0);
   let avrgTime = totalTime/timeDifference.length
@@ -69,6 +73,8 @@ async function getHuristicTime() {
 }
 async function updateGameInfo(autoSetNextRun = true) {
   let publicLobbies = await findPublicLobby();
+  
+  let startTime = Date.now()
   let active = {
     ids: await setHelpers.getSet(["info", "games", "active", "ids"]),
     ws: await mapHelpers.getMap(["info", "games", "active", "ws"]),
@@ -153,7 +159,7 @@ async function updateGameInfo(autoSetNextRun = true) {
         dateToNewIds.set(dateStr, []);
       }
       dateToNewIds.get(dateStr).push(currentId);
-
+      previousStartTimes.push(gameRecord.info.start)
       // Update your sets/maps as before
       //await setHelpers.add(["info", "games", "ids"], currentId);
       await mapHelpers.delete(["info", "games", "active", "ws"], currentId);
@@ -170,6 +176,7 @@ async function updateGameInfo(autoSetNextRun = true) {
     existingArrays = existingArrays.values().toArray()
     await saveFile(dateStr, existingArrays);
   }
+  setTimeout(updateGameInfo, Math.min(getHuristicTime(), publicLobbies[publicLobbies.length-1].msUntilStart-(startTime-Date.now())>0 ? publicLobbies[publicLobbies.length-1].msUntilStart-(startTime-Date.now()) : 500))
 }
 findPublicLobby().then(console.log);
 updateGameInfo()
