@@ -72,7 +72,7 @@ app.get("/update", async (req, res) => {
   //let autoRun = req.query?.autoRun
   //if (!autoRun) autoRun = true
   let out = await updateGameInfo(false);
-  res.end(out)
+  res.end(`${out}`)
 })
 //setInterval()
 app.listen(8080)
