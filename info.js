@@ -116,7 +116,9 @@ async function updateGameInfo(autoSetNextRun = true) {
     if (archived.exists) {
       // Parse end date from archived.gameRecord.info.end
       // Assuming ISO string or timestamp
-      const endDateRaw = archived.gameRecord?.info?.end;
+      let gameRecord = await getGame(currentId)
+      gameRecord = await gameRecord.json()
+      const endDateRaw = gameRecord.info?.end;
       if (!endDateRaw) {
         console.warn(`Missing end date for archived game ${currentId}`);
         continue;
