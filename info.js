@@ -91,7 +91,7 @@ async function updateGameInfo(autoSetNextRun = true) {
   }
 
   // Helper: save the updated daily arrays back to Supabase
-  async function saveFile(dateStr: string, arrays: string[][]) {
+  async function saveFile(dateStr, arrays) {
     const filename = `logs/${dateStr}.ndjson`;
     const content = arrays.map(arr => JSON.stringify(arr)).join("\n") + "\n";
     const { error } = await supabase.storage.from("logs").upload(filename, new Blob([content]), {
