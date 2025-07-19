@@ -110,7 +110,7 @@ async function updateGameInfo(autoSetNextRun = true) {
     const wsValue = active.ws.get(currentId);
     if (!wsValue) continue;
 
-    const res = await fetch(`https://blue.openfront.io/api/w${wsValue}/archived_game/${currentId}`);
+    const res = await fetch(`https://${config.prefixs.use}${config.domain}/w${wsValue}/api/archived_game/${currentId}`);
     const archived = await res.json();
 
     if (archived.exists) {
