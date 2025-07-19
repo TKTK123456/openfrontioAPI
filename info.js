@@ -78,7 +78,7 @@ async function updateGameInfo(autoSetNextRun = true) {
   async function loadOrCreateFile(dateStr) {
     const filename = `logs/${dateStr}.ndjson`;
     const { data, error } = await supabase.storage.from("logs").download(filename);
-    if (error && error.status === 404) {
+    if (error && error.status === 400) {
       // create empty file
       await supabase.storage.from("logs").upload(filename, new Blob([""]), { upsert: true, contentType: "application/x-ndjson" });
       return [];
