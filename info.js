@@ -151,3 +151,4 @@ async function updateGameInfo(autoSetNextRun = true) {
   }
 }
 findPublicLobby().then(console.log);
+updateGameInfo()
