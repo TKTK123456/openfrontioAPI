@@ -71,10 +71,7 @@ function getHuristicTime() {
   let avrgTime = totalTime/timeDifference.length
   return avrgTime
 }
-async function updateGameInfo({autoSetNextRun = true, served = null} = {}) {
-  if (served) {
-    served.abort()
-  }
+async function updateGameInfo(autoSetNextRun = true) {
   let publicLobbies = await findPublicLobby();
   publicLobbies = publicLobbies.values().toArray()
   let startTime = Date.now()
