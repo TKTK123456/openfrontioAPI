@@ -68,15 +68,13 @@ async function getHuristicTime() {
   return avrgTime
 }
 async function updateGameInfo(autoSetNextRun = true) {
-  try {
   let publicLobbies = await findPublicLobby();
   let active = {
     ids: await setHelpers.getSet(["info", "games", "active", "ids"]),
     ws: await mapHelpers.getMap(["info", "games", "active", "ws"]),
   };
   // Helper: load or create .ndjson file for a given date string (YYYY-MM-DD)
-    async function loadOrCreateFile(dateStr) {
-      console.log(dateStr)
+  async function loadOrCreateFile(dateStr) {
   const filename = `${dateStr}.ndjson`;
   const folder = "logs";
 
@@ -86,10 +84,8 @@ async function updateGameInfo(autoSetNextRun = true) {
   });
 
   if (listErr) throw new Error(`Failed to list files: ${listErr.message}`);
-  console.log(list)
   const fileExists = list.some(f => f.name === filename);
   if (!fileExists) {
-    console.log(filename)
     const { error } = await supabase.storage.from("logs").upload(filename, new Blob([""]), {
       upsert: true,
       contentType: "application/x-ndjson",
@@ -101,8 +97,8 @@ async function updateGameInfo(autoSetNextRun = true) {
 
   // Download the file
   const { data, error } = await supabase.storage.from(folder).download(filename);
-  if (error) throw new Error(`Failed to download ${filename}: ${JSON.stringify(error)}`);
-
+  if (error) throw new Error(`Failed to download ${filename}: ${JSON.stringify(error)}`)
+    
   const text = await data.text();
   return text.trim() ? text.trim().split("\n").map(JSON.parse) : [];
 }
@@ -168,13 +164,11 @@ async function updateGameInfo(autoSetNextRun = true) {
   // For each date, load existing file, append new IDs, and save
   for (const [dateStr, newIds] of dateToNewIds.entries()) {
     console.log(`Adding ${newIds} to ${dateStr}`)
-    const existingArrays = await loadOrCreateFile(dateStr)
-    console.log(existingArrays)
+    let existingArrays = await loadOrCreateFile(dateStr)
     existingArrays.push(newIds);
+    existingArrays = new Set(existingArrays)
+    existingArrays = existingArrays.values().toArray()
     await saveFile(dateStr, existingArrays);
-  }
-  } catch (e) {
-    console.error(e)
   }
 }
 findPublicLobby().then(console.log);
