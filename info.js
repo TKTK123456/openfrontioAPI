@@ -71,7 +71,7 @@ async function updateGameInfo(autoSetNextRun = true) {
   let publicLobbies = await findPublicLobby();
   let active = {
     ids: await setHelpers.getSet(["info", "games", "active", "ids"]),
-    ws: await setHelpers.getMap(["info", "games", "active", "ws"]),
+    ws: await mapHelpers.getMap(["info", "games", "active", "ws"]),
   };
   
   // Helper: load or create .ndjson file for a given date string (YYYY-MM-DD)
