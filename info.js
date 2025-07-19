@@ -76,6 +76,7 @@ async function updateGameInfo(autoSetNextRun = true) {
   
   // Helper: load or create .ndjson file for a given date string (YYYY-MM-DD)
     async function loadOrCreateFile(dateStr) {
+      console.log(dateStr)
   const filename = `${dateStr}.ndjson`;
   const folder = "logs";
 
@@ -166,6 +167,7 @@ async function updateGameInfo(autoSetNextRun = true) {
 
   // For each date, load existing file, append new IDs, and save
   for (const [dateStr, newIds] of dateToNewIds.entries()) {
+    console.log(`Adding ${newIds} to ${dateStr}`)
     const existingArrays = await loadOrCreateFile(dateStr)
     console.log(existingArrays)
     existingArrays.push(newIds);
