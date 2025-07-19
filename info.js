@@ -1,4 +1,4 @@
-import { findGameWebSocket, findPublicLobby, getPlayer, getGame } from './fetchers.js'
+                                          import { findGameWebSocket, findPublicLobby, getPlayer, getGame } from './fetchers.js'
 import Bunzip from 'seek-bzip';
 import tar from 'tar-stream';
 import { Buffer } from 'node:buffer'; 
@@ -76,31 +76,30 @@ async function updateGameInfo(autoSetNextRun = true) {
   
   // Helper: load or create .ndjson file for a given date string (YYYY-MM-DD)
     async function loadOrCreateFile(dateStr) {
-    const filename = `logs/${dateStr}.ndjson`;
-    const { data, error } = await supabase.storage.from("logs").download(filename);
+  const filename = `${dateStr}.ndjson`;
+  const folder = "logs";
 
-    if (error) {
-      if (error.status === 404) {
-        // File doesn't exist — create empty one
-        const { error: uploadErr } = await supabase.storage.from("logs").upload(
-          filename,
-          new Blob([""]),
-          { upsert: true, contentType: "application/x-ndjson" }
-        );
-        if (uploadErr) {
-          throw new Error(`Failed to create empty log file ${filename}: ${uploadErr.message}`);
-        }
-        return [];
-      } else {
-        // Unknown error — throw with detail
-        throw new Error(`Error loading log file ${filename}: ${JSON.stringify(error)}`);
-      }
-    }
+  // Check if file exists
+  const { data: list, error: listErr } = await supabase.storage.from(folder).list("", {
+    search: filename
+  });
 
-    const text = await data.text();
-    if (!text.trim()) return [];
-    return text.trim().split("\n").map(line => JSON.parse(line));
+  if (listErr) throw new Error(`Failed to list files: ${listErr.message}`);
+
+  const fileExists = list.some(f => f.name === filename);
+  if (!fileExists) {
+    // Only create if archive exists (per your earlier message)
+    throw new Error(`Archive file ${filename} does not exist.`);
   }
+
+  // Download the file
+  const { data, error } = await supabase.storage.from(folder).download(filename);
+  if (error) throw new Error(`Failed to download ${filename}: ${JSON.stringify(error)}`);
+
+  const text = await data.text();
+  return text.trim() ? text.trim().split("\n").map(JSON.parse) : [];
+}
+
 
   // Helper: save the updated daily arrays back to Supabase
   async function saveFile(dateStr, arrays) {
