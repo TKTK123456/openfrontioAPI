@@ -88,6 +88,7 @@ async function updateGameInfo(autoSetNextRun = true) {
 
   const fileExists = list.some(f => f.name === filename);
   if (!fileExists) {
+    console.log(filename)
     const { error } = await supabase.storage.from("logs").upload(filename, new Blob([""]), {
       upsert: true,
       contentType: "application/x-ndjson",
