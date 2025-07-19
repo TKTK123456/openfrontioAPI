@@ -2,7 +2,7 @@ import { createServer } from "node:http";
 import bodyParser from "body-parser";
 import express from 'express'
 import path from 'node:path'
-import { setHelpers, mapHelpers } from './info.js'
+import { setHelpers, mapHelpers, updateGameInfo } from './info.js'
 import { findGameWebSocket, findPublicLobby, getPlayer, getGame } from './fetchers.js'
 import config from './config.js'
 const __dirname = path.resolve();
