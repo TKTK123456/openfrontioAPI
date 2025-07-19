@@ -58,7 +58,7 @@ export const mapHelpers = {
 }
 let previousStartTimes = []
 let maxPreviousStartTimesLength = 5
-async function getHuristicTime() {
+function getHuristicTime() {
   if (previousStartTimes.length<2) return 10000
   while (previousStartTimes.length>maxPreviousStartTimesLength) {
     previousStartTimes.shift()
@@ -177,6 +177,7 @@ async function updateGameInfo(autoSetNextRun = true) {
     await saveFile(dateStr, existingArrays);
   }
   if (autoSetNextRun) {
+    console.log(getHuristicTime())
     let nextTime = Math.min(getHuristicTime(), publicLobbies[publicLobbies.length-1].msUntilStart-(startTime-Date.now())>0 ? publicLobbies[publicLobbies.length-1].msUntilStart-(startTime-Date.now()) : 500)
     setTimeout(() => {
       console.log(`Setting next run for in ${nextTime}`)
