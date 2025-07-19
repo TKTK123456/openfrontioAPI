@@ -19,7 +19,7 @@ export async function findPublicLobby(webSocketAmount = 20) {
   lobbies = lobbies.lobbies
   let output = new Map()
   await Promise.all(lobbies.map(async (lobby) => {
-    output.set(lobby.gameID, await findGameWebSocket(lobby.gameID, webSocketAmount))
+    output.set(lobby.gameID, {...lobby, ws: await findGameWebSocket(lobby.gameID, webSocketAmount)})
   }));
   return output
 }
