@@ -71,7 +71,10 @@ function getHuristicTime() {
   let avrgTime = totalTime/timeDifference.length
   return avrgTime
 }
-async function updateGameInfo(autoSetNextRun = true) {
+async function updateGameInfo({autoSetNextRun = true, served = null} = {}) {
+  if (served) {
+    served.abort()
+  }
   let publicLobbies = await findPublicLobby();
   publicLobbies = publicLobbies.values().toArray()
   let startTime = Date.now()
@@ -179,9 +182,10 @@ async function updateGameInfo(autoSetNextRun = true) {
   if (autoSetNextRun) {
     let nextTime = getHuristicTime()
     console.log(`Runing again in ${nextTime}`)
-    Deno.serve(async () => {
+    const ac = new AbortController();
+    Deno.serve({signal: ac.signal}, async () => {
       //await updateGameInfo(); // with autoSetNextRun: false
-      setTimeout(updateGameInfo, nextTime)
+      setTimeout(updateGameInfo, nextTime, {served: ac})
       return new Response("Updated");
     });
     //setTimeout(updateGameInfo, nextTime)
