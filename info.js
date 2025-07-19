@@ -134,10 +134,10 @@ async function updateGameInfo(autoSetNextRun = true) {
       if (!dateToNewIds.has(dateStr)) {
         dateToNewIds.set(dateStr, []);
       }
-      dateToNewIds.get(dateStr)!.push(currentId);
+      dateToNewIds.get(dateStr).push(currentId);
 
       // Update your sets/maps as before
-      await setHelpers.add(["info", "games", "ids"], currentId);
+      //await setHelpers.add(["info", "games", "ids"], currentId);
       await mapHelpers.delete(["info", "games", "active", "ws"], currentId);
       await setHelpers.delete(["info", "games", "active", "ids"], currentId);
     }
