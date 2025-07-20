@@ -66,7 +66,7 @@ function getHuristicTime() {
   }
   let timeDifference = []
   for (let i = 1;i<previousStartTimes.length;i++) {
-    timeDifference.push(previousStartTimes[i-1]-previousStartTimes[i])
+    timeDifference.push(previousStartTimes[i]-previousStartTimes[i-1])
   }
   console.log(timeDifference) 
   let totalTime = timeDifference.reduce((acuumulator, currentValue) => accumulator + currentValue, 0)
