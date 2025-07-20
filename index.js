@@ -77,7 +77,7 @@ app.get("/data/gameIds/:start{-:end}", async (req, res) => {
   if (Object.hasOwn(req.params, "start")) {
     if (req.params.start == "all") {
       gameIds = await getAllGameIds()
-    } else if (Object.hasOwn(req.params, "end"))) {
+    } else if (Object.hasOwn(req.params, "end")) {
       let startDate = stringToDate(req.params.start)
       let endDate = stringToDate(req.params.end)
       gameIds = await getRangeGameIds(startDate, endDate)
