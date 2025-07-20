@@ -7,6 +7,8 @@ import config from './config.js'
 import { createClient } from '@supabase/supabase-js'
 const supabase = createClient("https://ebnqhovfhgfrfxzexdxj.supabase.co", process.env.SUPABASE_TOKEN)
 const kv = await Deno.openKv();
+kv.set(["number", "amountRuns"], 0)
+kv.set(["number", "startTime"], Date.now())
 export const setHelpers = {
   add: async function(key, value) {
     let fullSet = await this.getSet(key)
