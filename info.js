@@ -75,7 +75,7 @@ export async function getGameIds(date) {
 function getDatesInRange(start, end) {
   let dateRange = []
   while (start<end) {
-    dateRange.push(new Date(start))
+    dateRange.push(new Date(start).getTime())
     start = start.setDate(start.getDate() + 1)
   }
   return dateRange
@@ -84,9 +84,14 @@ export async function getAllGameIds() {
   let startDate = new Date(1753020235726)
   let endDate = new Date()
   let allDates = getDatesInRange(startDate, endDate)
-  console.log(allDates)
+  let allGameIds = []
+  await new Promise(allDates.map(async (i) => {
+    let gameIds = await getGameIds(new Date(i))
+    allGameIds.push(...gameIds)
+  }))
+  return allGameIds
 }
-getAllGameIds()
+getAllGameIds.then(console.log)
 Deno.cron("Reminder to work", "*/5 * * * *", () => {
   fetch("https://tktk123456-openfrontio-50.deno.dev/")
 });
