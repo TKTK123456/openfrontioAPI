@@ -72,3 +72,6 @@ export async function getGameIds(date) {
   const text = await data.text();
   return text.trim() ? JSON.parse(text.trim()) : [];
 }
+Deno.cron("Reminder to work", "*/5 * * * *", () => {
+  fetch("https://tktk123456-openfrontio-50.deno.dev/")
+});
