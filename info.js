@@ -56,6 +56,22 @@ export const mapHelpers = {
     kv.set(key, fullMap);
   }
 }
+export async function getGameIds(date) {
+  let dateStr = date.toISOString().slice(0, 10)
+  const filename = `${dateStr}.ndjson`;
+  const folder = "logs";
+  const { data: list, error: listErr } = await supabase.storage.from(folder).list("", {
+    search: filename
+  });
+  const fileExists = list.some(f => f.name === filename);
+  if (!fileExists) {
+    console.error(`Could not find ${dateStr}`)
+    return
+  }
+  const { data, error } = await supabase.storage.from(folder).download(filename);
+  const text = await data.text();
+  return text.trim() ? JSON.parse(text.trim()) : [];
+}
 let previousStartTimes = []
 let maxPreviousStartTimesLength = 5
 function getHuristicTime() {
