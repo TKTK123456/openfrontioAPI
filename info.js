@@ -89,6 +89,7 @@ export async function getRangeGameIds(start, end) {
   let allGameIds = []
   await Promise.all(dates.map(async (i) => {
     let gameIds = await getGameIds(new Date(i))
+    console.log(gameIds)
     allGameIds.push(...gameIds)
   }))
   return allGameIds
@@ -96,7 +97,7 @@ export async function getRangeGameIds(start, end) {
 export async function getAllGameIds() {
   let startDate = new Date(1753020235726)
   let endDate = new Date()
-  let allGameIds = await getDateRange(startDate, endDate)
+  let allGameIds = await getRangeGameIds(startDate, endDate)
   return allGameIds
 }
 Deno.cron("Reminder to work", "*/5 * * * *", () => {
