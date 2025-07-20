@@ -192,4 +192,4 @@ export async function updateGameInfo(autoSetNextRun = true) {
   return waitTime
 }
 findPublicLobby().then(console.log);
-updateGameInfo(true)
+await updateGameInfo(true)
