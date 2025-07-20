@@ -144,6 +144,8 @@ export async function updateGameInfo(autoSetNextRun = true) {
       const endDateRaw = gameRecord.info?.end;
       if (!endDateRaw) {
         console.warn(`Missing end date for archived game ${currentId}`);
+        await mapHelpers.delete(["info", "games", "active", "ws"], currentId);
+        await setHelpers.delete(["info", "games", "active", "ids"], currentId);
         continue;
       }
 
