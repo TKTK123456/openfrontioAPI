@@ -114,7 +114,6 @@ export async function updateGameInfo(autoSetNextRun = true) {
   async function saveFile(dateStr, arrays) {
     const filename = `${dateStr}.ndjson`; // ✅ FIXED (was: logs/${dateStr}.ndjson)
     const content = JSON.stringify(arrays)
-    console.log(content);
     const { error } = await supabase.storage.from("logs").upload(filename, new Blob([content]), {
       upsert: true,
       contentType: "application/x-ndjson",
@@ -122,7 +121,6 @@ export async function updateGameInfo(autoSetNextRun = true) {
     if (error) {
       console.error(`Error uploading log file ${filename}:`, error);
     }
-    console.log(`Uploaded file: ${filename}`)
   }
 
   // Map date string => array of archived game IDs to append
@@ -171,7 +169,7 @@ export async function updateGameInfo(autoSetNextRun = true) {
 
   // For each date, load existing file, append new IDs, and save
   for (const [dateStr, newIds] of dateToNewIds.entries()) {
-    console.log(`Adding ${newIds} to ${dateStr}`)
+    console.log(`Adding ${newIds} to ${dateStr}.ndjson`)
     let existingArrays = await loadOrCreateFile(dateStr)
     existingArrays.push(newIds);
     existingArrays = new Set(existingArrays)
