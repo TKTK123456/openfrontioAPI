@@ -2,7 +2,7 @@ import { createServer } from "node:http";
 import bodyParser from "body-parser";
 import express from 'express'
 import path from 'node:path'
-import { setHelpers, mapHelpers, updateGameInfo } from './info.js'
+import { setHelpers, mapHelpers, getGameIds } from './info.js'
 import { findGameWebSocket, findPublicLobby, getPlayer, getGame } from './fetchers.js'
 import config from './config.js'
 const __dirname = path.resolve();
@@ -67,13 +67,6 @@ app.get("/info/games/ids", async (req, res) => {
   res.setHeader("Content-Type", "application/json")
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.end(JSON.stringify(ids))
-})
-app.get("/update", async (req, res) => {
-  //let autoRun = req.query?.autoRun
-  //if (!autoRun) autoRun = true;
-  res.setHeader("Access-Control-Allow-Origin", "*");
-  let out = await updateGameInfo(false);
-  res.end(`${out}`)
 })
 //setInterval()
 app.listen(8080)
