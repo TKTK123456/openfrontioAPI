@@ -175,7 +175,12 @@ export async function updateGameInfo(autoSetNextRun = true) {
     } else {
       let game = await fetch(`https://${config.prefixs.use}${config.domain}/w${wsValue}/api/game/${currentId}`);
       game = await game.json();
-      console.log(game)
+      if (game.error) {
+        if (game.error === "Game not found") {
+          await mapHelpers.delete(["info", "games", "active", "ws"], currentId);
+          await setHelpers.delete(["info", "games", "active", "ids"], currentId);
+        }
+      }
     }
   }
 
