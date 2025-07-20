@@ -34,8 +34,8 @@ jobs:
       - name: Upload to Deno Deploy
         uses: denoland/deployctl@v1
         with:
-          project: "tktk123456-openfrontio-50"
-          entrypoint: "info.js"
+          project: "tktk123456-openfrontio-51"
+          entrypoint: "index.js"
           root: ""
           
           
