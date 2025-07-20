@@ -73,7 +73,6 @@ function getHuristicTime() {
   return avrgTime
 }
 export async function updateGameInfo(autoSetNextRun = true) {
-  console.log(`Updating game info`)
   let publicLobbies = await findPublicLobby();
   publicLobbies = publicLobbies.values().toArray()
   let startTime = Date.now()
