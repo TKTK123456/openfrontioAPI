@@ -2,7 +2,7 @@ import { createServer } from "node:http";
 import bodyParser from "body-parser";
 import express from 'express'
 import path from 'node:path'
-import { setHelpers, mapHelpers, getGameIds, getAllGameIds } from './info.js'
+import { setHelpers, mapHelpers, getGameIds, getAllGameIds, getRangeGameIds } from './info.js'
 import { findGameWebSocket, findPublicLobby, getPlayer, getGame } from './fetchers.js'
 import config from './config.js'
 const __dirname = path.resolve();
@@ -72,8 +72,18 @@ app.get("/data/gameIds/:start{-:end}", async (req, res) => {
   res.setHeader("Content-Type", "application/json")
   res.setHeader("Access-Control-Allow-Origin", "*");
   let gameIds = []
-  if (req.params.start == "all") {
-    gameIds = await getAllGameIds()
+  const stringToDate = (string) => new Date(Date.UTC(string.slice(0,4), string.slice(4,6), string.slice(6)))
+  if (Object.hasOwn(req.params, "start")) {
+    if (req.params.start == "all") {
+      gameIds = await getAllGameIds()
+    } else if (Object.hasOwn(req.params, "end"))) {
+      let startDate = stringToDate(req.params.start)
+      let endDate = stringToDate(req.params.end)
+      gameIds = await getRangeGameIds(startDate, endDate)
+    } else {
+      let startDate = stringToDate(req.params.start)
+      gameIds = getGameIds(startDate)
+    }
   }
   res.end(JSON.stringify(gameIds))
 })
