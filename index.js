@@ -69,11 +69,13 @@ app.get("/info/games/ids", async (req, res) => {
   res.end(JSON.stringify(ids))
 })
 app.get("/data/gameIds/:start{-:end}", async (req, res) => {
-  console.log(req.params)
-  let allGameIds = await getAllGameIds()
   res.setHeader("Content-Type", "application/json")
   res.setHeader("Access-Control-Allow-Origin", "*");
-  res.end(JSON.stringify(allGameIds))
+  let gameIds
+  if (req.params.start == "all") {
+    gameIds = await getAllGameIds()
+  }
+  res.end(JSON.stringify(gameIds))
 })
 //setInterval()
 app.listen(8080)
