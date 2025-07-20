@@ -71,7 +71,10 @@ function getHuristicTime() {
   let avrgTime = totalTime/timeDifference.length
   return avrgTime
 }
+let updatingGameInfo = false
 export async function updateGameInfo(autoSetNextRun = true) {
+  if (updatingGameInfo) return 10000
+  updatingGameInfo = true
   let publicLobbies = await findPublicLobby();
   publicLobbies = publicLobbies.values().toArray()
   let startTime = Date.now()
@@ -179,6 +182,7 @@ export async function updateGameInfo(autoSetNextRun = true) {
   let timeTaken = startTime - Date.now()
   let lobbiesTimesToStart = publicLobbies.map(lobby => ((lobby.msUntilStart-timeTaken>0) ? lobby.msUntilStart-timeTaken : 0))
   let waitTime = Math.min(...lobbiesTimesToStart)
+  updatingGameInfo = false
   if (autoSetNextRun) {
     console.log(`Runing again in ${waitTime}ms`)
     setTimeout(updateGameInfo, waitTime)
