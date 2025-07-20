@@ -71,7 +71,7 @@ app.get("/info/games/ids", async (req, res) => {
 app.get("/data/gameIds/:start{-:end}", async (req, res) => {
   res.setHeader("Content-Type", "application/json")
   res.setHeader("Access-Control-Allow-Origin", "*");
-  let gameIds
+  let gameIds = []
   if (req.params.start == "all") {
     gameIds = await getAllGameIds()
   }
