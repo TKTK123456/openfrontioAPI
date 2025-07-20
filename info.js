@@ -59,20 +59,16 @@ export const mapHelpers = {
 let previousStartTimes = []
 let maxPreviousStartTimesLength = 5
 function getHuristicTime() {
-  console.log(previousStartTimes)
   if (previousStartTimes.length<2) return 10000
   while (previousStartTimes.length>maxPreviousStartTimesLength) {
     previousStartTimes.shift()
   }
   let timeDifference = []
   for (let i = 1;i<previousStartTimes.length;i++) {
-    timeDifference.push(previousStartTimes[i]-previousStartTimes[i-1])
-  }
-  console.log(timeDifference) 
+    timeDifference.push(Math.abs(previousStartTimes[i]-previousStartTimes[i-1]))
+  } 
   let totalTime = timeDifference.reduce((accumulator, currentValue) => accumulator + currentValue, 0)
-  console.log(totalTime)
   let avrgTime = totalTime/timeDifference.length
-  console.log(avrgTime)
   return avrgTime
 }
 export async function updateGameInfo(autoSetNextRun = true) {
@@ -179,14 +175,16 @@ export async function updateGameInfo(autoSetNextRun = true) {
     let existingArrays = await loadOrCreateFile(dateStr)
     existingArrays.push(newIds);
     existingArrays = new Set(existingArrays)
-    existingArrays = existingArrays.values().toArray()
+    existingArrays = existingArrays.values().toArray().flat()
     await saveFile(dateStr, existingArrays);
   }
-  let waitTime = getHuristicTime()
+  let timeTaken = startTime - Date.now()
+  let lobbiesTimesToStart = publicLobbies.map(lobby => ((lobby.msUntilStart-timeTaken>0) ? lobby.msUntilStart-timeTaken : 0))
+  let waitTime = lobbiesTimesToStart
   if (autoSetNextRun) {
     console.log(`Runing again in ${waitTime}`)
     setTimeout(updateGameInfo, waitTime)
-  }
+  } else console.log(`Suggested wait ${waitTime}`)
   return waitTime
 }
 findPublicLobby().then(console.log);
