@@ -172,6 +172,8 @@ export async function updateGameInfo(autoSetNextRun = true) {
       //await setHelpers.add(["info", "games", "ids"], currentId);
       await mapHelpers.delete(["info", "games", "active", "ws"], currentId);
       await setHelpers.delete(["info", "games", "active", "ids"], currentId);
+    } else {
+      console.log(`${currentId} is active on ${wsValue}`)
     }
   }
 
