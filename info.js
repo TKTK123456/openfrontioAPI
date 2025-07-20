@@ -80,15 +80,19 @@ function getDatesInRange(start, end) {
   }
   return dateRange
 }
-export async function getAllGameIds() {
-  let startDate = new Date(1753020235726)
-  let endDate = new Date()
-  let allDates = getDatesInRange(startDate, endDate)
+export async function getRangeGameIds(start, end) {
+  let dates = getDatesInRange(start, end)
   let allGameIds = []
-  await Promise.all(allDates.map(async (i) => {
+  await Promise.all(dates.map(async (i) => {
     let gameIds = await getGameIds(new Date(i))
     allGameIds.push(...gameIds)
   }))
+  return allGameIds
+}
+export async function getAllGameIds() {
+  let startDate = new Date(1753020235726)
+  let endDate = new Date()
+  let allGameIds = await getRangeGameIds(startDate, endDate)
   return allGameIds
 }
 Deno.cron("Reminder to work", "*/5 * * * *", () => {
