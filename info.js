@@ -186,10 +186,9 @@ export async function updateGameInfo(autoSetNextRun = true) {
   updatingGameInfo = false
   if (autoSetNextRun) {
     console.log(`Runing again in ${waitTime}ms`)
-    setTimeout(updateGameInfo, waitTime)
+    await new Promise(() => setTimeout(updateGameInfo, waitTime))
   } else console.log(`Suggested wait ${waitTime}ms`)
   return waitTime
 }
 findPublicLobby().then(console.log);
-updateGameInfo(false)
-await new Promise(() => setTimeout(console.log, 10000, "hi"))
+updateGameInfo(true)
