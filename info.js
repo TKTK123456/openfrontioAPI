@@ -113,7 +113,7 @@ export async function updateGameInfo(autoSetNextRun = true) {
   // Helper: save the updated daily arrays back to Supabase
   async function saveFile(dateStr, arrays) {
     const filename = `${dateStr}.ndjson`; // ✅ FIXED (was: logs/${dateStr}.ndjson)
-    const content = arrays.map(arr => JSON.stringify(arr)).join("\n") + "\n";
+    const content = JSON.stringify(arrays)
     console.log(content);
     const { error } = await supabase.storage.from("logs").upload(filename, new Blob([content]), {
       upsert: true,
@@ -180,7 +180,7 @@ export async function updateGameInfo(autoSetNextRun = true) {
   }
   let timeTaken = startTime - Date.now()
   let lobbiesTimesToStart = publicLobbies.map(lobby => ((lobby.msUntilStart-timeTaken>0) ? lobby.msUntilStart-timeTaken : 0))
-  let waitTime = lobbiesTimesToStart
+  let waitTime = Math.min(...lobbiesTimesToStart)
   if (autoSetNextRun) {
     console.log(`Runing again in ${waitTime}`)
     setTimeout(updateGameInfo, waitTime)
