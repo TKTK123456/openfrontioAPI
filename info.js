@@ -141,16 +141,19 @@ export async function updateGameInfo(autoSetNextRun = true) {
     if (archived.exists) {
       // Parse end date from archived.gameRecord.info.end
       // Assuming ISO string or timestamp
-      let gameRecord = await getGame(currentId)
-      gameRecord = await gameRecord.json()
-      const endDateRaw = gameRecord.info?.end;
+      let gameRecord = archived?.gameRecord
+      let endDateRaw = gameRecord?.info?.end;
       if (!endDateRaw) {
-        console.warn(`Missing end date for archived game ${currentId}`);
-        await mapHelpers.delete(["info", "games", "active", "ws"], currentId);
-        await setHelpers.delete(["info", "games", "active", "ids"], currentId);
-        continue;
+        gameRecord = await getGame(currentId)
+        gameRecord = await gameRecord.json()
+        endDateRaw = gameRecord?.info?.end;
+        if (!endDateRaw) {
+          console.warn(`Missing end date for archived game ${currentId}`);
+          await mapHelpers.delete(["info", "games", "active", "ws"], currentId);
+          await setHelpers.delete(["info", "games", "active", "ids"], currentId);
+          continue;
+        }
       }
-
       const endDate = new Date(endDateRaw);
       if (isNaN(endDate.getTime())) {
         console.warn(`Invalid end date for archived game ${currentId}: ${endDateRaw}`);
