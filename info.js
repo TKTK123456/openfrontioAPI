@@ -191,8 +191,8 @@ export async function updateGameInfo(autoSetNextRun = true) {
   return waitTime
 }
 findPublicLobby().then(console.log);
-await updateGameInfo(true)
-Deno.serve(() => new Response("Hello, world!"));
 Deno.cron("Reminder to work", "*/5 * * * *", () => {
   fetch("https://tktk123456-openfrontio-50.deno.dev/")
 });
+await updateGameInfo(true)
+Deno.serve(() => new Response("Hello, world!"));
