@@ -3,7 +3,6 @@ import Bunzip from 'seek-bzip';
 import tar from 'tar-stream';
 import { Buffer } from 'node:buffer'; 
 import { Readable } from 'node:stream';
-import getDumpData from './getDumpData.js'
 import config from './config.js'
 import { createClient } from '@supabase/supabase-js'
 const supabase = createClient("https://ebnqhovfhgfrfxzexdxj.supabase.co", process.env.SUPABASE_TOKEN)
