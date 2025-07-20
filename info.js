@@ -182,9 +182,9 @@ export async function updateGameInfo(autoSetNextRun = true) {
   let lobbiesTimesToStart = publicLobbies.map(lobby => ((lobby.msUntilStart-timeTaken>0) ? lobby.msUntilStart-timeTaken : 0))
   let waitTime = Math.min(...lobbiesTimesToStart)
   if (autoSetNextRun) {
-    console.log(`Runing again in ${waitTime}`)
+    console.log(`Runing again in ${waitTime}ms`)
     setTimeout(updateGameInfo, waitTime)
-  } else console.log(`Suggested wait ${waitTime}`)
+  } else console.log(`Suggested wait ${waitTime}ms`)
   return waitTime
 }
 findPublicLobby().then(console.log);
