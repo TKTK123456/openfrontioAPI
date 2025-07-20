@@ -73,7 +73,6 @@ app.get("/data/gameIds/:start{-:end}", async (req, res) => {
   res.setHeader("Access-Control-Allow-Origin", "*");
   let gameIds = []
   const stringToDate = (string) => new Date(Date.UTC(string.slice(0,4), string.slice(4,6), string.slice(6)))
-  console.log(Object.hasOwn(req.params, "start"))
   if (Object.hasOwn(req.params, "start")) {
     if (req.params.start == "all") {
       gameIds = await getAllGameIds()
@@ -82,9 +81,7 @@ app.get("/data/gameIds/:start{-:end}", async (req, res) => {
       let endDate = stringToDate(req.params.end)
       gameIds = await getRangeGameIds(startDate, endDate)
     } else {
-      console.log(req.params.start)
       let startDate = stringToDate(req.params.start)
-      console.log(startDate)
       gameIds = await getGameIds(startDate)
     }
   }
