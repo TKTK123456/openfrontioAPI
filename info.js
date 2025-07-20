@@ -179,7 +179,7 @@ export async function updateGameInfo(autoSetNextRun = true) {
     existingArrays = existingArrays.values().toArray().flat()
     await saveFile(dateStr, existingArrays);
   }
-  let timeTaken = startTime - Date.now()
+  let timeTaken = Date.now() - startTime
   let lobbiesTimesToStart = publicLobbies.map(lobby => ((lobby.msUntilStart-timeTaken>0) ? lobby.msUntilStart-timeTaken : 0))
   let waitTime = Math.min(...lobbiesTimesToStart)
   updatingGameInfo = false
