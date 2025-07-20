@@ -74,7 +74,7 @@ function getHuristicTime() {
 }
 let updatingGameInfo = false
 export async function updateGameInfo(autoSetNextRun = true) {
-  console.log(`Updating gameID's`)
+  console.log(`Updating gameIDs`)
   if (updatingGameInfo) return 10000
   updatingGameInfo = true
   let publicLobbies = await findPublicLobby();
