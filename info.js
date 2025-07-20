@@ -72,18 +72,20 @@ export async function getGameIds(date) {
   const text = await data.text();
   return text.trim() ? JSON.parse(text.trim()) : [];
 }
-function getDatesInRange(start, end) {
-  let dateRange = []
-  start = new Date(start)
-  end = new Date(end)
-  while (start.getTime()<=end.getTime()||start.getDate()<=end.getDate()) {
-    dateRange.push(new Date(start.getTime()))
-    start = start.setDate(start.getDate() + 1)
+function getDateRange(startDate, endDate) {
+  const dates = [];
+  let currentDate = new Date(startDate); // Create a new Date object from the start date
+
+  while (currentDate <= endDate) {
+    dates.push(new Date(currentDate)); // Push a copy of the current date to the array
+    currentDate.setDate(currentDate.getDate() + 1); // Increment the date by one day
   }
-  return dateRange
+
+  return dates;
 }
+
 export async function getRangeGameIds(start, end) {
-  let dates = getDatesInRange(start, end)
+  let dates = getDateRange(start, end)
   let allGameIds = []
   await Promise.all(dates.map(async (i) => {
     let gameIds = await getGameIds(new Date(i))
@@ -94,7 +96,7 @@ export async function getRangeGameIds(start, end) {
 export async function getAllGameIds() {
   let startDate = new Date(1753020235726)
   let endDate = new Date()
-  let allGameIds = await getRangeGameIds(startDate, endDate)
+  let allGameIds = await getDateRange(startDate, endDate)
   return allGameIds
 }
 Deno.cron("Reminder to work", "*/5 * * * *", () => {
