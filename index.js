@@ -68,7 +68,8 @@ app.get("/info/games/ids", async (req, res) => {
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.end(JSON.stringify(ids))
 })
-app.get("/data/gameIds/all", async (req, res) => {
+app.get("/data/gameIds/:start{-:end}", async (req, res) => {
+  console.log(req.params)
   let allGameIds = await getAllGameIds()
   res.setHeader("Content-Type", "application/json")
   res.setHeader("Access-Control-Allow-Origin", "*");
