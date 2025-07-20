@@ -74,8 +74,8 @@ export async function getGameIds(date) {
 }
 function getDatesInRange(start, end) {
   let dateRange = []
-  while (start<end) {
-    dateRange.push(new Date(start).getTime())
+  while (start.getTime()<=end.getTime()||start.getDate()<=end.getDate()) {
+    dateRange.push(new Date(start.getTime()))
     start = start.setDate(start.getDate() + 1)
   }
   return dateRange
