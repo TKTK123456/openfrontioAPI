@@ -72,7 +72,9 @@ export async function getGameIds(date) {
   const text = await data.text();
   return text.trim() ? JSON.parse(text.trim()) : [];
 }
-const getDatesInRange = (min, max) => Array((max-min)/86400000).fill(0).map((_, i) => new Date((new Date()).setUTCDate(min.getUTCDate() + i)))
+function getDatesInRange(start, end) {
+  console.log(start-end)
+}
 export async function getAllGameIds() {
   let startDate = new Date(1753020235726)
   let endDate = new Date()
