@@ -91,7 +91,6 @@ export async function getAllGameIds() {
   }))
   return allGameIds
 }
-getAllGameIds().then(console.log)
 Deno.cron("Reminder to work", "*/5 * * * *", () => {
   fetch("https://tktk123456-openfrontio-50.deno.dev/")
 });
