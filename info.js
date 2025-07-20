@@ -73,7 +73,12 @@ export async function getGameIds(date) {
   return text.trim() ? JSON.parse(text.trim()) : [];
 }
 function getDatesInRange(start, end) {
-  console.log(start-end)
+  let dateRange = []
+  while (start<end) {
+    dateRange.push(new Date(start))
+    start = start.setDate(start.getDate() + 1)
+  }
+  return dateRange
 }
 export async function getAllGameIds() {
   let startDate = new Date(1753020235726)
