@@ -70,7 +70,8 @@ app.get("/info/games/ids", async (req, res) => {
 })
 app.get("/update", async (req, res) => {
   //let autoRun = req.query?.autoRun
-  //if (!autoRun) autoRun = true
+  //if (!autoRun) autoRun = true;
+  res.setHeader("Access-Control-Allow-Origin", "*");
   let out = await updateGameInfo(false);
   res.end(`${out}`)
 })
