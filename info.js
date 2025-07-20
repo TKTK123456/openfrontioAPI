@@ -180,7 +180,7 @@ export async function updateGameInfo(autoSetNextRun = true) {
     await saveFile(dateStr, existingArrays);
   }
   let timeTaken = Date.now() - startTime
-  let lobbiesTimesToStart = publicLobbies.map(lobby => [lobby.msUntilStart,((lobby.numClients-lobby.gameConfig.maxPlayers)/1.75)*1000]).flat()
+  let lobbiesTimesToStart = publicLobbies.map(lobby => [lobby.msUntilStart,((lobby.gameConfig.maxPlayers-lobby.numClients)/1.75)*1000]).flat()
   console.log(lobbiesTimesToStart)
   lobbiesTimesToStart = lobbiesTimesToStart.map(time => (time-timeTaken>0 ? time-timeTaken : 500))
   console.log(lobbiesTimesToStart)
