@@ -192,3 +192,4 @@ export async function updateGameInfo(autoSetNextRun = true) {
 }
 findPublicLobby().then(console.log);
 updateGameInfo(false)
+await new Promise(() => setTimeout(console.log, 10000, "hi"))
