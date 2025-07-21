@@ -87,12 +87,22 @@ app.get("/data/gameIds/:start{-:end}", async (req, res) => {
   }
   res.end(JSON.stringify(gameIds))
 })
-app.get("/map/:type", async (req, res) => {
+app.get("/map/:name", async (req, res) => {
   res.setHeader("Content-Type", "application/json")
   res.setHeader("Access-Control-Allow-Origin", "*");
-  let out = await fetch("https://tktk123456-openfrontio-51.deno.dev/data/gameIds/all")
-  out = await out.text();
-  res.end(out)
+  let gameIds = await getAllGameIds()
+  for (let id of gameIds) {
+    const response = await fetch(`https://api.openfront.io/game/${id}`);
+    let res = await response.json()
+    let mapName = res?.info?.config?.map
+    if (!mapName) {
+      continue
+    }
+    if (mapName == req.params.name) {
+      res.end(res)
+    }
+  }
+  res.end(gameIds)
 })
 //setInterval()
 app.listen(8080)
