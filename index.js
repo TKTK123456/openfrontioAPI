@@ -99,7 +99,7 @@ app.get("/map/:name", async (req, res) => {
       continue
     }
     if (mapName == req.params.name) {
-      res.end(resp)
+      res.end(JSON.stringify(resp))
     }
   }
   res.end(gameIds)
