@@ -87,6 +87,11 @@ app.get("/data/gameIds/:start{-:end}", async (req, res) => {
   }
   res.end(JSON.stringify(gameIds))
 })
+app.get("/map/:type", async (req, res) => {
+  res.setHeader("Content-Type", "application/json")
+  res.setHeader("Access-Control-Allow-Origin", "*");
+  fetch("/data/gameIds/all").then(console.log)
+})
 //setInterval()
 app.listen(8080)
 /*const server = createServer(async (req, res) => {
