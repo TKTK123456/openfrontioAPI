@@ -93,13 +93,13 @@ app.get("/map/:name", async (req, res) => {
   let gameIds = await getAllGameIds()
   for (let id of gameIds) {
     const response = await fetch(`https://api.openfront.io/game/${id}`);
-    let res = await response.json()
-    let mapName = res?.info?.config?.gameMap
+    let resp = await response.json()
+    let mapName = resp?.info?.config?.gameMap
     if (!mapName) {
       continue
     }
     if (mapName == req.params.name) {
-      res.end(res)
+      res.end(resp)
     }
   }
   res.end(gameIds)
