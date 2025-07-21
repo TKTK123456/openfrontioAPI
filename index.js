@@ -90,7 +90,9 @@ app.get("/data/gameIds/:start{-:end}", async (req, res) => {
 app.get("/map/:type", async (req, res) => {
   res.setHeader("Content-Type", "application/json")
   res.setHeader("Access-Control-Allow-Origin", "*");
-  fetch("https://tktk123456-openfrontio-51.deno.dev/data/gameIds/all").then(console.log)
+  let out = await fetch("https://tktk123456-openfrontio-51.deno.dev/data/gameIds/all")
+  out = await out.text();
+  res.end(out)
 })
 //setInterval()
 app.listen(8080)
