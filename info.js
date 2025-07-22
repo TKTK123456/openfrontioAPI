@@ -59,8 +59,8 @@ export const mapHelpers = {
 }
 let clientsToTime = [3]
 function getAvrgTimeRaito(currentClientsToTime = false) {
-  if (currentClientsToTime) clientsToTime.push(currentClientsToTime)
-  if (clientsToTime.length<2) return (currentClientsToTime ? currentClientsToTime : 3)
+  if (currentClientsToTime) clientsToTime.push(...currentClientsToTime)
+  if (clientsToTime.length<2) return (currentClientsToTime ? Math.min(...currentClientsToTime) : 3)
   let totalTime = clientsToTime.reduce((accumulator, currentValue) => accumulator + currentValue, 0)
   let avrgTime = totalTime/clientsToTime.length
   return avrgTime
@@ -188,7 +188,7 @@ export async function updateGameInfo(autoSetNextRun = true) {
     await saveFile(dateStr, existingArrays);
   }
   let timeTaken = Date.now() - startTime
-  let timePerClient = getAvrgTimeRaito(lobby.numClients/(60000-lobby.msUntilStart))
+  let timePerClient = getAvrgTimeRaito(publicLobbies.map(lobby => lobby.numClients/(60000-lobby.msUntilStart)))
   console.log(`Average time per client join: ${timePerClient}ms`)
   let lobbiesTimesToStart = publicLobbies.map(lobby => [lobby.msUntilStart,(lobby.gameConfig.maxPlayers-lobby.numClients)*timePerClient]).flat()
   lobbiesTimesToStart = lobbiesTimesToStart.map(time => (time-timeTaken>0 ? time-timeTaken : 500))
