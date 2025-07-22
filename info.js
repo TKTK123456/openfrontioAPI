@@ -190,6 +190,7 @@ export async function updateGameInfo(autoSetNextRun = true) {
   let timeTaken = Date.now() - startTime
   let timePerClient = getAvrgTimeRaito(publicLobbies.map(lobby => lobby.numClients/(60000-lobby.msUntilStart)))
   console.log(`Average time per client join: ${timePerClient}ms`)
+  console.log(clientsToTime)
   let lobbiesTimesToStart = publicLobbies.map(lobby => [lobby.msUntilStart,(lobby.gameConfig.maxPlayers-lobby.numClients)*timePerClient]).flat()
   lobbiesTimesToStart = lobbiesTimesToStart.map(time => (time-timeTaken>0 ? time-timeTaken : 500))
   let waitTime = Math.min(...lobbiesTimesToStart)
