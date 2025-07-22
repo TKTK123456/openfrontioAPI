@@ -57,19 +57,12 @@ export const mapHelpers = {
     kv.set(key, fullMap);
   }
 }
-let previousStartTimes = []
-let maxPreviousStartTimesLength = 5
-function getHuristicTime() {
-  if (previousStartTimes.length<2) return 10000
-  while (previousStartTimes.length>maxPreviousStartTimesLength) {
-    previousStartTimes.shift()
-  }
-  let timeDifference = []
-  for (let i = 1;i<previousStartTimes.length;i++) {
-    timeDifference.push(Math.abs(previousStartTimes[i]-previousStartTimes[i-1]))
-  } 
-  let totalTime = timeDifference.reduce((accumulator, currentValue) => accumulator + currentValue, 0)
-  let avrgTime = totalTime/timeDifference.length
+let clientsToTime = [3]
+function getAvrgTimeRaito(currentClientsToTime = false) {
+  if (currentClientsToTime) clientsToTime.push(currentClientsToTime)
+  if (clientsToTime.length<2) return (currentClientsToTime ? currentClientsToTime : 3)
+  let totalTime = clientsToTime.reduce((accumulator, currentValue) => accumulator + currentValue, 0)
+  let avrgTime = totalTime/clientsToTime.length
   return avrgTime
 }
 let updatingGameInfo = false
@@ -168,7 +161,6 @@ export async function updateGameInfo(autoSetNextRun = true) {
         dateToNewIds.set(dateStr, []);
       }
       dateToNewIds.get(dateStr).push(currentId);
-      previousStartTimes.push(gameRecord.info.start)
       // Update your sets/maps as before
       //await setHelpers.add(["info", "games", "ids"], currentId);
       await mapHelpers.delete(["info", "games", "active", "ws"], currentId);
@@ -196,7 +188,8 @@ export async function updateGameInfo(autoSetNextRun = true) {
     await saveFile(dateStr, existingArrays);
   }
   let timeTaken = Date.now() - startTime
-  let lobbiesTimesToStart = publicLobbies.map(lobby => [lobby.msUntilStart,((lobby.gameConfig.maxPlayers-lobby.numClients)/3)*1000]).flat()
+  let timePerClient = getAvrgTimeRaito(lobby.numClients/(60000-lobby.msUntilStart))
+  let lobbiesTimesToStart = publicLobbies.map(lobby => [lobby.msUntilStart,(lobby.gameConfig.maxPlayers-lobby.numClients)*timePerClient]).flat()
   lobbiesTimesToStart = lobbiesTimesToStart.map(time => (time-timeTaken>0 ? time-timeTaken : 500))
   let waitTime = Math.min(...lobbiesTimesToStart)
   updatingGameInfo = false
