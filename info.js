@@ -129,7 +129,7 @@ export async function updateGameInfo(autoSetNextRun = true) {
     if (!wsValue) continue;
 
     const res = await fetch(`https://${config.prefixs.use}${config.domain}/w${wsValue}/api/archived_game/${currentId}`);
-    console.log(`https://${config.prefixs.use}${config.domain}/w${wsValue}/api/archived_game/${currentId}`)
+    //console.log(`https://${config.prefixs.use}${config.domain}/w${wsValue}/api/archived_game/${currentId}`)
     const archived = await res.json();
 
     if (archived.exists) {
