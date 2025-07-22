@@ -167,7 +167,7 @@ export async function updateGameInfo(autoSetNextRun = true) {
       await setHelpers.delete(["info", "games", "active", "ids"], currentId);
     } else {
       let game = await fetch(`https://${config.prefixs.use}${config.domain}/w${wsValue}/api/game/${currentId}`);
-      console.log(`https://${config.prefixs.use}${config.domain}/w${wsValue}/api/game/${currentId}`/)
+      //console.log(`https://${config.prefixs.use}${config.domain}/w${wsValue}/api/game/${currentId}`/)
       game = await game.json();
       if (game.error) {
         if (game.error === "Game not found") {
