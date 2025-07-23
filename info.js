@@ -59,11 +59,11 @@ export const mapHelpers = {
 let defaultClientsToTime = await kv.get(["default", "clientsToTime"])
 defaultClientsToTime = defaultClientsToTime.value
 let clientsToTime = [defaultClientsToTime]
-console.log(clientsToTime)
-function getAvrgTimeRaito(currentClientsToTime = false) {
+async function getAvrgTimeRaito(currentClientsToTime = false) {
   if (currentClientsToTime) clientsToTime.push(...currentClientsToTime)
   if (clientsToTime.length<2) return (currentClientsToTime ? Math.min(...currentClientsToTime) : defaultClientsToTime)
   let totalTime = clientsToTime.reduce((accumulator, currentValue) => accumulator + currentValue, 0)
+  console.log(clientsToTime)
   let avrgTime = totalTime/clientsToTime.length
   defaultClientsToTime = avrgTime
   kv.set(["default", "clientsToTime"], defaultClientsToTime)
@@ -192,7 +192,7 @@ export async function updateGameInfo(autoSetNextRun = true) {
     await saveFile(dateStr, existingArrays);
   }
   let timeTaken = Date.now() - startTime
-let timePerClient = getAvrgTimeRaito(
+let timePerClient = await getAvrgTimeRaito(
   publicLobbies.map(lobby => {
     const timeRemaining = 60000 - lobby.msUntilStart;
     if (lobby.numClients === 0 || timeRemaining <= 0) return defaultClientsToTime; // prevent division by 0
