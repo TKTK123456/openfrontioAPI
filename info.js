@@ -7,6 +7,7 @@ import config from './config.js'
 import { createClient } from '@supabase/supabase-js'
 const supabase = createClient("https://ebnqhovfhgfrfxzexdxj.supabase.co", process.env.SUPABASE_TOKEN)
 const kv = await Deno.openKv();
+await kv.set(["default", "clientsToTime"], 571.428571429)
 export const setHelpers = {
   add: async function(key, value) {
     let fullSet = await this.getSet(key)
@@ -56,6 +57,7 @@ export const mapHelpers = {
   }
 }
 let defaultClientsToTime = await kv.get(["default", "clientsToTime"])
+defaultClientsToTime = defaultClientsToTime.value
 let clientsToTime = [defaultClientsToTime]
 console.log(clientsToTime)
 function getAvrgTimeRaito(currentClientsToTime = false) {
