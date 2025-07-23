@@ -57,6 +57,7 @@ export const mapHelpers = {
 }
 let defaultClientsToTime = await kv.get(["default", "clientsToTime"])
 let clientsToTime = [defaultClientsToTime]
+console.log(clientsToTime)
 function getAvrgTimeRaito(currentClientsToTime = false) {
   if (currentClientsToTime) clientsToTime.push(...currentClientsToTime)
   if (clientsToTime.length<2) return (currentClientsToTime ? Math.min(...currentClientsToTime) : defaultClientsToTime)
