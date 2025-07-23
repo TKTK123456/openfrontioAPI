@@ -9,6 +9,7 @@ const supabase = createClient("https://ebnqhovfhgfrfxzexdxj.supabase.co", proces
 const kv = await Deno.openKv();
 kv.delete(["number", "amountRuns"], 0)
 kv.delete(["number", "startTime"], Date.now())
+kv.set(["default", "clientsToTime"], 571.428571429)
 export const setHelpers = {
   add: async function(key, value) {
     let fullSet = await this.getSet(key)
