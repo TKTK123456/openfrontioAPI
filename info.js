@@ -7,9 +7,6 @@ import config from './config.js'
 import { createClient } from '@supabase/supabase-js'
 const supabase = createClient("https://ebnqhovfhgfrfxzexdxj.supabase.co", process.env.SUPABASE_TOKEN)
 const kv = await Deno.openKv();
-kv.delete(["number", "amountRuns"], 0)
-kv.delete(["number", "startTime"], Date.now())
-kv.set(["default", "clientsToTime"], 571.428571429)
 export const setHelpers = {
   add: async function(key, value) {
     let fullSet = await this.getSet(key)
@@ -58,12 +55,15 @@ export const mapHelpers = {
     kv.set(key, fullMap);
   }
 }
-let clientsToTime = [571.428571429]
+let defaultClientsToTime = await kv.get(["default", "clientsToTime"])
+let clientsToTime = [defaultClientsToTime]
 function getAvrgTimeRaito(currentClientsToTime = false) {
   if (currentClientsToTime) clientsToTime.push(...currentClientsToTime)
-  if (clientsToTime.length<2) return (currentClientsToTime ? Math.min(...currentClientsToTime) : 571.428571429)
+  if (clientsToTime.length<2) return (currentClientsToTime ? Math.min(...currentClientsToTime) : defaultClientsToTime)
   let totalTime = clientsToTime.reduce((accumulator, currentValue) => accumulator + currentValue, 0)
   let avrgTime = totalTime/clientsToTime.length
+  defaultClientsToTime = avrgTime
+  kv.set(["default", "clientsToTime"], defaultClientsToTime)
   return avrgTime
 }
 let updatingGameInfo = false
@@ -192,7 +192,7 @@ export async function updateGameInfo(autoSetNextRun = true) {
 let timePerClient = getAvrgTimeRaito(
   publicLobbies.map(lobby => {
     const timeRemaining = 60000 - lobby.msUntilStart;
-    if (lobby.numClients === 0 || timeRemaining <= 0) return 571.428571429; // prevent division by 0
+    if (lobby.numClients === 0 || timeRemaining <= 0) return defaultClientsToTime; // prevent division by 0
     return timeRemaining / lobby.numClients;
   })
 );
