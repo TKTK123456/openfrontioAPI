@@ -63,7 +63,6 @@ async function getAvrgTimeRaito(currentClientsToTime = false) {
   if (currentClientsToTime) clientsToTime.push(...currentClientsToTime)
   if (clientsToTime.length<2) return (currentClientsToTime ? Math.min(...currentClientsToTime) : defaultClientsToTime)
   let totalTime = clientsToTime.reduce((accumulator, currentValue) => accumulator + currentValue, 0)
-  console.log(clientsToTime)
   let avrgTime = totalTime/clientsToTime.length
   defaultClientsToTime = avrgTime
   kv.set(["default", "clientsToTime"], defaultClientsToTime)
