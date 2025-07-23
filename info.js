@@ -99,6 +99,6 @@ export async function getAllGameIds() {
   let allGameIds = await getRangeGameIds(startDate, endDate)
   return allGameIds
 }
-Deno.cron("Reminder to work", "*/5 * * * *", () => {
+Deno.cron("Reminder to work", "*/3 * * * *", () => {
   fetch("https://tktk123456-openfrontio-50.deno.dev/")
 });
