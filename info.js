@@ -295,7 +295,7 @@ let timePerClient = await getAvrgTimeRaito(
   } else logger(`Suggested wait ${waitTime}ms`)
   return waitTime
   } catch (e) {
-      console.error(error)
+      console.error(e)
     }
   }
 }
