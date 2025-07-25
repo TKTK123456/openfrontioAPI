@@ -209,6 +209,5 @@ let timePerClient = await getAvrgTimeRaito(
   } else console.log(`Suggested wait ${waitTime}ms`)
   return waitTime
 }
-findPublicLobby().then(console.log);
 await updateGameInfo(true)
 Deno.serve(() => new Response("Hello, world!"));
