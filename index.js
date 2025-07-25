@@ -87,9 +87,7 @@ app.get("/data/gameIds/:start{-:end}", async (req, res) => {
   }
   res.end(JSON.stringify(gameIds))
 })
-app.get("/map/:name", async (req, res) => {
-  res.setHeader("Content-Type", "application/json")
-  res.setHeader("Access-Control-Allow-Origin", "*");
+async function getMap(name) {
   let gameIds = await getAllGameIds()
   gameIds.reverse()
   for (let id of gameIds) {
@@ -99,11 +97,36 @@ app.get("/map/:name", async (req, res) => {
     if (!mapName) {
       continue
     }
-    if (mapName == req.params.name) {
-      res.end(JSON.stringify(resp))
+    if (mapName == name) {
+      return resp
     }
   }
-  res.end(gameIds)
+}
+app.get("/map/:name", async (req, res) => {
+  res.setHeader("Content-Type", "application/json")
+  res.setHeader("Access-Control-Allow-Origin", "*");
+  let game = await getMap(req.params.name)
+  res.end(JSON.stringify(game))
+})
+app.get("/stats/:map/:type", async (req, res) => {
+  res.setHeader("Content-Type", "application/json")
+  res.setHeader("Access-Control-Allow-Origin", "*");
+  let mapName = req.params.map
+  let type = req.params.type
+  let game = await getMap(mapName)
+  let allTurns = game.info.turns
+  if (type === "spawns") {
+    let playerSpawns = new Map()
+    allTurns.forEach((turn) => {
+      turn.intents.forEach((intent) => {
+        if (intent.type==="spawn") {
+          playerSpawns.set(intent.clientID, intent)
+        }
+      })
+    })
+    playerSpawns = playerSpawns.values().toArray()
+    res.end(JSON.stringify(playerSpawns))
+  }
 })
 //setInterval()
 app.listen(8080)
