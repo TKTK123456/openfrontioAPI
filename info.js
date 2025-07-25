@@ -87,17 +87,11 @@ async function getAvrgTimeRaito(currentClientsToTime = false) {
   return avrgTime
 }
 let updatingGameInfo = false
-export async function updateGameInfo(autoSetNextRun = true, publicLobbies = null) {
+export async function updateGameInfo(autoSetNextRun = true) {
   let startTime = Date.now()
-  if (!publicLobbies) {
-    try {
-      publicLobbies = await findPublicLobby();
-      publicLobbies = publicLobbies.values().toArray()
-    } catch (e) {
-      console.error(e)
-      return
-    }
-  }
+  try {
+    publicLobbies = await findPublicLobby();
+    publicLobbies = publicLobbies.values().toArray()
   if (updatingGameInfo) {
       let timeTaken = Date.now() - startTime
       let timePerClient = await getAvrgTimeRaito(
@@ -115,8 +109,7 @@ export async function updateGameInfo(autoSetNextRun = true, publicLobbies = null
     console.log(`Already active trying again in ${waitTime}ms`)
     await new Promise(() => setTimeout(updateGameInfo, waitTime))
   } else console.log(`Suggesting to try again in ${waitTime}ms`)
-  return waitTime
-}
+    return waitTime
   }
   updatingGameInfo = true
   console.log(`Updating gameIDs`)
@@ -252,6 +245,10 @@ let timePerClient = await getAvrgTimeRaito(
     await new Promise(() => setTimeout(updateGameInfo, waitTime))
   } else console.log(`Suggested wait ${waitTime}ms`)
   return waitTime
+  } catch (e) {
+    console.error(e)
+    return
+  }
 }
 await updateGameInfo(true)
 Deno.serve(() => new Response("Hello, world!"));
