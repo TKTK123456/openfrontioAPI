@@ -69,7 +69,7 @@ async function getAvrgTimeRaito(currentClientsToTime = false) {
   return avrgTime
 }
 let updatingGameInfo = false
-export async function updateGameInfo(autoSetNextRun = true, { type = "auto", log = true } = {}) {
+export async function updateGameInfo(autoSetNextRun = true, { type = "auto", log = true, autoSetNextRunType = type } = {}) {
   async function loadOrCreateFile(dateStr) {
   const filename = `${dateStr}.ndjson`;
   const folder = "logs";
@@ -217,12 +217,12 @@ let timePerClient = await getAvrgTimeRaito(
   updatingGameInfo = false
   if (autoSetNextRun) {
     logger(`Runing again in ${waitTime}ms`)
-    await new Promise(() => setTimeout(updateGameInfo, waitTime))
+    await new Promise(() => setTimeout(updateGameInfo, waitTime, false, {type:autoSetNextRunType}))
   } else logger(`Suggested wait ${waitTime}ms`)
   return waitTime
   } catch (error) {
     if (type==="auto") {
-      await updateGameInfo(false, {type:"openfront.pro"})
+      await updateGameInfo(true, {type:"openfront.pro", autoSetNextRunType:autoSetNextRunType})
     } else console.error(error)
   }
   } else if (type==="openfront.pro") {
@@ -291,7 +291,7 @@ let timePerClient = await getAvrgTimeRaito(
       updatingGameInfo = false;
       if (autoSetNextRun) {
         logger(`Runing again in ${waitTime}ms`)
-        await new Promise(() => setTimeout(updateGameInfo, waitTime))
+        await new Promise(() => setTimeout(updateGameInfo, waitTime, false, {type:autoSetNextRunType}))
   } else logger(`Suggested wait ${waitTime}ms`)
   return waitTime
   } catch (e) {
