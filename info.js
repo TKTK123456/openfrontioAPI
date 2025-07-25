@@ -5,8 +5,26 @@ import { Buffer } from 'node:buffer';
 import { Readable } from 'node:stream';
 import config from './config.js'
 import { createClient } from '@supabase/supabase-js'
+import bodyParser from "body-parser";
+import express from 'express'
 const supabase = createClient("https://ebnqhovfhgfrfxzexdxj.supabase.co", process.env.SUPABASE_TOKEN)
 const kv = await Deno.openKv();
+const app = express()
+app.use(bodyParser.json());
+// Parse application/x-www-form-urlencoded
+app.use(bodyParser.urlencoded({ extended: true }));
+
+// Parse raw text data
+app.use(bodyParser.text());
+
+// Parse binary data
+app.use(bodyParser.raw());
+app.get("/", async (req, res) => {
+  res.end("Hello world")
+});
+app.get("/update/:id", async (req, res) => {
+  
+})
 //await kv.set(["default", "clientsToTime"], 571.428571429)
 export const setHelpers = {
   add: async function(key, value) {
@@ -70,8 +88,7 @@ async function getAvrgTimeRaito(currentClientsToTime = false) {
 }
 let updatingGameInfo = false
 export async function updateGameInfo(autoSetNextRun = true, publicLobbies = null) {
-  if (updatingGameInfo) return 10000
-  console.log(`Updating gameIDs`)
+  let startTime = Date.now()
   if (!publicLobbies) {
     try {
       publicLobbies = await findPublicLobby();
@@ -81,8 +98,28 @@ export async function updateGameInfo(autoSetNextRun = true, publicLobbies = null
       return
     }
   }
+  if (updatingGameInfo) {
+      let timeTaken = Date.now() - startTime
+      let timePerClient = await getAvrgTimeRaito(
+        publicLobbies.map(lobby => {
+          const timeRemaining = 60000 - lobby.msUntilStart;
+          if (lobby.numClients === 0 || timeRemaining <= 0) return defaultClientsToTime; // prevent division by 0
+          return timeRemaining / lobby.numClients;
+        })
+      );
+  //console.log(`Average time per client join: ${timePerClient}ms`)
+  let lobbiesTimesToStart = publicLobbies.map(lobby => [lobby.msUntilStart,(lobby.gameConfig.maxPlayers-lobby.numClients)*timePerClient]).flat()
+  lobbiesTimesToStart = lobbiesTimesToStart.map(time => (time-timeTaken>0 ? time-timeTaken : 500))
+  let waitTime = Math.min(...lobbiesTimesToStart)
+  if (autoSetNextRun) {
+    console.log(`Already active trying again in ${waitTime}ms`)
+    await new Promise(() => setTimeout(updateGameInfo, waitTime))
+  } else console.log(`Suggesting to try again in ${waitTime}ms`)
+  return waitTime
+}
+  }
   updatingGameInfo = true
-  let startTime = Date.now()
+  console.log(`Updating gameIDs`)
   let active = {
     ids: await setHelpers.getSet(["info", "games", "active", "ids"]),
     ws: await mapHelpers.getMap(["info", "games", "active", "ws"]),
