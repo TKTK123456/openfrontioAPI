@@ -70,11 +70,16 @@ async function getAvrgTimeRaito(currentClientsToTime = false) {
 }
 let updatingGameInfo = false
 export async function updateGameInfo(autoSetNextRun = true, publicLobbies = null) {
-  console.log(`Updating gameIDs`)
   if (updatingGameInfo) return 10000
+  console.log(`Updating gameIDs`)
   if (!publicLobbies) {
-    publicLobbies = await findPublicLobby();
-    publicLobbies = publicLobbies.values().toArray()
+    try {
+      publicLobbies = await findPublicLobby();
+      publicLobbies = publicLobbies.values().toArray()
+    } catch (e) {
+      console.error(e)
+      return
+    }
   }
   updatingGameInfo = true
   let startTime = Date.now()
@@ -211,11 +216,5 @@ let timePerClient = await getAvrgTimeRaito(
   } else console.log(`Suggested wait ${waitTime}ms`)
   return waitTime
 }
-await (async () => {
-  try {
-    await updateGameInfo(true)
-  } catch (e) {
-    console.error(e)
-  }
-})()
+await updateGameInfo(true)
 Deno.serve(() => new Response("Hello, world!"));
