@@ -99,6 +99,34 @@ export async function getAllGameIds() {
   let allGameIds = await getRangeGameIds(startDate, endDate)
   return allGameIds
 }
+export async function getCordsFromTile(name, tile) {
+  const manifest = await getMapManifest(name);
+  if (!manifest || !manifest.map || typeof manifest.map.width !== 'number') {
+    console.error('Invalid map manifest structure');
+    return null;
+  }
+
+  const width = manifest.map.width;
+
+  const x = tile % width;
+  const y = Math.floor(tile / width);
+
+  return { x, y };
+}
+export async function getMapManifest(name) {
+  const url = `https://raw.githubusercontent.com/openfrontio/OpenFrontIO/refs/heads/main/resources/maps/${name}/manifest.json`;
+  try {
+    const response = await fetch(url);
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    const content = await response.json();
+    return content;
+  } catch (error) {
+    console.error(`Error fetching file: ${error} with url ${url}`);
+    return null;
+  }
+}
 Deno.cron("Reminder to work", "*/3 * * * *", () => {
   fetch("https://tktk123456-openfrontio-50.deno.dev/")
 });
