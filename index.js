@@ -91,6 +91,7 @@ app.get("/map/:name", async (req, res) => {
   res.setHeader("Content-Type", "application/json")
   res.setHeader("Access-Control-Allow-Origin", "*");
   let gameIds = await getAllGameIds()
+  gameIds.reverse()
   for (let id of gameIds) {
     const response = await fetch(`https://api.openfront.io/game/${id}`);
     let resp = await response.json()
