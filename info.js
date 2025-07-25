@@ -138,7 +138,7 @@ export async function updateGameInfo(autoSetNextRun = true, { type = "auto", log
     return waitTime
   }
   updatingGameInfo = true
-  logger.log(`Updating gameIDs`)
+  logger(`Updating gameIDs`)
   let active = {
     ids: await setHelpers.getSet(["info", "games", "active", "ids"]),
     ws: await mapHelpers.getMap(["info", "games", "active", "ws"]),
@@ -235,7 +235,7 @@ let timePerClient = await getAvrgTimeRaito(
         mapHelpers.set(["info", "games", "active", "ws"], gameID, "unknown")
       }
       updatingGameInfo = true
-  logger.log(`Updating gameIDs`)
+  logger(`Updating gameIDs`)
   let active = {
     ids: await setHelpers.getSet(["info", "games", "active", "ids"]),
     ws: await mapHelpers.getMap(["info", "games", "active", "ws"]),
