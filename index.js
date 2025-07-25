@@ -115,7 +115,7 @@ app.get("/stats/:map/:type", async (req, res) => {
   let type = req.params.type
   let game = await getMap(mapName)
   let allTurns = game.info.turns
-  console.log(allTurns)
+  console.log(game.turns)
   if (type === "spawns") {
     let playerSpawns = new Map()
     allTurns.forEach((turn) => {
