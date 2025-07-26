@@ -45,7 +45,7 @@ export const setHelpers = {
   },
   saveFile: async function(fileJSON) {
     fileJSON = JSON.stringify(fileJSON)
-    const { error } = await supabase.storage.from(this.folder).upload(this.filename, new Blob(fileJSON), {
+    const { error } = await supabase.storage.from(this.folder).upload(this.filename, new Blob([fileJSON]), {
       upsert: true,
       contentType: "application/x-ndjson",
     });
@@ -101,7 +101,7 @@ export const mapHelpers = {
   },
   saveFile: async function(fileJSON) {
     fileJSON = JSON.stringify(fileJSON)
-    const { error } = await supabase.storage.from(this.folder).upload(this.filename, new Blob(fileJSON), {
+    const { error } = await supabase.storage.from(this.folder).upload(this.filename, new Blob([fileJSON]), {
       upsert: true,
       contentType: "application/x-ndjson",
     });
