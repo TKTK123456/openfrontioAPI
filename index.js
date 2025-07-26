@@ -89,7 +89,7 @@ app.get("/data/gameIds/:start{-:end}", async (req, res) => {
 })
 async function getMap(name) {
   let gameIds = await getAllGameIds()
-  gameIds.reverse()
+  let maps = []
   for (let id of gameIds) {
     const response = await fetch(`https://api.openfront.io/game/${id}`);
     let resp = await response.json()
@@ -98,9 +98,10 @@ async function getMap(name) {
       continue
     }
     if (mapName == name) {
-      return resp
+      maps.push(id)
     }
   }
+  return maps
 }
 app.get("/map/:name", async (req, res) => {
   res.setHeader("Content-Type", "application/json")
@@ -114,6 +115,8 @@ app.get("/stats/:map/:type", async (req, res) => {
   let mapName = req.params.map
   let type = req.params.type
   let game = await getMap(mapName)
+  game.reverse()
+  game = game[0]
   let allTurns = game.turns
   if (type === "spawns") {
     let playerSpawns = new Map()
