@@ -24,7 +24,7 @@ export const setHelpers = {
   getSet: async function(key) {
     key = this.keyParser(key)
     let output = await this.getFile()[key]
-    console.log(output)
+    console.log('Output:', output)
     if (output) {
       output = new Set(output)
     } else {
