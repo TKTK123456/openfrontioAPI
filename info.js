@@ -308,8 +308,8 @@ let timePerClient = await getAvrgTimeRaito(
       addGames = await addGames.json()
       for (let game of addGames) {
         let gameID = game.game_id
-        await setHelpers.add(["info", "games", "active", "ids"], gameID)
-        await mapHelpers.set(["info", "games", "active", "ws"], gameID, "unknown")
+        setHelpers.add(["info", "games", "active", "ids"], gameID)
+        mapHelpers.set(["info", "games", "active", "ws"], gameID, "unknown")
       }
       updatingGameInfo = true
   logger(`Updating gameIDs`)
