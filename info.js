@@ -54,7 +54,7 @@ export const setHelpers = {
     }
   },
   getFile: async function() {
-    const { data, error } = await supabase.storage.from(this.folder).download(this.filename);
+    let { data, error } = await supabase.storage.from(this.folder).download(this.filename);
     if (error) throw new Error(`Failed to download ${this.filename}: ${JSON.stringify(error)}`)
     data = await data.text()
     return JSON.parse(data)
@@ -110,7 +110,7 @@ export const mapHelpers = {
     }
   },
   getFile: async function() {
-    const { data, error } = await supabase.storage.from(this.folder).download(this.filename);
+    let { data, error } = await supabase.storage.from(this.folder).download(this.filename);
     if (error) throw new Error(`Failed to download ${this.filename}: ${JSON.stringify(error)}`)
     data = await data.text()
     return JSON.parse(data)
