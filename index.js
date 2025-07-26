@@ -175,29 +175,44 @@ Deno.serve(async (req) => {
     };
 
     ws.onmessage = (event) => {
-      const data = JSON.parse(event.data);
+  const data = JSON.parse(event.data);
 
-      if (data.progress !== undefined) {
-        progressEl.innerText = "Progress: " + data.progress + "% (" + data.currentCount + " checked, " + data.matches + " matches)";
-      }
+  if (data.type === "progress") {
+    if (data.task === "filterGames") {
+      progressEl.innerText =
+        `Map Progress: ${data.progress}% (${data.currentCount}/${data.total} checked, ${data.matchesCount} matches)`;
+    } else if (data.task === "getStats") {
+      progressEl.innerText =
+        `Stats Progress: ${data.progress}% (${data.currentCount} checked, ${data.matchesCount} entries)`;
+    } else {
+      progressEl.innerText =
+        `Progress (${data.task}): ${data.progress}% (${data.currentCount} checked)`;
+    }
+  }
 
-      if (data.done) {
-        progressEl.innerText = "Finished!";
-        resultEl.innerText = JSON.stringify(data.matches, null, 2);
-      }
+  if (data.done) {
+    progressEl.innerText = "Finished!";
+    if (data.matches) {
+      resultEl.innerText = JSON.stringify(data.matches, null, 2);
+    } else if (data.stats) {
+      resultEl.innerText = JSON.stringify(data.stats, null, 2);
+    } else {
+      resultEl.innerText = "Done, but no results returned.";
+    }
+  }
 
-      if (data.error) {
-        progressEl.innerText = "Error: " + data.error;
-      }
-    };
+  if (data.error) {
+    progressEl.innerText = "Error: " + data.error;
+  }
+};
 
-    ws.onerror = () => {
-      progressEl.innerText = "WebSocket error.";
-    };
+ws.onerror = () => {
+  progressEl.innerText = "WebSocket error.";
+};
 
-    ws.onclose = () => {
-      progressEl.innerText += "\\nConnection closed.";
-    };
+ws.onclose = () => {
+  progressEl.innerText += "\nConnection closed.";
+};
   </script>
 </body>
 </html>`;
@@ -234,29 +249,44 @@ Deno.serve(async (req) => {
     };
 
     ws.onmessage = (event) => {
-      const data = JSON.parse(event.data);
+  const data = JSON.parse(event.data);
 
-      if (data.progress !== undefined) {
-        progressEl.innerText = "Progress: " + data.progress + "%";
-      }
+  if (data.type === "progress") {
+    if (data.task === "filterGames") {
+      progressEl.innerText =
+        `Map Progress: ${data.progress}% (${data.currentCount}/${data.total} checked, ${data.matchesCount} matches)`;
+    } else if (data.task === "getStats") {
+      progressEl.innerText =
+        `Stats Progress: ${data.progress}% (${data.currentCount} checked, ${data.matchesCount} entries)`;
+    } else {
+      progressEl.innerText =
+        `Progress (${data.task}): ${data.progress}% (${data.currentCount} checked)`;
+    }
+  }
 
-      if (data.done) {
-        progressEl.innerText = "Finished!";
-        resultEl.innerText = JSON.stringify(data.stats, null, 2);
-      }
+  if (data.done) {
+    progressEl.innerText = "Finished!";
+    if (data.matches) {
+      resultEl.innerText = JSON.stringify(data.matches, null, 2);
+    } else if (data.stats) {
+      resultEl.innerText = JSON.stringify(data.stats, null, 2);
+    } else {
+      resultEl.innerText = "Done, but no results returned.";
+    }
+  }
 
-      if (data.error) {
-        progressEl.innerText = "Error: " + data.error;
-      }
-    };
+  if (data.error) {
+    progressEl.innerText = "Error: " + data.error;
+  }
+};
 
-    ws.onerror = () => {
-      progressEl.innerText = "WebSocket error.";
-    };
+ws.onerror = () => {
+  progressEl.innerText = "WebSocket error.";
+};
 
-    ws.onclose = () => {
-      progressEl.innerText += "\\nConnection closed.";
-    };
+ws.onclose = () => {
+  progressEl.innerText += "\nConnection closed.";
+};
   </script>
 </body>
 </html>`;
@@ -276,43 +306,87 @@ Deno.serve(async (req) => {
   };
 
   socket.onmessage = async (event) => {
-    try {
-      const data = JSON.parse(event.data);
-      if (data.type === "getMap" && data.mapName) {
-        const mapName = data.mapName;
-        const gameIds = await getAllGameIds();
-        const total = gameIds.length;
-        const matches = [];
+  try {
+    const data = JSON.parse(event.data);
 
-        for (let i = 0; i < total; i++) {
-          const id = gameIds[i];
-          try {
-            const game = await fetchGameInfo(id);
-            if (game && game.info && game.info.config && game.info.config.gameMap === mapName) {
-              matches.push(id);
-            }
-          } catch {}
-
-          // Send progress every game or at end
-          if (i % 1 === 0 || i === total - 1) {
-            socket.send(
-              JSON.stringify({
-                progress: Math.floor(((i + 1) / total) * 100),
-                currentCount: i + 1,
-                matchesCount: matches.length,
-              }),
-            );
-          }
-        }
-
-        socket.send(JSON.stringify({ done: true, matches }));
-      } else {
-        socket.send(JSON.stringify({ error: "Invalid message" }));
-      }
-    } catch (e) {
-      socket.send(JSON.stringify({ error: e.message }));
+    if (!data.mapName) {
+      socket.send(JSON.stringify({ error: "Missing mapName" }));
+      return;
     }
-  };
+
+    const gameIds = await getAllGameIds();
+    const total = gameIds.length;
+    const matches = [];
+    // STEP 1: Find matches
+    for (let i = 0; i < total; i++) {
+      const id = gameIds[i];
+      try {
+        let game = await fetch(`https://api.openfront.io/game/${id}`).then(r => r.json());
+        if (game?.info?.config?.gameMap === data.mapName) {
+          matches.push(id);
+        }
+      } catch {}
+
+      socket.send(JSON.stringify({
+        type: "progress",
+        task: "filterGames",
+        progress: Math.floor(((i + 1) / total) * 100),
+        currentCount: i + 1,
+        total,
+        matchesCount: matches.length,
+      }));
+    }
+
+    if (type === "getMap") {
+      socket.send(JSON.stringify({ done: true, matches }));
+      return;
+    }
+
+    // STEP 2: Handle stats
+    if (type === "getStats") {
+      const stats = {};
+      let totalIntents = 0;
+      stats[data.statType] = []
+      for (let i = 0; i < matches.length; i++) {
+        const id = matches[i];
+        try {
+          const game = await fetch(`https://api.openfront.io/game/${id}`).then(r => r.json());
+          for (const turn of game.turns ?? []) {
+            for (const intent of turn.intents ?? []) {
+              totalIntents++;
+
+              if (data.statType === "spawns" && intent.type === "spawn") {
+                stats[data.statType].push({ ...intent, gameId: id });
+              }
+
+              // You can expand here for other statTypes
+              // if (data.statType === "moves" && intent.type === "move") { ... }
+
+              if (totalIntents % 100 === 0) {
+                let statType = data.statType
+                socket.send(JSON.stringify({
+                  type: "progress",
+                  task: "statScan",
+                  statType,
+                  currentGame: i + 1,
+                  totalGames: matches.length,
+                  currentIntents: totalIntents,
+                  tracked: Object.keys(stats).length,
+                }));
+              }
+            }
+          }
+        } catch {}
+      }
+
+      socket.send(JSON.stringify({ done: true, stats }));
+      return
+    }
+
+  } catch (e) {
+    socket.send(JSON.stringify({ error: e.message }));
+  }
+};
 
   socket.onerror = (e) => console.error("WebSocket error:", e);
   socket.onclose = () => console.log("WebSocket closed");
