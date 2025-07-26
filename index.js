@@ -125,7 +125,7 @@ app.get("/stats/:map/:type", async (req, res) => {
       })
     })
     playerSpawns = playerSpawns.values().toArray()
-    res.end(JSON.stringify(playerSpawns))
+    res.end(JSON.stringify({gameID:game.info.gameID, playerSpawns:playerSpawns}))
   }
 })
 //setInterval()
