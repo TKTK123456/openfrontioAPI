@@ -63,16 +63,21 @@ export const setHelpers = {
 export const mapHelpers = {
   folder: "storage",
   filename: "maps.ndjson",
+  keyParser: function(key) {
+    return key.join("/")
+  },
   set: async function(key, mapKey, value) {
     let fullMap = await this.getMap(key)
     if (fullMap.has(mapKey)) return
     fullMap.set(mapKey, value)
-    kv.set(key, fullMap)
+    this.saveMap(key, fullMap)
   },
   getMap: async function(key) {
-    let output = await kv.get(key);
-    output = output.value
-    if (!output) {
+    key = this.keyParser(key)
+    let output = await this.getFile()[key]
+    if (output) {
+      output = new Map(output)
+    } else {
       output = new Map();
     }
     return output;
@@ -85,7 +90,14 @@ export const mapHelpers = {
     let fullMap = await this.getMap(key)
     if (!fullMap.has(mapKey)) return;
     fullMap.delete(mapKey);
-    kv.set(key, fullMap);
+    this.saveMap(key, fullMap);
+  },
+  saveMap: async function(key, map) {
+    key = this.keyParser(key)
+    map = map.entries().toArray()
+    let file = await this.getFile()
+    file[key] = map
+    this.saveFile(file)
   },
   saveFile: async function(fileJSON) {
     fileJSON = JSON.stringify(fileJSON)
