@@ -29,8 +29,5 @@ export async function getPlayer(id) {
 }
 export async function getGame(id) {
   let game = await fetch(`https://${config.prefixs.api}${config.domain}/game/${id}`)
-  if (game.status === 200) {
-    setHelpers.add(["info", "games", "ids"], id)
-  }
   return game
 }
