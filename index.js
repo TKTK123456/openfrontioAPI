@@ -9,7 +9,7 @@ import config from './config.js'
 const __dirname = path.resolve();
 const kv = await Deno.openKv();
 function getContentType(Path) {
-  const ext = extname(Path);
+  const ext = path.extname(Path);
   switch (ext) {
     case ".html": return "text/html";
     case ".js": return "application/javascript";
@@ -266,7 +266,59 @@ Deno.serve(async (req) => {
       });
     }
   }
+  if (pathname === "/ws") {
 
+  const { socket, response } = Deno.upgradeWebSocket(req);
+
+  socket.onopen = () => {
+    console.log("WebSocket opened");
+    socket.send(JSON.stringify({ message: "WebSocket connection established" }));
+  };
+
+  socket.onmessage = async (event) => {
+    try {
+      const data = JSON.parse(event.data);
+      if (data.type === "getMap" && data.mapName) {
+        const mapName = data.mapName;
+        const gameIds = await getAllGameIds();
+        const total = gameIds.length;
+        const matches = [];
+
+        for (let i = 0; i < total; i++) {
+          const id = gameIds[i];
+          try {
+            const game = await fetchGameInfo(id);
+            if (game && game.info && game.info.config && game.info.config.gameMap === mapName) {
+              matches.push(id);
+            }
+          } catch {}
+
+          // Send progress every game or at end
+          if (i % 1 === 0 || i === total - 1) {
+            socket.send(
+              JSON.stringify({
+                progress: Math.floor(((i + 1) / total) * 100),
+                currentCount: i + 1,
+                matchesCount: matches.length,
+              }),
+            );
+          }
+        }
+
+        socket.send(JSON.stringify({ done: true, matches }));
+      } else {
+        socket.send(JSON.stringify({ error: "Invalid message" }));
+      }
+    } catch (e) {
+      socket.send(JSON.stringify({ error: e.message }));
+    }
+  };
+
+  socket.onerror = (e) => console.error("WebSocket error:", e);
+  socket.onclose = () => console.log("WebSocket closed");
+
+  return response;
+  }
   // Try static file fallback
   try {
     const fileResponse = await serveStaticFile(req, pathname);
