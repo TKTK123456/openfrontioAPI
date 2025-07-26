@@ -111,7 +111,7 @@ export const mapHelpers = {
   },
   getFile: async function() {
     let { data, error } = await supabase.storage.from(this.folder).download(this.filename);
-    if (error) throw new Error(`Failed to download ${this.filename}: ${JSON.stringify(error)}`)
+    if (error) console.error(`Failed to download ${this.filename}: ${JSON.stringify(error)}`)
     data = await data.text()
     return JSON.parse(data)
   }
@@ -122,7 +122,7 @@ export const storageTxtHelper = {
   get: async function(file) {
     file = file + this.ext
     const { data, error } = await supabase.storage.from(this.folder).download(file);
-    if (error) throw new Error(`Failed to download ${file}: ${JSON.stringify(error)}`)
+    if (error) console.error(`Failed to download ${file}: ${JSON.stringify(error)}`)
     return data.text()
   },
   set: async function(file, content) {
