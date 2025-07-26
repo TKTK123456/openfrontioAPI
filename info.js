@@ -9,16 +9,23 @@ const supabase = createClient("https://ebnqhovfhgfrfxzexdxj.supabase.co", proces
 const kv = await Deno.openKv();
 //await kv.set(["default", "clientsToTime"], 571.428571429)
 export const setHelpers = {
+  folder: "storage",
+  filename: "sets.ndjson",
+  keyParser: function(key) {
+    return key.join("/")
+  },
   add: async function(key, value) {
     let fullSet = await this.getSet(key)
     if (fullSet.has(value)) return
     fullSet.add(value);
-    kv.set(key, fullSet);
+    this.saveSet(key, fullSet);
   },
   getSet: async function(key) {
-    let output = await kv.get(key);
-    output = output.value
-    if (!output) {
+    key = this.keyParser(key)
+    let output = await this.getFile()[key]
+    if (output) {
+      output = new Set(output)
+    } else {
       output = new Set();
     }
     return output;
@@ -27,10 +34,35 @@ export const setHelpers = {
     let fullSet = await this.getSet(key)
     if (!fullSet.has(setKey)) return
     fullSet.delete(setKey);
-    kv.set(key, fullSet);
+    this.saveSet(key, fullSet);
+  },
+  saveSet: async function(key, set) {
+    key = this.keyParser(key)
+    set = set.values().toArray()
+    let file = await this.getFile()
+    file[key] = set
+    this.saveFile(file)
+  },
+  saveFile: async function(fileJSON) {
+    fileJSON = JSON.stringify(fileJSON)
+    const { error } = await supabase.storage.from(this.folder).upload(this.filename, new Blob(fileJSON), {
+      upsert: true,
+      contentType: "application/x-ndjson",
+    });
+    if (error) {
+      console.error(error)
+    }
+  },
+  getFile: async function() {
+    const { data, error } = await supabase.storage.from(this.folder).download(this.filename);
+    if (error) throw new Error(`Failed to download ${this.filename}: ${JSON.stringify(error)}`)
+    data = await data.json()
+    return data
   }
 }
 export const mapHelpers = {
+  folder: "storage",
+  filename: "maps.ndjson",
   set: async function(key, mapKey, value) {
     let fullMap = await this.getMap(key)
     if (fullMap.has(mapKey)) return
@@ -54,6 +86,22 @@ export const mapHelpers = {
     if (!fullMap.has(mapKey)) return;
     fullMap.delete(mapKey);
     kv.set(key, fullMap);
+  },
+  saveFile: async function(fileJSON) {
+    fileJSON = JSON.stringify(fileJSON)
+    const { error } = await supabase.storage.from(this.folder).upload(this.filename, new Blob(fileJSON), {
+      upsert: true,
+      contentType: "application/x-ndjson",
+    });
+    if (error) {
+      console.error(error)
+    }
+  },
+  getFile: async function() {
+    const { data, error } = await supabase.storage.from(this.folder).download(this.filename);
+    if (error) throw new Error(`Failed to download ${this.filename}: ${JSON.stringify(error)}`)
+    data = await data.json()
+    return data
   }
 }
 export const storageTxtHelper = {
@@ -65,7 +113,7 @@ export const storageTxtHelper = {
     if (error) throw new Error(`Failed to download ${file}: ${JSON.stringify(error)}`)
     return data.text()
   },
-  set: async function(file) {
+  set: async function(file, content) {
     file = file + this.ext
     const { error } = await supabase.storage.from(this.folder).upload(file, new Blob([content]), {
       upsert: true
