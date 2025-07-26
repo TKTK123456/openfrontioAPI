@@ -179,14 +179,11 @@ Deno.serve(async (req) => {
 
   if (data.type === "progress") {
     if (data.task === "filterGames") {
-      progressEl.innerText =
-        \`Map Progress: ${data.progress}% (${data.currentCount}/${data.total} checked, ${data.matchesCount} matches)\`;
+      progressEl.innerText = \`Map Progress: \${data.progress}% (\${data.currentCount}/\${data.total} checked, \${data.matchesCount} matches)\`;
     } else if (data.task === "getStats") {
-      progressEl.innerText =
-        \`Stats Progress: ${data.progress}% (${data.currentCount} checked, ${data.matchesCount} entries)\`;
+      progressEl.innerText = \`\${data.statType.charAt(0).toUpperCase() + data.statType.slice(1).toLowerCase()} Stat Progress: Game \${data.currentGame}/\${data.totalGames}, Intents processed: \${data.currentIntents}, Tracked entries: \${data.tracked}\`;
     } else {
-      progressEl.innerText =
-        \`Progress (${data.task}): ${data.progress}% (${data.currentCount} checked)\`;
+      progressEl.innerText = \`Progress (\${data.task}): \${data.progress}% (\${data.currentCount} checked)\`;
     }
   }
 
@@ -253,14 +250,11 @@ ws.onclose = () => {
 
   if (data.type === "progress") {
     if (data.task === "filterGames") {
-      progressEl.innerText =
-        `Map Progress: ${data.progress}% (${data.currentCount}/${data.total} checked, ${data.matchesCount} matches)`;
+      progressEl.innerText = \`Map Progress: \${data.progress}% (\${data.currentCount}/\${data.total} checked, \${data.matchesCount} matches)\`;
     } else if (data.task === "getStats") {
-      progressEl.innerText =
-        `Stats Progress: ${data.progress}% (${data.currentCount} checked, ${data.matchesCount} entries)`;
+      progressEl.innerText = \`\${data.statType.charAt(0).toUpperCase() + data.statType.slice(1).toLowerCase()} Stat Progress: Game \${data.currentGame}/\${data.totalGames}, Intents processed: \${data.currentIntents}, Tracked entries: \${data.tracked}\`;
     } else {
-      progressEl.innerText =
-        `Progress (${data.task}): ${data.progress}% (${data.currentCount} checked)`;
+      progressEl.innerText = \`Progress (\${data.task}): \${data.progress}% (\${data.currentCount} checked)\`;
     }
   }
 
@@ -366,7 +360,7 @@ ws.onclose = () => {
                 let statType = data.statType
                 socket.send(JSON.stringify({
                   type: "progress",
-                  task: "statScan",
+                  task: "getStats",
                   statType,
                   currentGame: i + 1,
                   totalGames: matches.length,
