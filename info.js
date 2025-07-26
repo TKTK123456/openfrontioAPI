@@ -18,15 +18,12 @@ export const setHelpers = {
     let fullSet = await this.getSet(key)
     if (fullSet.has(value)) return
     fullSet.add(value);
-    console.log(fullSet)
     await this.saveSet(key, fullSet);
   },
   getSet: async function(key) {
     key = this.keyParser(key)
     let output = await this.getFile()
-    console.log(output)
     output = output[key]
-    console.log(output)
     if (output) {
       output = new Set(output)
     } else {
@@ -78,7 +75,8 @@ export const mapHelpers = {
   },
   getMap: async function(key) {
     key = this.keyParser(key)
-    let output = await this.getFile()[key]
+    let output = await this.getFile()
+    output = output[key]
     if (output) {
       output = new Map(output)
     } else {
