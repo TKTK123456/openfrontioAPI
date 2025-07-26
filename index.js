@@ -180,13 +180,13 @@ Deno.serve(async (req) => {
   if (data.type === "progress") {
     if (data.task === "filterGames") {
       progressEl.innerText =
-        `Map Progress: ${data.progress}% (${data.currentCount}/${data.total} checked, ${data.matchesCount} matches)`;
+        \`Map Progress: ${data.progress}% (${data.currentCount}/${data.total} checked, ${data.matchesCount} matches)\`;
     } else if (data.task === "getStats") {
       progressEl.innerText =
-        `Stats Progress: ${data.progress}% (${data.currentCount} checked, ${data.matchesCount} entries)`;
+        \`Stats Progress: ${data.progress}% (${data.currentCount} checked, ${data.matchesCount} entries)\`;
     } else {
       progressEl.innerText =
-        `Progress (${data.task}): ${data.progress}% (${data.currentCount} checked)`;
+        \`Progress (${data.task}): ${data.progress}% (${data.currentCount} checked)\`;
     }
   }
 
