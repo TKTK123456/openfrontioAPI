@@ -18,6 +18,7 @@ export const setHelpers = {
     let fullSet = await this.getSet(key)
     if (fullSet.has(value)) return
     fullSet.add(value);
+    console.log(fullSet)
     await this.saveSet(key, fullSet);
   },
   getSet: async function(key) {
