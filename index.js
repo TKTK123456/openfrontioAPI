@@ -216,7 +216,13 @@ app.get("/stats/:map/:type", async (req, res) => {
     </html>
   `);
 });
-app.get("/ws", async (req, res) => {
+//setInterval()
+app.listen(8080);
+Deno.serve({ port: 3000 }, async (req) => {
+  const url = new URL(req.url);
+  if (url.pathname !== "/ws") {
+    return new Response("Not found", { status: 404 });
+  }
 
   const { socket, response } = Deno.upgradeWebSocket(req);
 
@@ -268,11 +274,7 @@ app.get("/ws", async (req, res) => {
   socket.onclose = () => console.log("WebSocket closed");
 
   return response;
-})
-
-//setInterval()
-app.listen(8080);
-
+});
 /*const server = createServer(async (req, res) => {
   
   try {
