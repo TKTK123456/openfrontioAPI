@@ -8,7 +8,7 @@ import { findGameWebSocket, findPublicLobby, getPlayer, getGame } from './fetche
 import config from './config.js'
 const __dirname = path.resolve();
 const kv = await Deno.openKv();
-function getContentType(path: string): string {
+function getContentType(path) {
   const ext = extname(path);
   switch (ext) {
     case ".html": return "text/html";
@@ -21,7 +21,7 @@ function getContentType(path: string): string {
   }
 }
 
-async function serveStaticFile(req: Request, filePath: string): Promise<Response> {
+async function serveStaticFile(req, filePath) {
   try {
     const fullPath = join(__dirname, filePath);
     const file = await Deno.readFile(fullPath);
@@ -36,25 +36,19 @@ async function serveStaticFile(req: Request, filePath: string): Promise<Response
   }
 }
 
-function parseQuery(url: URL, key: string): string | null {
+function parseQuery(url, key) {
   return url.searchParams.get(key);
 }
 
-function parseUrlParam(pathname: string, prefix: string): string | null {
-  if (pathname.startsWith(prefix)) {
-    return pathname.slice(prefix.length);
-  }
-  return null;
-}
-
-const stringToDate = (string: string) =>
-  new Date(Date.UTC(
+function stringToDate(string) {
+  return new Date(Date.UTC(
     parseInt(string.slice(0, 4)),
     parseInt(string.slice(4, 6)) - 1,
     parseInt(string.slice(6))
   ));
+}
 
-async function getMap(name: string) {
+async function getMap(name) {
   const gameIds = await getAllGameIds();
   const maps = [];
   for (const id of gameIds) {
@@ -70,21 +64,17 @@ async function getMap(name: string) {
   return maps;
 }
 
-Deno.serve(async (req: Request) => {
+serve(async (req) => {
   const url = new URL(req.url);
   const pathname = url.pathname;
 
-  // Serve static files from root dir for requests to "/"
   if (pathname === "/") {
-    // Your original was sending an external URL - Deno cannot send remote file via sendFile, so redirect or fetch and serve
-    // Let's redirect the user to the github file
     return new Response(null, {
       status: 302,
       headers: { "location": "https://github.com/TKTK123456/openfrontioAPI/blob/acbece1dfb8ea72cabe6bf7755f215fade77b25e/index.html" },
     });
   }
 
-  // /player?id=...
   if (pathname === "/player") {
     const id = parseQuery(url, "id");
     if (!id) return new Response("Missing id parameter", { status: 400 });
@@ -103,7 +93,6 @@ Deno.serve(async (req: Request) => {
     }
   }
 
-  // /game?id=...
   if (pathname === "/game") {
     const id = parseQuery(url, "id");
     if (!id) return new Response("Missing id parameter", { status: 400 });
@@ -122,7 +111,6 @@ Deno.serve(async (req: Request) => {
     }
   }
 
-  // /info/games/ids
   if (pathname === "/info/games/ids") {
     try {
       let ids = await setHelpers.get(["info", "games", "ids"]);
@@ -139,7 +127,6 @@ Deno.serve(async (req: Request) => {
     }
   }
 
-  // /data/gameIds/:start{-:end}
   if (pathname.startsWith("/data/gameIds/")) {
     const param = pathname.slice("/data/gameIds/".length);
     let gameIds = [];
@@ -167,7 +154,6 @@ Deno.serve(async (req: Request) => {
     }
   }
 
-  // /map/:name
   if (pathname.startsWith("/map/")) {
     const mapName = pathname.slice("/map/".length);
 
@@ -224,9 +210,7 @@ Deno.serve(async (req: Request) => {
     });
   }
 
-  // /stats/:map/:type
   if (pathname.startsWith("/stats/")) {
-    // Example path: /stats/Asia/typeA
     const parts = pathname.split("/");
     if (parts.length === 4) {
       const mapName = parts[2];
@@ -286,16 +270,11 @@ Deno.serve(async (req: Request) => {
     }
   }
 
-  // Serve static files for other paths (like js/css/html) from current directory
+  // Try static file fallback
   try {
-    // Try to serve as static file
     const fileResponse = await serveStaticFile(req, pathname);
-    if (fileResponse.status !== 404) {
-      return fileResponse;
-    }
-  } catch {
-    // fallthrough
-  }
+    if (fileResponse.status !== 404) return fileResponse;
+  } catch {}
 
   return new Response("Not Found", { status: 404 });
 }, { port: 8080 });
