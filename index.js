@@ -121,7 +121,7 @@ app.get("/map/:name", async (req, res) => {
       <script>
         const mapName = "${mapName}";
         const ws = new WebSocket("ws://" + location.host);
-
+        alert(location.host)
         const progressEl = document.getElementById("progress");
         const resultEl = document.getElementById("result");
 
@@ -178,7 +178,7 @@ app.get("/stats/:map/:type", async (req, res) => {
         const mapName = "${mapName}";
         const statType = "${statType}";
         const ws = new WebSocket("ws://" + location.host);
-
+        alert(location.host)
         const progressEl = document.getElementById("progress");
         const resultEl = document.getElementById("result");
 
