@@ -175,6 +175,7 @@ Deno.serve(async (req) => {
     };
 
     ws.onmessage = (event) => {
+    alert("Message received:", event.data);
   const data = JSON.parse(event.data);
 
   if (data.type === "progress") {
@@ -300,6 +301,7 @@ ws.onclose = () => {
   };
 
   socket.onmessage = async (event) => {
+    console.log("Received WebSocket message:", event.data);
   try {
     const data = JSON.parse(event.data);
 
