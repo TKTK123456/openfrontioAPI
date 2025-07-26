@@ -18,7 +18,7 @@ export const setHelpers = {
     let fullSet = await this.getSet(key)
     if (fullSet.has(value)) return
     fullSet.add(value);
-    this.saveSet(key, fullSet);
+    await this.saveSet(key, fullSet);
   },
   getSet: async function(key) {
     key = this.keyParser(key)
@@ -34,14 +34,14 @@ export const setHelpers = {
     let fullSet = await this.getSet(key)
     if (!fullSet.has(setKey)) return
     fullSet.delete(setKey);
-    this.saveSet(key, fullSet);
+    await this.saveSet(key, fullSet);
   },
   saveSet: async function(key, set) {
     key = this.keyParser(key)
     set = set.values().toArray()
     let file = await this.getFile()
     file[key] = set
-    this.saveFile(file)
+    await this.saveFile(file)
   },
   saveFile: async function(fileJSON) {
     fileJSON = JSON.stringify(fileJSON)
@@ -70,7 +70,7 @@ export const mapHelpers = {
     let fullMap = await this.getMap(key)
     if (fullMap.has(mapKey)) return
     fullMap.set(mapKey, value)
-    this.saveMap(key, fullMap)
+    await this.saveMap(key, fullMap)
   },
   getMap: async function(key) {
     key = this.keyParser(key)
@@ -90,14 +90,14 @@ export const mapHelpers = {
     let fullMap = await this.getMap(key)
     if (!fullMap.has(mapKey)) return;
     fullMap.delete(mapKey);
-    this.saveMap(key, fullMap);
+    await this.saveMap(key, fullMap);
   },
   saveMap: async function(key, map) {
     key = this.keyParser(key)
     map = map.entries().toArray()
     let file = await this.getFile()
     file[key] = map
-    this.saveFile(file)
+    await this.saveFile(file)
   },
   saveFile: async function(fileJSON) {
     fileJSON = JSON.stringify(fileJSON)
@@ -308,8 +308,8 @@ let timePerClient = await getAvrgTimeRaito(
       addGames = await addGames.json()
       for (let game of addGames) {
         let gameID = game.game_id
-        setHelpers.add(["info", "games", "active", "ids"], gameID)
-        mapHelpers.set(["info", "games", "active", "ws"], gameID, "unknown")
+        await setHelpers.add(["info", "games", "active", "ids"], gameID)
+        await mapHelpers.set(["info", "games", "active", "ws"], gameID, "unknown")
       }
       updatingGameInfo = true
   logger(`Updating gameIDs`)
