@@ -8,8 +8,8 @@ import { findGameWebSocket, findPublicLobby, getPlayer, getGame } from './fetche
 import config from './config.js'
 const __dirname = path.resolve();
 const kv = await Deno.openKv();
-function getContentType(path) {
-  const ext = extname(path);
+function getContentType(Path) {
+  const ext = extname(Path);
   switch (ext) {
     case ".html": return "text/html";
     case ".js": return "application/javascript";
@@ -64,17 +64,14 @@ async function getMap(name) {
   return maps;
 }
 
-serve(async (req) => {
+Deno.serve(async (req) => {
   const url = new URL(req.url);
   const pathname = url.pathname;
 
   if (pathname === "/") {
-    return new Response(null, {
-      status: 302,
-      headers: { "location": "https://github.com/TKTK123456/openfrontioAPI/blob/acbece1dfb8ea72cabe6bf7755f215fade77b25e/index.html" },
-    });
-  }
-
+  return await serveStaticFile(req, "/index.html");
+}
+  // /player?id=...
   if (pathname === "/player") {
     const id = parseQuery(url, "id");
     if (!id) return new Response("Missing id parameter", { status: 400 });
@@ -92,7 +89,7 @@ serve(async (req) => {
       return new Response(`Error: ${e.message}`, { status: 500 });
     }
   }
-
+  // /game?id=...
   if (pathname === "/game") {
     const id = parseQuery(url, "id");
     if (!id) return new Response("Missing id parameter", { status: 400 });
@@ -110,7 +107,7 @@ serve(async (req) => {
       return new Response(`Error: ${e.message}`, { status: 500 });
     }
   }
-
+  // /info/games/ids
   if (pathname === "/info/games/ids") {
     try {
       let ids = await setHelpers.get(["info", "games", "ids"]);
@@ -126,7 +123,7 @@ serve(async (req) => {
       return new Response(`Error: ${e.message}`, { status: 500 });
     }
   }
-
+  // /data/gameIds/:start{-:end}
   if (pathname.startsWith("/data/gameIds/")) {
     const param = pathname.slice("/data/gameIds/".length);
     let gameIds = [];
@@ -153,7 +150,7 @@ serve(async (req) => {
       return new Response(`Error: ${e.message}`, { status: 500 });
     }
   }
-
+  // /map/:name
   if (pathname.startsWith("/map/")) {
     const mapName = pathname.slice("/map/".length);
 
@@ -209,7 +206,7 @@ serve(async (req) => {
       headers: { "content-type": "text/html" },
     });
   }
-
+  // /stats/:map/:type
   if (pathname.startsWith("/stats/")) {
     const parts = pathname.split("/");
     if (parts.length === 4) {
