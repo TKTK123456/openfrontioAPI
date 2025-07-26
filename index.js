@@ -331,13 +331,13 @@ ws.onclose = () => {
       }));
     }
 
-    if (type === "getMap") {
+    if (data.type === "getMap") {
       socket.send(JSON.stringify({ done: true, matches }));
       return;
     }
 
     // STEP 2: Handle stats
-    if (type === "getStats") {
+    if (data.type === "getStats") {
       const stats = {};
       let totalIntents = 0;
       stats[data.statType] = []
