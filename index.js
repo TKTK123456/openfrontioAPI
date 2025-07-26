@@ -121,7 +121,7 @@ app.get("/map/:name", async (req, res) => {
       <script>
         const mapName = "${mapName}";
         alert(location.host)
-        const ws = new WebSocket("ws://" + location.host);
+        const ws = new WebSocket("wss://" + location.host+"/ws");
         const progressEl = document.getElementById("progress");
         const resultEl = document.getElementById("result");
 
@@ -178,7 +178,7 @@ app.get("/stats/:map/:type", async (req, res) => {
         const mapName = "${mapName}";
         const statType = "${statType}";
         alert(location.host)
-        const ws = new WebSocket("ws://" + location.host);
+        const ws = new WebSocket("wss://" + location.host+"/ws");
         const progressEl = document.getElementById("progress");
         const resultEl = document.getElementById("result");
 
@@ -217,113 +217,65 @@ app.get("/stats/:map/:type", async (req, res) => {
   `);
 });
 //setInterval()
-const server = createServer(app); // Attach WebSocket to the same server
-const wss = new WebSocketServer({ server });
-wss.on("connection", (ws) => {
-  console.log("WebSocket client connected");
+app.listen(8080);
 
-  ws.on("message", async (msg) => {
+Deno.serve(async (req) => {
+  const url = new URL(req.url);
+  if (url.pathname !== "/ws") {
+    return new Response("Not found", { status: 404 });
+  }
+
+  const { socket, response } = Deno.upgradeWebSocket(req);
+
+  socket.onopen = () => {
+    console.log("WebSocket opened");
+    socket.send(JSON.stringify({ message: "WebSocket connection established" }));
+  };
+
+  socket.onmessage = async (event) => {
     try {
-      const { type, mapName, statType } = JSON.parse(msg.toString());
-
-      if (type === "getMap") {
+      const data = JSON.parse(event.data);
+      if (data.type === "getMap" && data.mapName) {
+        const mapName = data.mapName;
         const gameIds = await getAllGameIds();
-        let matches = [];
         const total = gameIds.length;
+        const matches = [];
 
         for (let i = 0; i < total; i++) {
           const id = gameIds[i];
-
           try {
-            const response = await fetch(`https://api.openfront.io/game/${id}`);
-            const game = await response.json();
-            const currentMap = game?.info?.config?.gameMap;
-
-            if (currentMap === mapName) {
+            const game = await fetchGameInfo(id);
+            if (game && game.info && game.info.config && game.info.config.gameMap === mapName) {
               matches.push(id);
             }
-          } catch (err) {
-            // Ignore fetch errors
-          }
+          } catch {}
 
-          // Send progress every 25 steps or at the end
-          if (i % 25 === 0 || i === total - 1) {
-            ws.send(JSON.stringify({
-              type: "progress",
-              progress: Math.floor((i / total) * 100),
-              currentCount: i,
-              matches: matches.length
-            }));
+          // Send progress every game or at end
+          if (i % 1 === 0 || i === total - 1) {
+            socket.send(
+              JSON.stringify({
+                progress: Math.floor(((i + 1) / total) * 100),
+                currentCount: i + 1,
+                matchesCount: matches.length,
+              }),
+            );
           }
         }
 
-        ws.send(JSON.stringify({
-          type: "done",
-          done: true,
-          matches
-        }));
+        socket.send(JSON.stringify({ done: true, matches }));
+      } else {
+        socket.send(JSON.stringify({ error: "Invalid message" }));
       }
-
-      if (type === "getStats") {
-        const gameIds = await getAllGameIds();
-        let matches = [];
-
-        for (const id of gameIds) {
-          try {
-            const response = await fetch(`https://api.openfront.io/game/${id}`);
-            const game = await response.json();
-            const map = game?.info?.config?.gameMap;
-            if (map === mapName) {
-              matches.push({ id, game });
-            }
-          } catch (e) {}
-        }
-
-        const latest = matches.at(-1);
-        if (!latest) {
-          return ws.send(JSON.stringify({ type: "error", error: "No matching games found" }));
-        }
-
-        const turns = latest.game.turns ?? [];
-        let stats = {};
-
-        if (statType === "spawns") {
-          let spawns = new Map();
-          for (const turn of turns) {
-            for (const intent of turn.intents || []) {
-              if (intent.type === "spawn") {
-                spawns.set(intent.clientID, intent);
-              }
-            }
-          }
-
-          stats = {
-            gameID: latest.id,
-            playerSpawns: Array.from(spawns.values())
-          };
-        }
-
-        ws.send(JSON.stringify({
-          type: "done",
-          done: true,
-          stats
-        }));
-      }
-
-    } catch (err) {
-      console.error(err);
-      ws.send(JSON.stringify({
-        type: "error",
-        error: err.message
-      }));
+    } catch (e) {
+      socket.send(JSON.stringify({ error: e.message }));
     }
-  });
+  };
 
-  ws.on("close", () => {
-    console.log("WebSocket connection closed");
-  });
+  socket.onerror = (e) => console.error("WebSocket error:", e);
+  socket.onclose = () => console.log("WebSocket closed");
+
+  return response;
 });
-server.listen(8080);
 /*const server = createServer(async (req, res) => {
   
   try {
