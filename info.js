@@ -18,13 +18,14 @@ export const setHelpers = {
     let fullSet = await this.getSet(key)
     if (fullSet.has(value)) return
     fullSet.add(value);
-    console.log(key, fullSet)
     await this.saveSet(key, fullSet);
   },
   getSet: async function(key) {
     key = this.keyParser(key)
-    let output = await this.getFile()[key]
-    console.log('Output:', output)
+    let output = await this.getFile()
+    console.log(output)
+    output = output[key]
+    console.log(output)
     if (output) {
       output = new Set(output)
     } else {
