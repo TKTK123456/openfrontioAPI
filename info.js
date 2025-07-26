@@ -56,8 +56,25 @@ export const mapHelpers = {
     kv.set(key, fullMap);
   }
 }
-let defaultClientsToTime = await kv.get(["default", "clientsToTime"])
-defaultClientsToTime = defaultClientsToTime.value
+export const storageTxtHelper = {
+  folder: "storage",
+  ext: ".txt",
+  get: async function(file) {
+    file = file + this.ext
+    const { data, error } = await supabase.storage.from(this.folder).download(file);
+    if (error) throw new Error(`Failed to download ${file}: ${JSON.stringify(error)}`)
+    return data.text()
+  },
+  set: async function(file) {
+    file = file + this.ext
+    const { error } = await supabase.storage.from(this.folder).upload(file, new Blob([content]), {
+      upsert: true
+    });
+    if (error) console.error(error)
+  }
+}
+let defaultClientsToTime = await storageTxtHelper.get("clientsToTime")
+defaultClientsToTime = parseInt(defaultClientsToTime)
 let clientsToTime = [defaultClientsToTime]
 async function getAvrgTimeRaito(currentClientsToTime = false) {
   if (currentClientsToTime) clientsToTime.push(...currentClientsToTime)
@@ -65,7 +82,7 @@ async function getAvrgTimeRaito(currentClientsToTime = false) {
   let totalTime = clientsToTime.reduce((accumulator, currentValue) => accumulator + currentValue, 0)
   let avrgTime = totalTime/clientsToTime.length
   defaultClientsToTime = avrgTime
-  kv.set(["default", "clientsToTime"], defaultClientsToTime)
+  storageTxtHelper.set("clientsToTime", defaultClientsToTime)
   return avrgTime
 }
 let updatingGameInfo = false
