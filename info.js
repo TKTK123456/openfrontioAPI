@@ -179,7 +179,7 @@ export async function updateGameInfo(autoSetNextRun = true, { type = "auto", log
   async function saveFile(dateStr, entries) {
     const filename = `${dateStr}.ndjson`;
     // Save JSON lines (ndjson) format, each entry stringified on separate line
-    const content = JSON.stringify(entries)
+    const content = JSON.stringify(entries.flat(Infinity))
     const { error } = await supabase.storage.from("logs").upload(filename, new Blob([content]), {
       upsert: true,
       contentType: "application/x-ndjson",
