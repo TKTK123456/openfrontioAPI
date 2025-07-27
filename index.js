@@ -212,7 +212,8 @@ Deno.serve(async (req) => {
   }
   // /map/:name
   if (pathname.startsWith("/map/")) {
-    const mapName = pathname.slice("/map/".length);
+    const parts = pathname.split("/")
+    const mapName = parts[2];
     const html = `<!DOCTYPE html>
 <html>
 <head>
