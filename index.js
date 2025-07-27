@@ -388,7 +388,7 @@ Deno.serve(async (req) => {
               totalIntents++;
 
               if (data.statType === "spawns" && intent.type === "spawn") {
-                intent.tile = await getCordsFromTile(intent.tile)
+                intent.tile = await getCordsFromTile(data.mapName, intent.tile)
                 stats[data.statType].push({ ...intent, gameId: id });
               }
 
