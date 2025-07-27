@@ -153,8 +153,7 @@ Deno.serve(async (req) => {
   // /map/:name
   if (pathname.startsWith("/map/")) {
     const mapName = pathname.slice("/map/".length);
-
-    const html = const html = `<!DOCTYPE html>
+    const html = `<!DOCTYPE html>
 <html>
 <head>
   <title>Map Search Progress - ${mapName}</title>
