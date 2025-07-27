@@ -1,5 +1,5 @@
 import { createServer } from "node:http";
-import fs from "node:fs";
+import fs from "node:fs/promises";
 import bodyParser from "body-parser";
 import express from 'express'
 import { WebSocketServer } from "ws";
@@ -24,7 +24,7 @@ function getContentType(Path) {
 
 async function serveStaticFile(req, filePath) {
   try {
-    const fullPath = join(__dirname, filePath);
+    const fullPath = path.join(__dirname, filePath);
     const file = await Deno.readFile(fullPath);
     return new Response(file, {
       status: 200,
