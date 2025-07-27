@@ -110,7 +110,7 @@ export async function getCordsFromTile(name, tile) {
   }
 
   const width = manifest.map.width;
-
+  console.log(width, tile)
   const x = tile % width;
   const y = Math.floor(tile / width);
 
