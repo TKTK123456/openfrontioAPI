@@ -1,4 +1,5 @@
 import { createServer } from "node:http";
+import fs from "node:fs";
 import bodyParser from "body-parser";
 import express from 'express'
 import { WebSocketServer } from "ws";
@@ -39,7 +40,6 @@ async function serveStaticFile(req, filePath) {
 function parseQuery(url, key) {
   return url.searchParams.get(key);
 }
-
 function stringToDate(string) {
   return new Date(Date.UTC(
     parseInt(string.slice(0, 4)),
@@ -48,20 +48,73 @@ function stringToDate(string) {
   ));
 }
 
-async function getMap(name) {
+async function getMap(name, socket = null) {
   const gameIds = await getAllGameIds();
-  const maps = [];
-  for (const id of gameIds) {
-    const response = await fetch(`https://api.openfront.io/game/${id}`);
-    if (!response.ok) continue;
-    const resp = await response.json();
-    const mapName = resp?.info?.config?.gameMap;
-    if (!mapName) continue;
-    if (mapName === name) {
-      maps.push(id);
+  const total = gameIds.length;
+  const matches = [];
+  const filename = `${name}.json`;
+
+  // Try to load previous progress
+  try {
+    const fileData = await fs.readFile(filename, 'utf8');
+    const parsed = JSON.parse(fileData);
+
+    // If scan is complete or in progress, just return known matches
+    if (typeof parsed.lastChecked === 'number' && parsed.lastChecked >= total) {
+      return Array.isArray(parsed.matches) ? parsed.matches : [];
+    }
+
+    // Otherwise resume from lastChecked
+    if (typeof parsed.lastChecked === 'number') {
+      var startIndex = parsed.lastChecked;
+    } else {
+      var startIndex = 0;
+    }
+
+    if (Array.isArray(parsed.matches)) {
+      matches.push(...parsed.matches);
+    }
+  } catch {
+    // File doesn't exist or is unreadable — start from scratch
+    var startIndex = 0;
+  }
+
+  for (let i = startIndex; i < total; i++) {
+    const id = gameIds[i];
+    try {
+      const response = await fetch(`https://api.openfront.io/game/${id}`);
+      if (!response.ok) continue;
+
+      const game = await response.json();
+      if (game?.info?.config?.gameMap === name) {
+        matches.push(id);
+      }
+    } catch {}
+
+    // Save progress with index
+    const dataToWrite = {
+      lastChecked: i + 1, // Store next index to resume from
+      matches,
+    };
+    try {
+      await fs.writeFile(filename, JSON.stringify(dataToWrite, null, 2), 'utf8');
+    } catch (err) {
+      console.error(`Error writing to file ${filename}:`, err);
+    }
+
+    if (socket) {
+      socket.send(JSON.stringify({
+        type: "progress",
+        task: "filterGames",
+        progress: Math.floor(((i + 1) / total) * 100),
+        currentCount: i + 1,
+        total,
+        matchesCount: matches.length,
+      }));
     }
   }
-  return maps;
+
+  return matches;
 }
 
 Deno.serve(async (req) => {
@@ -307,30 +360,7 @@ Deno.serve(async (req) => {
       socket.send(JSON.stringify({ error: "Missing mapName" }));
       return;
     }
-
-    const gameIds = await getAllGameIds();
-    const total = gameIds.length;
-    const matches = [];
-    // STEP 1: Find matches
-    for (let i = 0; i < total; i++) {
-      const id = gameIds[i];
-      try {
-        let game = await fetch(`https://api.openfront.io/game/${id}`).then(r => r.json());
-        if (game?.info?.config?.gameMap === data.mapName) {
-          matches.push(id);
-        }
-      } catch {}
-
-      socket.send(JSON.stringify({
-        type: "progress",
-        task: "filterGames",
-        progress: Math.floor(((i + 1) / total) * 100),
-        currentCount: i + 1,
-        total,
-        matchesCount: matches.length,
-      }));
-    }
-
+    const matches = await getMap(data.mapName, socket)
     if (data.type === "getMap") {
       socket.send(JSON.stringify({ done: true, matches }));
       return;
