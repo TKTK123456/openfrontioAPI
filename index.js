@@ -225,14 +225,13 @@ Deno.serve(async (req) => {
   <div id="progress">Connecting...</div>
   <pre id="result"></pre>
   <script>
-    const mapName = "${mapName}";
-    alert(mapName)
+    const mapName = ${JSON.stringify(mapName)};
     const ws = new WebSocket("wss://" + location.host + "/ws");
     const progressEl = document.getElementById("progress");
     const resultEl = document.getElementById("result");
 
     ws.onopen = () => {
-      progressEl.innerText = "Connected. Starting map scan...";
+      progressEl.innerText = "Connected. Starting stats fetch...";
       ws.send(JSON.stringify({ type: "getMap", mapName }));
     };
 
@@ -270,7 +269,7 @@ Deno.serve(async (req) => {
     };
 
     ws.onclose = () => {
-      progressEl.innerText += "\nConnection closed.";
+      progressEl.innerText += "\\nConnection closed.";
     };
   </script>
 </body>
