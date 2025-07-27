@@ -150,36 +150,36 @@ async function getAvrgTimeRaito(currentClientsToTime = false) {
 let updatingGameInfo = false
 export async function updateGameInfo(autoSetNextRun = true, { type = "auto", log = true, autoSetNextRunType = type } = {}) {
   async function loadOrCreateFile(dateStr) {
-  const filename = `${dateStr}.ndjson`;
-  const folder = "logs";
+    const filename = `${dateStr}.ndjson`;
+    const folder = "logs";
 
-  // Check if file exists
-  const { data: list, error: listErr } = await supabase.storage.from(folder).list("", {
-    search: filename
-  });
-
-  if (listErr) throw new Error(`Failed to list files: ${listErr.message}`);
-  const fileExists = list.some(f => f.name === filename);
-  if (!fileExists) {
-    const { error } = await supabase.storage.from("logs").upload(filename, new Blob([""]), {
-      upsert: true,
-      contentType: "application/x-ndjson",
+    // Check if file exists
+    const { data: list, error: listErr } = await supabase.storage.from(folder).list("", {
+      search: filename
     });
-    if (error) {
-      console.error(error)
+
+    if (listErr) throw new Error(`Failed to list files: ${listErr.message}`);
+    const fileExists = list.some(f => f.name === filename);
+    if (!fileExists) {
+      const { error } = await supabase.storage.from(folder).upload(filename, new Blob([""]), {
+        upsert: true,
+        contentType: "application/x-ndjson",
+      });
+      if (error) console.error(error);
     }
+
+    // Download the file
+    const { data, error } = await supabase.storage.from(folder).download(filename);
+    if (error) throw new Error(`Failed to download ${filename}: ${JSON.stringify(error)}`);
+
+    const text = await data.text();
+    return text.trim() ? text.trim().split("\n").map(JSON.parse) : [];
   }
 
-  // Download the file
-  const { data, error } = await supabase.storage.from(folder).download(filename);
-  if (error) throw new Error(`Failed to download ${filename}: ${JSON.stringify(error)}`)
-    
-  const text = await data.text();
-  return text.trim() ? text.trim().split("\n").map(JSON.parse) : [];
-}
-  async function saveFile(dateStr, arrays) {
-    const filename = `${dateStr}.ndjson`; // ✅ FIXED (was: logs/${dateStr}.ndjson)
-    const content = JSON.stringify(arrays)
+  async function saveFile(dateStr, entries) {
+    const filename = `${dateStr}.ndjson`;
+    // Save JSON lines (ndjson) format, each entry stringified on separate line
+    const content = entries.map(e => JSON.stringify(e)).join("\n");
     const { error } = await supabase.storage.from("logs").upload(filename, new Blob([content]), {
       upsert: true,
       contentType: "application/x-ndjson",
@@ -188,193 +188,219 @@ export async function updateGameInfo(autoSetNextRun = true, { type = "auto", log
       console.error(`Error uploading log file ${filename}:`, error);
     }
   }
-  let logger = function(msg) {
-    if (log) console.log(msg)
-  }
-  if (type==="selfFetch"||type==="auto") {
-  let startTime = Date.now()
-  let publicLobbies;
-  try {
-    publicLobbies = await findPublicLobby();
-    publicLobbies = publicLobbies.values().toArray()
-  if (updatingGameInfo) {
-      let timeTaken = Date.now() - startTime
+
+  let logger = msg => { if (log) console.log(msg) };
+
+  if (type === "selfFetch" || type === "auto") {
+    let startTime = Date.now();
+    let publicLobbies;
+    try {
+      publicLobbies = await findPublicLobby();
+      publicLobbies = publicLobbies.values().toArray();
+
+      if (updatingGameInfo) {
+        let timeTaken = Date.now() - startTime;
+        let timePerClient = await getAvrgTimeRaito(
+          publicLobbies.map(lobby => {
+            const timeRemaining = 60000 - lobby.msUntilStart;
+            if (lobby.numClients === 0 || timeRemaining <= 0) return defaultClientsToTime;
+            return timeRemaining / lobby.numClients;
+          })
+        );
+
+        let lobbiesTimesToStart = publicLobbies.map(lobby => [lobby.msUntilStart, (lobby.gameConfig.maxPlayers - lobby.numClients) * timePerClient]).flat();
+        lobbiesTimesToStart = lobbiesTimesToStart.map(time => (time - timeTaken > 0 ? time - timeTaken : 500));
+        let waitTime = Math.min(...lobbiesTimesToStart);
+        if (autoSetNextRun) {
+          logger(`Already active trying again in ${waitTime}ms`);
+          await new Promise(() => setTimeout(updateGameInfo, waitTime));
+        } else {
+          logger(`Suggesting to try again in ${waitTime}ms`);
+        }
+        return waitTime;
+      }
+
+      updatingGameInfo = true;
+      logger(`Updating gameIDs`);
+
+      let active = {
+        ids: await setHelpers.getSet(["info", "games", "active", "ids"]),
+        ws: await mapHelpers.getMap(["info", "games", "active", "ws"]),
+      };
+
+      // Map date string => array of { gameId, mapType }
+      const dateToNewEntries = new Map();
+
+      for (const currentId of active.ids.values().toArray()) {
+        const wsValue = active.ws.get(currentId);
+        if (!wsValue) continue;
+        const res = await getGame(currentId);
+        const gameRecord = await res.json();
+
+        if (!gameRecord?.error) {
+          let endDateRaw = gameRecord?.info?.end;
+          if (!endDateRaw) {
+            console.warn(`Missing end date for archived game ${currentId}`);
+            await mapHelpers.delete(["info", "games", "active", "ws"], currentId);
+            await setHelpers.delete(["info", "games", "active", "ids"], currentId);
+            continue;
+          }
+          const endDate = new Date(endDateRaw);
+          if (isNaN(endDate.getTime())) {
+            console.warn(`Invalid end date for archived game ${currentId}: ${endDateRaw}`);
+            continue;
+          }
+
+          const dateStr = endDate.toISOString().slice(0, 10);
+          const mapType = gameRecord?.info?.config?.gameMap || "unknown";
+
+          if (!dateToNewEntries.has(dateStr)) {
+            dateToNewEntries.set(dateStr, []);
+          }
+          dateToNewEntries.get(dateStr).push({ gameId: currentId, mapType });
+
+          await mapHelpers.delete(["info", "games", "active", "ws"], currentId);
+          await setHelpers.delete(["info", "games", "active", "ids"], currentId);
+
+        } else {
+          let game = await fetch(`https://${config.prefixs.use}${config.domain}/w${wsValue}/api/game/${currentId}`);
+          game = await game.json();
+          if (game.error === "Game not found") {
+            await mapHelpers.delete(["info", "games", "active", "ws"], currentId);
+            await setHelpers.delete(["info", "games", "active", "ids"], currentId);
+          }
+        }
+      }
+
+      for (const [dateStr, newEntries] of dateToNewEntries.entries()) {
+        logger(`Adding ${newEntries.length} games with mapType to ${dateStr}.ndjson`);
+        let existingEntries = await loadOrCreateFile(dateStr);
+
+        // Avoid duplicates by gameId
+        const existingIds = new Set(existingEntries.map(e => e.gameId));
+        for (const entry of newEntries) {
+          if (!existingIds.has(entry.gameId)) {
+            existingEntries.push(entry);
+          }
+        }
+        await saveFile(dateStr, existingEntries);
+      }
+
+      let timeTaken = Date.now() - startTime;
       let timePerClient = await getAvrgTimeRaito(
         publicLobbies.map(lobby => {
           const timeRemaining = 60000 - lobby.msUntilStart;
-          if (lobby.numClients === 0 || timeRemaining <= 0) return defaultClientsToTime; // prevent division by 0
+          if (lobby.numClients === 0 || timeRemaining <= 0) return defaultClientsToTime;
           return timeRemaining / lobby.numClients;
         })
       );
-  //console.log(`Average time per client join: ${timePerClient}ms`)
-  let lobbiesTimesToStart = publicLobbies.map(lobby => [lobby.msUntilStart,(lobby.gameConfig.maxPlayers-lobby.numClients)*timePerClient]).flat()
-  lobbiesTimesToStart = lobbiesTimesToStart.map(time => (time-timeTaken>0 ? time-timeTaken : 500))
-  let waitTime = Math.min(...lobbiesTimesToStart)
-  if (autoSetNextRun) {
-    logger(`Already active trying again in ${waitTime}ms`)
-    await new Promise(() => setTimeout(updateGameInfo, waitTime))
-  } else logger(`Suggesting to try again in ${waitTime}ms`)
-    return waitTime
-  }
-  updatingGameInfo = true
-  logger(`Updating gameIDs`)
-  let active = {
-    ids: await setHelpers.getSet(["info", "games", "active", "ids"]),
-    ws: await mapHelpers.getMap(["info", "games", "active", "ws"]),
-  };
-  // Helper: load or create .ndjson file for a given date string (YYYY-MM-DD)
 
-  // Map date string => array of archived game IDs to append
-  const dateToNewIds = new Map();
+      logger(`Average time per client join: ${timePerClient}ms`);
 
-  for (const currentId of active.ids.values().toArray()) {
-    const wsValue = active.ws.get(currentId);
-    if (!wsValue) continue;
-    const res = await getGame(currentId)
-    const gameRecord = await res.json();
+      let lobbiesTimesToStart = publicLobbies.map(lobby => [lobby.msUntilStart, (lobby.gameConfig.maxPlayers - lobby.numClients) * timePerClient]).flat();
+      lobbiesTimesToStart = lobbiesTimesToStart.map(time => (time - timeTaken > 0 ? time - timeTaken : 500));
+      let waitTime = Math.min(...lobbiesTimesToStart);
 
-    if (!gameRecord?.error) {
-      // Assuming ISO string or timestamp
-      let endDateRaw = gameRecord?.info?.end;
-      if (!endDateRaw) {
-        console.warn(`Missing end date for archived game ${currentId}`);
-        await mapHelpers.delete(["info", "games", "active", "ws"], currentId);
-        await setHelpers.delete(["info", "games", "active", "ids"], currentId);
-        continue;
+      updatingGameInfo = false;
+
+      if (autoSetNextRun) {
+        logger(`Running again in ${waitTime}ms`);
+        await new Promise(() => setTimeout(updateGameInfo, waitTime, false, { type: autoSetNextRunType }));
+      } else {
+        logger(`Suggested wait ${waitTime}ms`);
       }
-      const endDate = new Date(endDateRaw);
-      if (isNaN(endDate.getTime())) {
-        console.warn(`Invalid end date for archived game ${currentId}: ${endDateRaw}`);
-        continue;
+      return waitTime;
+
+    } catch (error) {
+      if (type === "auto") {
+        await updateGameInfo(true, { type: "openfront.pro", autoSetNextRunType: autoSetNextRunType });
+      } else {
+        console.error(error);
+      }
+    }
+  } else if (type === "openfront.pro") {
+    try {
+      let addGames = await fetch("https://openfront.pro/api/v1/lobbies");
+      addGames = await addGames.json();
+
+      for (let game of addGames) {
+        let gameID = game.game_id;
+        setHelpers.add(["info", "games", "active", "ids"], gameID);
+        mapHelpers.set(["info", "games", "active", "ws"], gameID, "unknown");
       }
 
-      const dateStr = endDate.toISOString().slice(0, 10); // YYYY-MM-DD UTC date
+      updatingGameInfo = true;
+      logger(`Updating gameIDs`);
 
-      // Add currentId to dateToNewIds map
-      if (!dateToNewIds.has(dateStr)) {
-        dateToNewIds.set(dateStr, []);
-      }
-      dateToNewIds.get(dateStr).push(currentId);
-      // Update your sets/maps as before
-      //await setHelpers.add(["info", "games", "ids"], currentId);
-      await mapHelpers.delete(["info", "games", "active", "ws"], currentId);
-      await setHelpers.delete(["info", "games", "active", "ids"], currentId);
-    } else {
-      let game = await fetch(`https://${config.prefixs.use}${config.domain}/w${wsValue}/api/game/${currentId}`);
-      //console.log(`https://${config.prefixs.use}${config.domain}/w${wsValue}/api/game/${currentId}`/)
-      game = await game.json();
-      if (game.error) {
-        if (game.error === "Game not found") {
+      let active = {
+        ids: await setHelpers.getSet(["info", "games", "active", "ids"]),
+        ws: await mapHelpers.getMap(["info", "games", "active", "ws"]),
+      };
+
+      // Map date string => array of { gameId, mapType }
+      const dateToNewEntries = new Map();
+
+      for (const currentId of active.ids.values().toArray()) {
+        const wsValue = active.ws.get(currentId);
+        if (!wsValue) continue;
+
+        const res = await getGame(currentId);
+        const gameRecord = await res.json();
+
+        if (!gameRecord?.error) {
+          let endDateRaw = gameRecord?.info?.end;
+          if (!endDateRaw) {
+            console.warn(`Missing end date for archived game ${currentId}`);
+            await mapHelpers.delete(["info", "games", "active", "ws"], currentId);
+            await setHelpers.delete(["info", "games", "active", "ids"], currentId);
+            continue;
+          }
+          const endDate = new Date(endDateRaw);
+          if (isNaN(endDate.getTime())) {
+            console.warn(`Invalid end date for archived game ${currentId}: ${endDateRaw}`);
+            continue;
+          }
+          const dateStr = endDate.toISOString().slice(0, 10);
+
+          const mapType = gameRecord?.info?.config?.gameMap || "unknown";
+
+          if (!dateToNewEntries.has(dateStr)) {
+            dateToNewEntries.set(dateStr, []);
+          }
+          dateToNewEntries.get(dateStr).push({ gameId: currentId, mapType });
+
           await mapHelpers.delete(["info", "games", "active", "ws"], currentId);
           await setHelpers.delete(["info", "games", "active", "ids"], currentId);
         }
       }
-    }
-  }
 
-  // For each date, load existing file, append new IDs, and save
-  for (const [dateStr, newIds] of dateToNewIds.entries()) {
-    console.log(`Adding ${newIds} to ${dateStr}.ndjson`)
-    let existingArrays = await loadOrCreateFile(dateStr)
-    existingArrays.push(newIds);
-    existingArrays = new Set(existingArrays)
-    existingArrays = existingArrays.values().toArray().flat()
-    await saveFile(dateStr, existingArrays);
-  }
-  let timeTaken = Date.now() - startTime
-let timePerClient = await getAvrgTimeRaito(
-  publicLobbies.map(lobby => {
-    const timeRemaining = 60000 - lobby.msUntilStart;
-    if (lobby.numClients === 0 || timeRemaining <= 0) return defaultClientsToTime; // prevent division by 0
-    return timeRemaining / lobby.numClients;
-  })
-);
-  logger(`Average time per client join: ${timePerClient}ms`)
-  let lobbiesTimesToStart = publicLobbies.map(lobby => [lobby.msUntilStart,(lobby.gameConfig.maxPlayers-lobby.numClients)*timePerClient]).flat()
-  lobbiesTimesToStart = lobbiesTimesToStart.map(time => (time-timeTaken>0 ? time-timeTaken : 500))
-  let waitTime = Math.min(...lobbiesTimesToStart)
-  updatingGameInfo = false
-  if (autoSetNextRun) {
-    logger(`Runing again in ${waitTime}ms`)
-    await new Promise(() => setTimeout(updateGameInfo, waitTime, false, {type:autoSetNextRunType}))
-  } else logger(`Suggested wait ${waitTime}ms`)
-  return waitTime
-  } catch (error) {
-    if (type==="auto") {
-      await updateGameInfo(true, {type:"openfront.pro", autoSetNextRunType:autoSetNextRunType})
-    } else console.error(error)
-  }
-  } else if (type==="openfront.pro") {
-    try {
-      let addGames = await fetch("https://openfront.pro/api/v1/lobbies")
-      addGames = await addGames.json()
-      for (let game of addGames) {
-        let gameID = game.game_id
-        setHelpers.add(["info", "games", "active", "ids"], gameID)
-        mapHelpers.set(["info", "games", "active", "ws"], gameID, "unknown")
-      }
-      updatingGameInfo = true
-  logger(`Updating gameIDs`)
-  let active = {
-    ids: await setHelpers.getSet(["info", "games", "active", "ids"]),
-    ws: await mapHelpers.getMap(["info", "games", "active", "ws"]),
-  };
-  // Helper: load or create .ndjson file for a given date string (YYYY-MM-DD)
+      for (const [dateStr, newEntries] of dateToNewEntries.entries()) {
+        logger(`Adding ${newEntries.length} games with mapType to ${dateStr}.ndjson`);
+        let existingEntries = await loadOrCreateFile(dateStr);
 
-  // Map date string => array of archived game IDs to append
-  const dateToNewIds = new Map();
-
-  for (const currentId of active.ids.values().toArray()) {
-    const wsValue = active.ws.get(currentId);
-    if (!wsValue) continue;
-    const res = await getGame(currentId)
-    const gameRecord = await res.json();
-
-    if (!gameRecord?.error) {
-      // Assuming ISO string or timestamp
-      let endDateRaw = gameRecord?.info?.end;
-      if (!endDateRaw) {
-        console.warn(`Missing end date for archived game ${currentId}`);
-        await mapHelpers.delete(["info", "games", "active", "ws"], currentId);
-        await setHelpers.delete(["info", "games", "active", "ids"], currentId);
-        continue;
-      }
-      const endDate = new Date(endDateRaw);
-      if (isNaN(endDate.getTime())) {
-        console.warn(`Invalid end date for archived game ${currentId}: ${endDateRaw}`);
-        continue;
+        // Avoid duplicates by gameId
+        const existingIds = new Set(existingEntries.map(e => e.gameId));
+        for (const entry of newEntries) {
+          if (!existingIds.has(entry.gameId)) {
+            existingEntries.push(entry);
+          }
+        }
+        await saveFile(dateStr, existingEntries);
       }
 
-      const dateStr = endDate.toISOString().slice(0, 10); // YYYY-MM-DD UTC date
-
-      // Add currentId to dateToNewIds map
-      if (!dateToNewIds.has(dateStr)) {
-        dateToNewIds.set(dateStr, []);
-      }
-      dateToNewIds.get(dateStr).push(currentId);
-      // Update your sets/maps as before
-      //await setHelpers.add(["info", "games", "ids"], currentId);
-      await mapHelpers.delete(["info", "games", "active", "ws"], currentId);
-      await setHelpers.delete(["info", "games", "active", "ids"], currentId);
-    }
-  }
-      for (const [dateStr, newIds] of dateToNewIds.entries()) {
-        console.log(`Adding ${newIds} to ${dateStr}.ndjson`)
-        let existingArrays = await loadOrCreateFile(dateStr)
-        existingArrays.push(newIds);
-        existingArrays = new Set(existingArrays)
-        existingArrays = existingArrays.values().toArray().flat()
-        await saveFile(dateStr, existingArrays);
-      }
       let waitTime = 10000;
       updatingGameInfo = false;
+
       if (autoSetNextRun) {
-        logger(`Runing again in ${waitTime}ms`)
-        await new Promise(() => setTimeout(updateGameInfo, waitTime, false, {type:autoSetNextRunType}))
-  } else logger(`Suggested wait ${waitTime}ms`)
-  return waitTime
-  } catch (e) {
-      console.error(e)
+        logger(`Running again in ${waitTime}ms`);
+        await new Promise(() => setTimeout(updateGameInfo, waitTime, false, { type: autoSetNextRunType }));
+      } else {
+        logger(`Suggested wait ${waitTime}ms`);
+      }
+      return waitTime;
+
+    } catch (e) {
+      console.error(e);
     }
   }
 }
