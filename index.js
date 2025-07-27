@@ -124,8 +124,6 @@ async function getMap(name, socket = null) {
 
   return matches;
 }
-
-
 Deno.serve(async (req) => {
   const url = new URL(req.url);
   const pathname = url.pathname;
