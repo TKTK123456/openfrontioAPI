@@ -94,7 +94,7 @@ export async function getRangeGameIds(start, end) {
   return allGameIds
 }
 export async function getAllGameIds() {
-  let startDate = new Date(1753020235726)
+  let startDate = new Date(1753637516478)
   let endDate = new Date()
   let allGameIds = await getRangeGameIds(startDate, endDate)
   return allGameIds
