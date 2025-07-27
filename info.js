@@ -93,11 +93,14 @@ export async function getRangeGameIds(start, end) {
   }))
   return allGameIds
 }
-export async function getAllGameIds() {
+export async function getAllGameIds(mapType = true) {
   let startDate = new Date(1753637516478)
   let endDate = new Date()
-  let allGameIds = await getRangeGameIds(startDate, endDate)
-  return allGameIds
+  let allGames = await getRangeGameIds(startDate, endDate)
+  if (!mapType) {
+    allGames = allGames.map((i) => i.gameId)
+  }
+  return allGames
 }
 export async function getCordsFromTile(name, tile) {
   const manifest = await getMapManifest(name);
