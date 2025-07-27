@@ -81,7 +81,7 @@ async function getMap(name, socket = null) {
   const filename = `${name}.json`;
 
   // Try to load previous progress
-  const parsed = await readJsonFile(filename);
+  const parsed = null//await readJsonFile(filename);
 
   let startIndex = 0;
   if (parsed) {
@@ -103,7 +103,7 @@ async function getMap(name, socket = null) {
       matches,
     };
     try {
-      await writeJsonFile(filename, dataToWrite);
+      //await writeJsonFile(filename, dataToWrite);
     } catch (err) {
       console.error(`Error writing to file ${filename}:`, err);
     }
