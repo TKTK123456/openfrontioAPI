@@ -51,7 +51,8 @@ const encoder = new TextEncoder();
 
 async function readJsonFile(filename) {
   try {
-    const text = await Deno.readTextFile(filename);
+    const fullPath = path.join(__dirname, filename);
+    const text = await Deno.readTextFile(fullPath);
     return JSON.parse(text);
   } catch (err) {
     if (err instanceof Deno.errors.NotFound) {
@@ -64,14 +65,13 @@ async function readJsonFile(filename) {
 async function writeJsonFile(filename, data) {
   const jsonString = JSON.stringify(data, null, 2);
   const encoded = encoder.encode(jsonString);
+  const fullPath = path.join(__dirname, filename);
 
-  const pathParts = filename.split("/");
-  if (pathParts.length > 1) {
-    const dir = pathParts.slice(0, -1).join("/");
-    await Deno.mkdir(dir, { recursive: true });
-  }
+  // Ensure directory exists
+  const dir = path.dirname(fullPath);
+  await Deno.mkdir(dir, { recursive: true });
 
-  await Deno.writeFile(filename, encoded);
+  await Deno.writeFile(fullPath, encoded);
 }
 
 async function getMap(name, socket = null) {
