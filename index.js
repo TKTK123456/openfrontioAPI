@@ -75,8 +75,8 @@ async function writeJsonFile(filename, data) {
 }
 
 async function getMap(name, socket = null) {
-  const gameIds = await getAllGameIds();
-  const total = gameIds.length;
+  const games = await getAllGameIds();
+  const total = games.length;
   const matches = [];
   const filename = `${name}.json`;
 
@@ -95,16 +95,7 @@ async function getMap(name, socket = null) {
   }
 
   for (let i = startIndex; i < total; i++) {
-    const id = gameIds[i];
-    try {
-      const response = await fetch(`https://api.openfront.io/game/${id}`);
-      if (!response.ok) continue;
-
-      const game = await response.json();
-      if (game?.info?.config?.gameMap === name) {
-        matches.push(id);
-      }
-    } catch {}
+    if (games[i].mapType === name) matches.push(name)
 
     // Save progress with index
     const dataToWrite = {
