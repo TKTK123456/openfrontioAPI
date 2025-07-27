@@ -154,7 +154,7 @@ Deno.serve(async (req) => {
   if (pathname.startsWith("/map/")) {
     const mapName = pathname.slice("/map/".length);
 
-    const html = `<!DOCTYPE html>
+    const html = const html = `<!DOCTYPE html>
 <html>
 <head>
   <title>Map Search Progress - ${mapName}</title>
@@ -164,53 +164,63 @@ Deno.serve(async (req) => {
   <div id="progress">Connecting...</div>
   <pre id="result"></pre>
   <script>
-    const mapName = "${mapName}";
+    const mapName = ${JSON.stringify(mapName)};
     const ws = new WebSocket("wss://" + location.host + "/ws");
     const progressEl = document.getElementById("progress");
     const resultEl = document.getElementById("result");
 
+    function logStatus(msg) {
+      progressEl.innerText += "\\n" + msg;
+    }
+
+    logStatus("Connecting to WebSocket at: " + "wss://" + location.host + "/ws");
+    logStatus("Using mapName: " + mapName);
+
     ws.onopen = () => {
+      logStatus("WebSocket opened");
       progressEl.innerText = "Connected. Starting map scan...";
-      ws.send(JSON.stringify({ type: "getMap", mapName }));
+      const msg = JSON.stringify({ type: "getMap", mapName });
+      logStatus("Sending: " + msg);
+      ws.send(msg);
     };
 
     ws.onmessage = (event) => {
-    alert("Message received:", event.data);
-  const data = JSON.parse(event.data);
+      logStatus("Received message: " + event.data);
+      const data = JSON.parse(event.data);
 
-  if (data.type === "progress") {
-    if (data.task === "filterGames") {
-      progressEl.innerText = \`Map Progress: \${data.progress}% (\${data.currentCount}/\${data.total} checked, \${data.matchesCount} matches)\`;
-    } else if (data.task === "getStats") {
-      progressEl.innerText = \`\${data.statType.charAt(0).toUpperCase() + data.statType.slice(1).toLowerCase()} Stat Progress: Game \${data.currentGame}/\${data.totalGames}, Intents processed: \${data.currentIntents}, Tracked entries: \${data.tracked}\`;
-    } else {
-      progressEl.innerText = \`Progress (\${data.task}): \${data.progress}% (\${data.currentCount} checked)\`;
-    }
-  }
+      if (data.type === "progress") {
+        if (data.task === "filterGames") {
+          progressEl.innerText = \`Map Progress: \${data.progress}% (\${data.currentCount}/\${data.total} checked, \${data.matchesCount} matches)\`;
+        } else if (data.task === "getStats") {
+          progressEl.innerText = \`\${data.statType.charAt(0).toUpperCase() + data.statType.slice(1).toLowerCase()} Stat Progress: Game \${data.currentGame}/\${data.totalGames}, Intents processed: \${data.currentIntents}, Tracked entries: \${data.tracked}\`;
+        } else {
+          progressEl.innerText = \`Progress (\${data.task}): \${data.progress}% (\${data.currentCount} checked)\`;
+        }
+      }
 
-  if (data.done) {
-    progressEl.innerText = "Finished!";
-    if (data.matches) {
-      resultEl.innerText = JSON.stringify(data.matches, null, 2);
-    } else if (data.stats) {
-      resultEl.innerText = JSON.stringify(data.stats, null, 2);
-    } else {
-      resultEl.innerText = "Done, but no results returned.";
-    }
-  }
+      if (data.done) {
+        progressEl.innerText = "Finished!";
+        if (data.matches) {
+          resultEl.innerText = JSON.stringify(data.matches, null, 2);
+        } else if (data.stats) {
+          resultEl.innerText = JSON.stringify(data.stats, null, 2);
+        } else {
+          resultEl.innerText = "Done, but no results returned.";
+        }
+      }
 
-  if (data.error) {
-    progressEl.innerText = "Error: " + data.error;
-  }
-};
+      if (data.error) {
+        progressEl.innerText = "Error: " + data.error;
+      }
+    };
 
-ws.onerror = () => {
-  progressEl.innerText = "WebSocket error.";
-};
+    ws.onerror = (event) => {
+      logStatus("WebSocket error.");
+    };
 
-ws.onclose = () => {
-  progressEl.innerText += "\nConnection closed.";
-};
+    ws.onclose = (event) => {
+      logStatus("Connection closed.");
+    };
   </script>
 </body>
 </html>`;
