@@ -80,7 +80,7 @@ async function fixOldFiles() {
     const entries = await loadFile(dateStr);
     if (!entries) continue;
 
-    if (entries.length && (typeof entries[0] === "string" || typeof entries[0] === "number")) {
+    if (entries.length) {
       const updatedEntries = await runWithConcurrencyLimit(entries, async (gameId) => {
         const mapType = await fetchMapType(gameId);
         console.log(`Game ${gameId}: mapType = ${mapType}`);
