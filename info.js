@@ -280,6 +280,7 @@ export async function updateGameInfo(autoSetNextRun = true, { type = "auto", log
         const existingIds = new Set(existingEntries.map(e => e.gameId));
         for (const entry of newEntries) {
           if (!existingIds.has(entry.gameId)) {
+            console.log(entry)
             existingEntries.push(entry);
           }
         }
@@ -382,6 +383,7 @@ export async function updateGameInfo(autoSetNextRun = true, { type = "auto", log
         const existingIds = new Set(existingEntries.map(e => e.gameId));
         for (const entry of newEntries) {
           if (!existingIds.has(entry.gameId)) {
+            console.log(entry)
             existingEntries.push(entry);
           }
         }
