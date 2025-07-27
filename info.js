@@ -213,7 +213,7 @@ export async function updateGameInfo(autoSetNextRun = true, { type = "auto", log
     } catch (e) {
       if (type === "auto") {
         updatingGameInfo = false;
-        await updateGameInfo(autoSetNextRun, {type: "openfront.pro", autoSetNextRunType}
+        await updateGameInfo(autoSetNextRun, {type: "openfront.pro", autoSetNextRunType})
       }
     }
     } else if (type === "openfront.pro") {
