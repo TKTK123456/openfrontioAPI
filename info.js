@@ -192,12 +192,17 @@ let updatingGameInfo = false;
 
 export async function updateGameInfo(autoSetNextRun = true, { type = "auto", log = true, autoSetNextRunType = type } = {}) {
   const logger = msg => { if (log) console.log(msg); };
-
-  try {
-    if (updatingGameInfo) return;
-    updatingGameInfo = true;
-
+  const waitTime = 10000;
+  if (updatingGameInfo) {
+    if (autoSetNextRun) {
+      logger(`Trying again in ${waitTime}ms`);
+      await new Promise(resolve => setTimeout(() => updateGameInfo(true, { type: autoSetNextRunType }), waitTime));
+    }
+    return 10000
+  };
+  updatingGameInfo = true;
     if (type === "selfFetch" || type === "auto") {
+    try {
       const publicLobbies = await findPublicLobby();
       const lobbies = Array.from(publicLobbies.values());
 
@@ -205,6 +210,12 @@ export async function updateGameInfo(autoSetNextRun = true, { type = "auto", log
         setHelpers.add(["info", "games", "active", "ids"], lobby.gameId);
         mapHelpers.set(["info", "games", "active", "ws"], lobby.gameId, lobby.wsId);
       }
+    } catch (e) {
+      if (type === "auto") {
+        updatingGameInfo = false;
+        await updateGameInfo(autoSetNextRun, {type: "openfront.pro", autoSetNextRunType}
+      }
+    }
     } else if (type === "openfront.pro") {
       const addGames = await fetch("https://openfront.pro/api/v1/lobbies");
       const games = await addGames.json();
@@ -213,7 +224,6 @@ export async function updateGameInfo(autoSetNextRun = true, { type = "auto", log
         mapHelpers.set(["info", "games", "active", "ws"], game.game_id, "unknown");
       }
     }
-
     logger("Updating gameIDs");
     const active = {
       ids: await setHelpers.getSet(["info", "games", "active", "ids"]),
@@ -263,10 +273,7 @@ export async function updateGameInfo(autoSetNextRun = true, { type = "auto", log
       logger(`Running again in ${waitTime}ms`);
       await new Promise(resolve => setTimeout(() => updateGameInfo(true, { type: autoSetNextRunType }), waitTime));
     }
-  } catch (e) {
-    console.error(e);
-    updatingGameInfo = false;
-  }
+  return 10000
 }
 
 await updateGameInfo(true);
