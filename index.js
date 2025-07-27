@@ -95,7 +95,7 @@ async function getMap(name, socket = null) {
   }
 
   for (let i = startIndex; i < total; i++) {
-    if (games[i].mapType === name) matches.push(name)
+    if (games[i].mapType === name) matches.push(games[i].gameId)
 
     // Save progress with index
     const dataToWrite = {
@@ -383,7 +383,8 @@ Deno.serve(async (req) => {
       for (let i = 0; i < matches.length; i++) {
         const id = matches[i];
         try {
-          const game = await fetch(`https://api.openfront.io/game/${id}`).then(r => r.json());
+          const game = await fetch(`https://api.openfront.io/game/${id}`).then(r => r.json())
+          
           for (const turn of game.turns ?? []) {
             for (const intent of turn.intents ?? []) {
               totalIntents++;
