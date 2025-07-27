@@ -226,6 +226,7 @@ Deno.serve(async (req) => {
   <pre id="result"></pre>
   <script>
     const mapName = ${JSON.stringify(mapName)};
+    alert(mapName)
     const ws = new WebSocket("wss://" + location.host + "/ws");
     const progressEl = document.getElementById("progress");
     const resultEl = document.getElementById("result");
