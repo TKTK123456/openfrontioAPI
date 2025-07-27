@@ -5,6 +5,7 @@ import { Buffer } from 'node:buffer';
 import { Readable } from 'node:stream';
 import config from './config.js'
 import { createClient } from '@supabase/supabase-js'
+import './refactor.js'
 const supabase = createClient("https://ebnqhovfhgfrfxzexdxj.supabase.co", process.env.SUPABASE_TOKEN)
 const kv = await Deno.openKv();
 //await kv.set(["default", "clientsToTime"], 571.428571429)
