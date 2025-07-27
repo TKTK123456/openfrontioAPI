@@ -47,6 +47,32 @@ function stringToDate(string) {
     parseInt(string.slice(6))
   ));
 }
+const encoder = new TextEncoder();
+
+async function readJsonFile(filename) {
+  try {
+    const text = await Deno.readTextFile(filename);
+    return JSON.parse(text);
+  } catch (err) {
+    if (err instanceof Deno.errors.NotFound) {
+      return null;
+    }
+    throw err;
+  }
+}
+
+async function writeJsonFile(filename, data) {
+  const jsonString = JSON.stringify(data, null, 2);
+  const encoded = encoder.encode(jsonString);
+
+  const pathParts = filename.split("/");
+  if (pathParts.length > 1) {
+    const dir = pathParts.slice(0, -1).join("/");
+    await Deno.mkdir(dir, { recursive: true });
+  }
+
+  await Deno.writeFile(filename, encoded);
+}
 
 async function getMap(name, socket = null) {
   const gameIds = await getAllGameIds();
@@ -55,28 +81,17 @@ async function getMap(name, socket = null) {
   const filename = `${name}.json`;
 
   // Try to load previous progress
-  try {
-    const fileData = await fs.readFile(filename, 'utf8');
-    const parsed = JSON.parse(fileData);
+  const parsed = await readJsonFile(filename);
 
-    // If scan is complete or in progress, just return known matches
-    if (typeof parsed.lastChecked === 'number' && parsed.lastChecked >= total) {
+  let startIndex = 0;
+  if (parsed) {
+    if (typeof parsed.lastChecked === "number" && parsed.lastChecked >= total) {
       return Array.isArray(parsed.matches) ? parsed.matches : [];
     }
-
-    // Otherwise resume from lastChecked
-    if (typeof parsed.lastChecked === 'number') {
-      var startIndex = parsed.lastChecked;
-    } else {
-      var startIndex = 0;
-    }
-
+    startIndex = typeof parsed.lastChecked === "number" ? parsed.lastChecked : 0;
     if (Array.isArray(parsed.matches)) {
       matches.push(...parsed.matches);
     }
-  } catch {
-    // File doesn't exist or is unreadable — start from scratch
-    var startIndex = 0;
   }
 
   for (let i = startIndex; i < total; i++) {
@@ -93,29 +108,32 @@ async function getMap(name, socket = null) {
 
     // Save progress with index
     const dataToWrite = {
-      lastChecked: i + 1, // Store next index to resume from
+      lastChecked: i + 1,
       matches,
     };
     try {
-      await fs.writeFile(filename, JSON.stringify(dataToWrite, null, 2), 'utf8');
+      await writeJsonFile(filename, dataToWrite);
     } catch (err) {
       console.error(`Error writing to file ${filename}:`, err);
     }
 
     if (socket) {
-      socket.send(JSON.stringify({
-        type: "progress",
-        task: "filterGames",
-        progress: Math.floor(((i + 1) / total) * 100),
-        currentCount: i + 1,
-        total,
-        matchesCount: matches.length,
-      }));
+      socket.send(
+        JSON.stringify({
+          type: "progress",
+          task: "filterGames",
+          progress: Math.floor(((i + 1) / total) * 100),
+          currentCount: i + 1,
+          total,
+          matchesCount: matches.length,
+        })
+      );
     }
   }
 
   return matches;
 }
+
 
 Deno.serve(async (req) => {
   const url = new URL(req.url);
