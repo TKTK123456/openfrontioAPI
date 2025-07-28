@@ -116,7 +116,7 @@ export async function getCordsFromTile(name, tile) {
 }
 export async function getMapManifest(name) {
   name = name.toLowerCase()
-  const url = `https://raw.githubusercontent.com/openfrontio/OpenFrontIO/refs/heads/main/resources/maps/${name}/manifest.json`;
+  const url = `https://cdn.jsdelivr.net/gh/openfrontio/OpenFrontIO/resources/maps/${name}/manifest.json`;
   try {
     const response = await fetch(url);
     if (!response.ok) {
