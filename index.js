@@ -425,6 +425,7 @@ r.ws("/ws", (socket) => {
       }
 
     } catch (e) {
+      console.error(e)
       socket.send(JSON.stringify({ error: e.message }));
     }
   };
