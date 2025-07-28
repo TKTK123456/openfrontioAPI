@@ -275,9 +275,11 @@ export async function updateGameInfo(autoSetNextRun = true, { type = "auto", log
       for (const [dateStr, newEntries] of dateToNewEntries.entries()) {
         logger(`Adding ${newEntries.length} games with mapType to ${dateStr}.ndjson`);
         let existingEntries = await loadOrCreateFile(dateStr);
-        existingEntries.push(...newEntries)
-        existingEntries = new Set(existingEntries)
-        existingEntries = existingEntries.values().toArray()
+        existingEntries.push(...newEntries.flat(Infinity))
+        existingEntries = new Set(existingEntries.flat(Infinity).map((i) => JSON.stringify(i)))
+        console.log(existingEntries)
+        existingEntries = existingEntries.values().toArray().map((i) => JSON.parse(i))
+        existingEntries
         await saveFile(dateStr, existingEntries);
       }
 
@@ -372,10 +374,11 @@ export async function updateGameInfo(autoSetNextRun = true, { type = "auto", log
       for (const [dateStr, newEntries] of dateToNewEntries.entries()) {
         logger(`Adding ${newEntries.length} games with mapType to ${dateStr}.ndjson`);
         let existingEntries = await loadOrCreateFile(dateStr);
-        existingEntries.push(...newEntries)
-        existingEntries = new Set(existingEntries.map(JSON.stringify))
+        existingEntries.push(...newEntries.flat(Infinity))
+        existingEntries = new Set(existingEntries.flat(Infinity).map((i) => JSON.stringify(i)))
         console.log(existingEntries)
-        existingEntries = existingEntries.values().toArray().map(JSON.parse)
+        existingEntries = existingEntries.values().toArray().map((i) => JSON.parse(i))
+        existingEntries
         await saveFile(dateStr, existingEntries);
       }
 
