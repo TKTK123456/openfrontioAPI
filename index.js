@@ -160,19 +160,17 @@ r.get("/game", async ({ query, send }) => {
   }
 });
 
-r.get("/data/gameIds/:param", async ({ params, send }) => {
-  const param = params.param;
+r.get("/data/gameIds/:start{-:end}", async ({ params, send }) => {
   let gameIds = [];
   try {
-    if (param === "all") {
+    if (params.start === "all") {
       gameIds = await getAllGameIds();
-    } else if (param.includes("-")) {
-      const [start, end] = param.split("-");
-      const startDate = stringToDate(start);
-      const endDate = stringToDate(end);
+    } else if (param.end) {
+      const startDate = stringToDate(params.start);
+      const endDate = stringToDate(end.end);
       gameIds = await getRangeGameIds(startDate, endDate);
     } else {
-      const startDate = stringToDate(param);
+      const startDate = stringToDate(param.start);
       gameIds = await getGameIds(startDate);
     }
     send(JSON.stringify(gameIds), { type: "application/json" });
@@ -235,6 +233,7 @@ r.get("/map/:name", ({ params, send }) => {
 
 // For /stats/:map/:type
 r.get("/stats/:map/:type{/:display}", ({ params, send }) => {
+  console.log(params)
   const mapName = params.map;
   const statType = params.type;
   const html = `<!DOCTYPE html>
