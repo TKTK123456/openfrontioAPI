@@ -8,7 +8,7 @@ import { setHelpers, mapHelpers, getGameIds, getAllGameIds, getRangeGameIds, get
 import { findGameWebSocket, findPublicLobby, getPlayer, getGame } from './fetchers.js'
 import config from './config.js'
 import router from "./router.js";
-import heatmap from './heatmap.js'
+import { generateHeatmapRaw } from './heatmap.js'
 const __dirname = path.resolve();
 const kv = await Deno.openKv();
 function getContentType(Path) {
