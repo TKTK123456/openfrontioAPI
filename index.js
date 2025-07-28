@@ -183,6 +183,7 @@ r.get("/data/gameIds/:param", async ({ params, send }) => {
 
 // For /map/:name
 r.get("/map/:name", ({ params, send }) => {
+  console.log("Params:", params);
   const mapName = params.name;
   const html = `<!DOCTYPE html>
 <html>
