@@ -98,59 +98,47 @@ class Router {
 
   const paramNames = [];
 
-  // Split routePath into parts and convert each to regex segment
   let pattern = routePath
     .split("/")
     .filter(Boolean)
     .map(part => {
-      // Check if this part contains optional group syntax {...}
+      // 1. Optional group: e.g. ":start{-:end}"
       if (part.includes("{") && part.includes("}")) {
-        // e.g. ":start{-:end}"
         const [mainPart, groupPart] = part.split("{");
-        const groupContent = groupPart.slice(0, -1); // remove trailing "}"
+        const groupContent = groupPart.slice(0, -1); // remove '}'
 
-        // Find param names inside mainPart and groupContent
+        // Collect param names
         const collectParams = str => {
-          const params = [];
-          const paramRegex = /:([a-zA-Z0-9_]+)/g;
-          let m;
-          while ((m = paramRegex.exec(str))) {
-            params.push(m[1]);
-          }
-          return params;
+          const matches = [...str.matchAll(/:([a-zA-Z0-9_]+)/g)];
+          return matches.map(m => m[1]);
         };
 
-        const mainParams = collectParams(mainPart);
-        const groupParams = collectParams(groupContent);
+        paramNames.push(...collectParams(mainPart));
+        paramNames.push(...collectParams(groupContent));
 
-        paramNames.push(...mainParams, ...groupParams);
+        const mainRegex = mainPart.replace(/:([a-zA-Z0-9_]+)/g, () => `([^-/]+)`);
+        const groupRegex = groupContent.replace(/:([a-zA-Z0-9_]+)/g, () => `([^/]+)`);
 
-        // Replace params with capture groups in mainPart and groupContent
-        // Use [^-]+ for mainPart params to avoid including dash (separator)
-        const mainRegex = mainPart.replace(/:([a-zA-Z0-9_]+)/g, (_, name) => `([^-/]+)`);
-        // groupContent includes the dash literal (e.g. "-:end"), so keep dash
-        const groupRegex = groupContent.replace(/:([a-zA-Z0-9_]+)/g, (_, name) => `([^/]+)`);
-
-        // The entire group is optional: wrap in ( ... )?
         return `/${mainRegex}(?:${groupRegex})?`;
+      }
 
-      } else if (part.startsWith(":")) {
-        // Simple param, optionally with regex and optional marker (e.g. :id(\d+)?, :name?)
-        const match = part.match(/^:([a-zA-Z0-9_]+)(\(([^)]+)\))?(\?)?$/);
-        if (!match) return "/" + escapeRegex(part);
-
+      // 2. Normal named param: :id or :id? or :id(\d+)?
+      const match = part.match(/^:([a-zA-Z0-9_]+)(\(([^)]+)\))?(\?)?$/);
+      if (match) {
         const [, name, , regex, optional] = match;
         paramNames.push(name);
         const capture = regex || "[^/]+";
-        return optional ? `/(?:${capture})?` : `/${capture}`;
+        return optional ? `(?:/(${capture}))?` : `/(${capture})`;
+      }
 
-      } else if (part === "*") {
+      // 3. Wildcard param
+      if (part === "*") {
         paramNames.push("wildcard");
         return "/(.*)";
-
-      } else {
-        return "/" + escapeRegex(part);
       }
+
+      // 4. Static path
+      return "/" + escapeRegex(part);
     })
     .join("");
 
@@ -166,7 +154,6 @@ class Router {
 
   return { params };
 }
-
   
 
   async #tryStatic(pathname) {
