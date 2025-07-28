@@ -165,12 +165,12 @@ r.get("/data/gameIds/:start{-:end}", async ({ params, send }) => {
   try {
     if (params.start === "all") {
       gameIds = await getAllGameIds();
-    } else if (param.end) {
+    } else if (params.end) {
       const startDate = stringToDate(params.start);
       const endDate = stringToDate(params.end);
       gameIds = await getRangeGameIds(startDate, endDate);
     } else {
-      const startDate = stringToDate(param.start);
+      const startDate = stringToDate(params.start);
       gameIds = await getGameIds(startDate);
     }
     send(JSON.stringify(gameIds), { type: "application/json" });
