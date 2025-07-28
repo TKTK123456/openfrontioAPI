@@ -379,6 +379,7 @@ Deno.serve(async (req) => {
       const stats = {};
       let totalIntents = 0;
       stats[data.statType] = []
+      if (data.statType === "spawns") stats[data.statType] = new Map()
       for (let i = 0; i < matches.length; i++) {
         const id = matches[i];
         try {
@@ -390,7 +391,7 @@ Deno.serve(async (req) => {
 
               if (data.statType === "spawns" && intent.type === "spawn") {
                 intent.tile = await getCordsFromTile(data.mapName, intent.tile)
-                stats[data.statType].push({ ...intent, gameId: id });
+                stats[data.statType].set(intent.clientID, { ...intent, gameId: id });
               }
 
               // You can expand here for other statTypes
@@ -412,7 +413,7 @@ Deno.serve(async (req) => {
           }
         } catch {}
       }
-
+      if (data.statType === "spawns") stats[data.statType] = stats[data.statType].values().toArray()
       socket.send(JSON.stringify({ done: true, stats }));
       return
     }
