@@ -281,6 +281,7 @@ function createScript(startingDataExpr, inputVars, progressElm = "progress", res
 
     ws.onmessage = (event) => {
       const data = JSON.parse(event.data);
+
       if (data.type === "progress") {
         if (data.task === "filterGames") {
           progressEl.innerText = \`Map Progress: \${data.progress}% (\${data.currentCount}/\${data.total} checked, \${data.matchesCount} matches)\`;
@@ -290,9 +291,38 @@ function createScript(startingDataExpr, inputVars, progressElm = "progress", res
           progressEl.innerText = \`Progress (\${data.task}): \${data.progress}% (\${data.currentCount} checked)\`;
         }
       }
+
       if (data.done) {
         progressEl.innerText = "Finished!";
-        if (data.matches) {
+        
+        if (data.display === "heatmap" && data.heatmap && data.heatmap.raw && data.heatmap.width && data.heatmap.height) {
+          const canvas = document.createElement("canvas");
+          canvas.width = data.heatmap.width;
+          canvas.height = data.heatmap.height;
+          const ctx = canvas.getContext("2d");
+
+          // Convert base64 or array to Uint8ClampedArray
+          let raw;
+          if (typeof data.heatmap.raw === "string") {
+            // If base64 encoded
+            const binary = atob(data.heatmap.raw);
+            const len = binary.length;
+            raw = new Uint8ClampedArray(len);
+            for (let i = 0; i < len; i++) {
+              raw[i] = binary.charCodeAt(i);
+            }
+          } else if (Array.isArray(data.heatmap.raw)) {
+            raw = new Uint8ClampedArray(data.heatmap.raw);
+          }
+
+          const imageData = new ImageData(raw, data.heatmap.width, data.heatmap.height);
+          ctx.putImageData(imageData, 0, 0);
+
+          resultEl.innerHTML = "";
+          resultEl.appendChild(canvas);
+        } 
+        // Fallback display
+        else if (data.matches) {
           resultEl.innerText = JSON.stringify(data.matches, null, 2);
         } else if (data.stats) {
           resultEl.innerText = JSON.stringify(data.stats, null, 2);
@@ -300,6 +330,7 @@ function createScript(startingDataExpr, inputVars, progressElm = "progress", res
           resultEl.innerText = "Done, but no results returned.";
         }
       }
+
       if (data.error) {
         progressEl.innerText = "Error: " + data.error;
       }
