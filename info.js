@@ -75,11 +75,10 @@ export async function getGameIds(date) {
 function getDateRange(startDate, endDate) {
   const dates = [];
   let currentDate = new Date(startDate); // Create a new Date object from the start date
-
-  while (currentDate <= endDate) {
+  do {
     dates.push(new Date(currentDate)); // Push a copy of the current date to the array
     currentDate.setDate(currentDate.getDate() + 1); // Increment the date by one day
-  }
+  } while (currentDate <= endDate) 
 
   return dates;
 }
@@ -96,7 +95,7 @@ export async function getRangeGameIds(start, end) {
 }
 export async function getAllGameIds(mapType = true) {
   let startDate = new Date(1753637516478)
-  let endDate = new Date()
+  let endDate = Date.now()
   let allGames = await getRangeGameIds(startDate, endDate)
   if (!mapType) {
     allGames = allGames.map((i) => i.gameId)
