@@ -1,5 +1,5 @@
 // router.js
-export class Router {
+class Router {
   constructor() {
     this.routes = [];
     this.staticDir = null;
@@ -133,4 +133,7 @@ export class Router {
       ico: "image/x-icon",
     })[ext] || "application/octet-stream";
   }
+}
+export default function router() {
+  return new Router()
 }
