@@ -191,13 +191,14 @@ async function collectStats(matches, data, socket = null) {
     stats[data.statType] = Array.from(stats[data.statType].values());
   }
 
+  const manifest = await getMapManifest(data.mapName);
+  if (!manifest?.map?.width || !manifest?.map?.height) {
+    throw new Error(`Invalid map manifest for ${data.mapName}`);
+  }
+
+  const width = manifest.map.width;
+  const height = manifest.map.height;
   
-
-  // Generate heatmap for the collected points
-  // Make sure you have width and height defined, e.g. from your data or config
-  const width = data.width || 1000;  // example default width
-  const height = data.height || 1000; // example default height
-
   // Call your heatmap generator (assuming generateHeatmapRaw is in scope)
   const heatmapRaw = generateHeatmapRaw(width, height, heatmapPoints, { radius: 20 });
 
