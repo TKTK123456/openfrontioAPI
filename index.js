@@ -4,7 +4,7 @@ import bodyParser from "body-parser";
 import express from 'express'
 import { WebSocketServer } from "ws";
 import path from 'node:path'
-import { setHelpers, mapHelpers, getGameIds, getAllGameIds, getRangeGameIds, getCordsFromTile } from './info.js'
+import { setHelpers, mapHelpers, getGameIds, getAllGameIds, getRangeGameIds, getCordsFromTile, getMapManifest } from './info.js'
 import { findGameWebSocket, findPublicLobby, getPlayer, getGame } from './fetchers.js'
 import config from './config.js'
 import router from "./router.js";
