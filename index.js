@@ -130,7 +130,7 @@ const r = router();
 
 r.useStatic(__dirname); // or your static directory
 
-r.get("/", async ({ send }) = {
+r.get("/", async ({ send }) => {
   const response = await serveStaticFile(null, "/index.html");
   send(await response.text(), { type: "text/html" });
 });
@@ -154,16 +154,6 @@ r.get("/game", async ({ query, send }) => {
     const response = await getGame(id);
     const data = await response.text();
     send(data, { type: "application/json" });
-  } catch (e) {
-    send(`Error: ${e.message}`, { status: 500 });
-  }
-});
-
-r.get("/info/games/ids", async ({ send }) => {
-  try {
-    let ids = await setHelpers.get(["info", "games", "ids"]);
-    ids = [...ids.values()];
-    send(JSON.stringify(ids), { type: "application/json" });
   } catch (e) {
     send(`Error: ${e.message}`, { status: 500 });
   }
