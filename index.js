@@ -295,7 +295,7 @@ r.ws("/ws", (socket) => {
   };
 
   socket.onmessage = async (event) => {
-    console.log(event)
+    //console.log(event)
     try {
       const data = JSON.parse(event.data);
 
