@@ -82,7 +82,7 @@ class Router {
   #matchRoute(pathname, routePath) {
     const pathParts = pathname.split("/").filter(Boolean);
     const routeParts = routePath.split("/").filter(Boolean);
-    if (pathParts.length < routeParts.length) return null;
+      if (pathParts.length !== routeParts.length) return null;
 
     const params = {};
 
