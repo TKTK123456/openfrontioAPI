@@ -233,7 +233,7 @@ r.get("/map/:name", ({ params, send }) => {
 
 // For /stats/:map/:type
 r.get("/stats/:map/:type{/:display}", ({ params, send }) => {
-  console.log(params)
+  const display = params.display
   const mapName = params.map;
   const statType = params.type;
   const html = `<!DOCTYPE html>
@@ -246,12 +246,13 @@ r.get("/stats/:map/:type{/:display}", ({ params, send }) => {
   <script>
     const mapName = ${JSON.stringify(mapName)};
     const statType = ${JSON.stringify(statType)};
+    const display = ${JSON.stringify(display)};
     const ws = new WebSocket("wss://" + location.host + "/ws");
     const progressEl = document.getElementById("progress");
     const resultEl = document.getElementById("result");
     ws.onopen = () => {
       progressEl.innerText = "Connected. Starting stats fetch...";
-      ws.send(JSON.stringify({ type: "getStats", mapName, statType }));
+      ws.send(JSON.stringify({ type: "getStats", mapName, statType, display }));
     };
     ws.onmessage = (event) => {
       const data = JSON.parse(event.data);
