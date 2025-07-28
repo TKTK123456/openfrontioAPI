@@ -275,14 +275,9 @@ export async function updateGameInfo(autoSetNextRun = true, { type = "auto", log
       for (const [dateStr, newEntries] of dateToNewEntries.entries()) {
         logger(`Adding ${newEntries.length} games with mapType to ${dateStr}.ndjson`);
         let existingEntries = await loadOrCreateFile(dateStr);
-
-        // Avoid duplicates by gameId
-        const existingIds = new Set(existingEntries.map(e => e.gameId));
-        for (const entry of newEntries) {
-          if (!existingIds.has(entry.gameId)) {
-            existingEntries.push(entry);
-          }
-        }
+        existingEntries.push(...newEntries)
+        existingEntries = new Set(existingEntries)
+        existingEntries = existingEntries.values().toArray()
         await saveFile(dateStr, existingEntries);
       }
 
@@ -377,14 +372,9 @@ export async function updateGameInfo(autoSetNextRun = true, { type = "auto", log
       for (const [dateStr, newEntries] of dateToNewEntries.entries()) {
         logger(`Adding ${newEntries.length} games with mapType to ${dateStr}.ndjson`);
         let existingEntries = await loadOrCreateFile(dateStr);
-
-        // Avoid duplicates by gameId
-        const existingIds = new Set(existingEntries.map(e => e.gameId));
-        for (const entry of newEntries) {
-          if (!existingIds.has(entry.gameId)) {
-            existingEntries.push(entry);
-          }
-        }
+        existingEntries.push(...newEntries)
+        existingEntries = new Set(existingEntries)
+        existingEntries = existingEntries.values().toArray()
         await saveFile(dateStr, existingEntries);
       }
 
