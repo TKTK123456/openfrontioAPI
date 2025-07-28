@@ -230,7 +230,7 @@ r.get("/map/:name", ({ params, send }) => {
   <h1>Searching for map: ${mapName}</h1>
   <div id="progress">Connecting...</div>
   <pre id="result"></pre>
-  ${createScript('JSON.stringify({ type: "getMap", mapName })', `const mapName = ${JSON.stringify(${mapName})};`)}
+  ${createScript('JSON.stringify({ type: "getMap", mapName })', `const mapName = ${JSON.stringify(mapName)};`)}
 </body>
 </html>`;
   send(html, { type: "text/html" });
@@ -248,7 +248,7 @@ r.get("/stats/:map/:type{/:display}", ({ params, send }) => {
   <h1>Stat Collection: ${statType} on ${mapName}</h1>
   <div id="progress">Connecting...</div>
   <pre id="result"></pre>
-  ${createScript('JSON.stringify({ type: "getMap", mapName })', `const mapName = ${JSON.stringify(${mapName})}; const statType = ${JSON.stringify(statType)}; const display = ${JSON.stringify(display)};`)}
+  ${createScript('JSON.stringify({ type: "getMap", mapName })', `const mapName = ${JSON.stringify(mapName)}; const statType = ${JSON.stringify(statType)}; const display = ${JSON.stringify(display)};`)}
   </body>
 </html>`;
   send(html, { type: "text/html" });
