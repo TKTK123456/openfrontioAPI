@@ -96,7 +96,7 @@ class Router {
         const paramRegex = (main + groupContent).replace(/:([\w]+)/g, (_, name) => `(?<${name}>[^/]+)`);
         const fullRegex = new RegExp(`^${paramRegex}$`);
         const match = pathPart.match(fullRegex);
-        if (!match?.groups) return null;
+        if (!match?.groups) continue;
         Object.assign(params, match.groups);
       } else if (routePart.startsWith(":")) {
         params[routePart.slice(1)] = decodeURIComponent(pathPart);
