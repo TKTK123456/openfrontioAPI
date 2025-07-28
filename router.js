@@ -93,21 +93,36 @@ class Router {
   }
 
   #matchRoute(pathname, routePath) {
-  const escapeRegex = str =>
-    str.replace(/([.+*?=^!:${}()[\]|/\\])/g, "\\$1");
+    const escapeRegex = str => str.replace(/([.+*?=^!:${}()[\]|/\\])/g, "\\$1");
 
   const paramNames = [];
 
-  let pattern = routePath
-    .split("/")
-    .filter(Boolean)
-    .map(part => {
-      // 1. Optional group: e.g. ":start{-:end}"
-      if (part.includes("{") && part.includes("}")) {
+  // Step 1: Custom split that respects {...} groups
+  const segments = [];
+  let buffer = "";
+  let inGroup = 0;
+
+  for (const char of routePath) {
+    if (char === "{") inGroup++;
+    if (char === "}") inGroup--;
+
+    if (char === "/" && inGroup === 0) {
+      if (buffer) {
+        segments.push(buffer);
+        buffer = "";
+      }
+    } else {
+      buffer += char;
+    }
+  }
+  if (buffer) segments.push(buffer);
+
+  // Step 2: Convert to regex pattern
+  let pattern = segments.map(part => {
+    if (part.includes("{") && part.includes("}")) {
         const [mainPart, groupPart] = part.split("{");
         const groupContent = groupPart.slice(0, -1); // remove '}'
 
-        // Collect param names
         const collectParams = str => {
           const matches = [...str.matchAll(/:([a-zA-Z0-9_]+)/g)];
           return matches.map(m => m[1]);
@@ -116,13 +131,13 @@ class Router {
         paramNames.push(...collectParams(mainPart));
         paramNames.push(...collectParams(groupContent));
 
-        const mainRegex = mainPart.replace(/:([a-zA-Z0-9_]+)/g, () => `([^-/]+)`);
+        const mainRegex = mainPart.replace(/:([a-zA-Z0-9_]+)/g, () => `([^/]+)`);
         const groupRegex = groupContent.replace(/:([a-zA-Z0-9_]+)/g, () => `([^/]+)`);
 
         return `/${mainRegex}(?:${groupRegex})?`;
       }
 
-      // 2. Normal named param: :id or :id? or :id(\d+)?
+      // 2. Handle single param with optionality or regex e.g. :id(\d+)? or :id?
       const match = part.match(/^:([a-zA-Z0-9_]+)(\(([^)]+)\))?(\?)?$/);
       if (match) {
         const [, name, , regex, optional] = match;
@@ -142,6 +157,7 @@ class Router {
     })
     .join("");
 
+  // Step 3: Final match
   const fullPattern = "^" + pattern + "/?$";
   const regex = new RegExp(fullPattern);
   const match = pathname.match(regex);
@@ -149,13 +165,11 @@ class Router {
 
   const params = {};
   paramNames.forEach((name, i) => {
-    params[name] = match[i + 1] ? decodeURIComponent(match[i + 1]) : undefined;
+    params[name] = match[i + 1] ? decodeURIComponent(match[i + 1]) : null;
   });
 
   return { params };
 }
-  
-
   async #tryStatic(pathname) {
     try {
       const filepath = this.staticDir + decodeURIComponent(pathname);
