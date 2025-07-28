@@ -22,7 +22,7 @@ class Router {
 
   async handle(req) {
     const url = new URL(req.url);
-    const { pathname } = url;
+    const pathname = this.#normalizePath(url.pathname);
     const isWS = req.headers.get("upgrade")?.toLowerCase() === "websocket";
     const method = isWS ? "WS" : req.method;
 
@@ -38,7 +38,16 @@ class Router {
         return response;
       }
 
-      const query = Object.fromEntries(url.searchParams.entries());
+      // Build query object with support for repeated keys
+      const query = {};
+      for (const [key, value] of url.searchParams.entries()) {
+        if (query[key]) {
+          query[key] = Array.isArray(query[key]) ? [...query[key], value] : [query[key], value];
+        } else {
+          query[key] = value;
+        }
+      }
+
       const contentType = req.headers.get("content-type") || "";
       let body = null;
 
@@ -79,39 +88,49 @@ class Router {
     return new Response("Not Found", { status: 404 });
   }
 
+  #normalizePath(path) {
+    return path.replace(/\/+$/, "") || "/";
+  }
+
   #matchRoute(pathname, routePath) {
-  const pathParts = pathname.split("/").filter(Boolean);
-  const routeParts = routePath.split("/").filter(Boolean);
-  if (pathParts.length > routeParts.length) return null;
+    const escapeRegex = str =>
+      str.replace(/([.+*?=^!:${}()[\]|/\\])/g, "\\$1");
 
-  const params = {};
+    const paramNames = [];
 
-  for (let i = 0; i < routeParts.length; i++) {
-    const routePart = routeParts[i];
-    const pathPart = pathParts[i];
+    let pattern = routePath
+      .split("/")
+      .filter(Boolean)
+      .map(part => {
+        if (part.startsWith(":")) {
+          const match = part.match(/^:([a-zA-Z0-9_]+)(\(([^)]+)\))?(\?)?$/);
+          if (!match) return escapeRegex(part);
 
-    if (routePart?.includes("{")) {
-      const [main, group] = routePart.split("{");
-      const groupContent = group.slice(0, -1); // remove the closing }
-      
-      const paramRegex = (main + groupContent).replace(/:([\w]+)/g, (_, name) => `(?<${name}>[^/]+)`);
-      
-      const fullRegex = new RegExp(`^${main}(?:${groupContent.replace(/:([\w]+)/g, (_, name) => `(?<${name}>[^/]+)`)})?$`);
-      const match = pathPart?.match(fullRegex);
-      
-      if (!match?.groups) continue;
-      Object.assign(params, match.groups);
-    } else if (routePart.startsWith(":")) {
-      if (pathPart === undefined) return null;
-      params[routePart.slice(1)] = decodeURIComponent(pathPart);
-    } else {
-      if (routePart !== pathPart) return null;
-    }
+          const [, name, , regex, optional] = match;
+          paramNames.push(name);
+          const capture = regex || "[^/]+";
+          return optional ? `(?:/(${capture}))?` : `/(${capture})`;
+        } else if (part === "*") {
+          paramNames.push("wildcard");
+          return "/(.*)";
+        } else {
+          return "/" + escapeRegex(part);
+        }
+      })
+      .join("");
+
+    const fullPattern = "^" + pattern + "/?$";
+    const regex = new RegExp(fullPattern);
+    const match = pathname.match(regex);
+    if (!match) return null;
+
+    const params = {};
+    paramNames.forEach((name, i) => {
+      params[name] = decodeURIComponent(match[i + 1] || "");
+    });
+
+    return { params };
   }
-
-  return { params };
-  }
-  
 
   async #tryStatic(pathname) {
     try {
@@ -127,7 +146,7 @@ class Router {
 
   #mime(filePath) {
     const ext = filePath.split(".").pop();
-    return ({
+    return {
       html: "text/html",
       js: "application/javascript",
       css: "text/css",
@@ -138,7 +157,7 @@ class Router {
       jpeg: "image/jpeg",
       svg: "image/svg+xml",
       ico: "image/x-icon",
-    })[ext] || "application/octet-stream";
+    }[ext] || "application/octet-stream";
   }
 }
 
