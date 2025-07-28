@@ -7,6 +7,7 @@ import path from 'node:path'
 import { setHelpers, mapHelpers, getGameIds, getAllGameIds, getRangeGameIds, getCordsFromTile } from './info.js'
 import { findGameWebSocket, findPublicLobby, getPlayer, getGame } from './fetchers.js'
 import config from './config.js'
+import router from "./router.js";
 const __dirname = path.resolve();
 const kv = await Deno.openKv();
 function getContentType(Path) {
@@ -124,101 +125,77 @@ async function getMap(name, socket = null) {
 
   return matches;
 }
-Deno.serve(async (req) => {
-  const url = new URL(req.url);
-  const pathname = url.pathname;
 
-  if (pathname === "/") {
-  return await serveStaticFile(req, "/index.html");
-}
-  // /player?id=...
-  if (pathname === "/player") {
-    const id = parseQuery(url, "id");
-    if (!id) return new Response("Missing id parameter", { status: 400 });
-    try {
-      const response = await getPlayer(id);
-      const data = await response.text();
-      return new Response(data, {
-        status: 200,
-        headers: {
-          "content-type": "application/json",
-          "access-control-allow-origin": "*",
-        },
-      });
-    } catch (e) {
-      return new Response(`Error: ${e.message}`, { status: 500 });
-    }
+const r = router();
+
+r.useStatic(__direname); // or your static directory
+
+r.get("/", async ({ send }) => {
+  const response = await serveStaticFile(null, "/index.html");
+  send(await response.text(), { type: "text/html" });
+});
+
+r.get("/player", async ({ query, send }) => {
+  const id = query.id;
+  if (!id) return send("Missing id parameter", { status: 400 });
+  try {
+    const response = await getPlayer(id);
+    const data = await response.text();
+    send(data, { type: "application/json" });
+  } catch (e) {
+    send(`Error: ${e.message}`, { status: 500 });
   }
-  // /game?id=...
-  if (pathname === "/game") {
-    const id = parseQuery(url, "id");
-    if (!id) return new Response("Missing id parameter", { status: 400 });
-    try {
-      const response = await getGame(id);
-      const data = await response.text();
-      return new Response(data, {
-        status: 200,
-        headers: {
-          "content-type": "application/json",
-          "access-control-allow-origin": "*",
-        },
-      });
-    } catch (e) {
-      return new Response(`Error: ${e.message}`, { status: 500 });
-    }
+});
+
+r.get("/game", async ({ query, send }) => {
+  const id = query.id;
+  if (!id) return send("Missing id parameter", { status: 400 });
+  try {
+    const response = await getGame(id);
+    const data = await response.text();
+    send(data, { type: "application/json" });
+  } catch (e) {
+    send(`Error: ${e.message}`, { status: 500 });
   }
-  // /info/games/ids
-  if (pathname === "/info/games/ids") {
-    try {
-      let ids = await setHelpers.get(["info", "games", "ids"]);
-      ids = [...ids.values()];
-      return new Response(JSON.stringify(ids), {
-        status: 200,
-        headers: {
-          "content-type": "application/json",
-          "access-control-allow-origin": "*",
-        },
-      });
-    } catch (e) {
-      return new Response(`Error: ${e.message}`, { status: 500 });
-    }
+});
+
+r.get("/info/games/ids", async ({ send }) => {
+  try {
+    let ids = await setHelpers.get(["info", "games", "ids"]);
+    ids = [...ids.values()];
+    send(JSON.stringify(ids), { type: "application/json" });
+  } catch (e) {
+    send(`Error: ${e.message}`, { status: 500 });
   }
-  // /data/gameIds/:start{-:end}
-  if (pathname.startsWith("/data/gameIds/")) {
-    const param = pathname.slice("/data/gameIds/".length);
-    let gameIds = [];
-    try {
-      if (param === "all") {
-        gameIds = await getAllGameIds();
-      } else if (param.includes("-")) {
-        const [start, end] = param.split("-");
-        const startDate = stringToDate(start);
-        const endDate = stringToDate(end);
-        gameIds = await getRangeGameIds(startDate, endDate);
-      } else {
-        const startDate = stringToDate(param);
-        gameIds = await getGameIds(startDate);
-      }
-      return new Response(JSON.stringify(gameIds), {
-        status: 200,
-        headers: {
-          "content-type": "application/json",
-          "access-control-allow-origin": "*",
-        },
-      });
-    } catch (e) {
-      return new Response(`Error: ${e.message}`, { status: 500 });
+});
+
+r.get("/data/gameIds/:param", async ({ params, send }) => {
+  const param = params.param;
+  let gameIds = [];
+  try {
+    if (param === "all") {
+      gameIds = await getAllGameIds();
+    } else if (param.includes("-")) {
+      const [start, end] = param.split("-");
+      const startDate = stringToDate(start);
+      const endDate = stringToDate(end);
+      gameIds = await getRangeGameIds(startDate, endDate);
+    } else {
+      const startDate = stringToDate(param);
+      gameIds = await getGameIds(startDate);
     }
+    send(JSON.stringify(gameIds), { type: "application/json" });
+  } catch (e) {
+    send(`Error: ${e.message}`, { status: 500 });
   }
-  // /map/:name
-  if (pathname.startsWith("/map/")) {
-    const parts = pathname.split("/")
-    const mapName = parts[2];
-    const html = `<!DOCTYPE html>
+});
+
+// For /map/:name
+r.get("/map/:name", ({ params, send }) => {
+  const mapName = params.name;
+  const html = `<!DOCTYPE html>
 <html>
-<head>
-  <title>Map Search Progress - ${mapName}</title>
-</head>
+<head><title>Map Search Progress - ${mapName}</title></head>
 <body>
   <h1>Searching for map: ${mapName}</h1>
   <div id="progress">Connecting...</div>
@@ -228,15 +205,12 @@ Deno.serve(async (req) => {
     const ws = new WebSocket("wss://" + location.host + "/ws");
     const progressEl = document.getElementById("progress");
     const resultEl = document.getElementById("result");
-
     ws.onopen = () => {
       progressEl.innerText = "Connected. Starting stats fetch...";
       ws.send(JSON.stringify({ type: "getMap", mapName }));
     };
-
     ws.onmessage = (event) => {
       const data = JSON.parse(event.data);
-
       if (data.type === "progress") {
         if (data.task === "filterGames") {
           progressEl.innerText = \`Map Progress: \${data.progress}% (\${data.currentCount}/\${data.total} checked, \${data.matchesCount} matches)\`;
@@ -246,7 +220,6 @@ Deno.serve(async (req) => {
           progressEl.innerText = \`Progress (\${data.task}): \${data.progress}% (\${data.currentCount} checked)\`;
         }
       }
-
       if (data.done) {
         progressEl.innerText = "Finished!";
         if (data.matches) {
@@ -257,38 +230,25 @@ Deno.serve(async (req) => {
           resultEl.innerText = "Done, but no results returned.";
         }
       }
-
       if (data.error) {
         progressEl.innerText = "Error: " + data.error;
       }
     };
-
-    ws.onerror = () => {
-      progressEl.innerText = "WebSocket error.";
-    };
-
-    ws.onclose = () => {
-      progressEl.innerText += "\\nConnection closed.";
-    };
+    ws.onerror = () => { progressEl.innerText = "WebSocket error."; };
+    ws.onclose = () => { progressEl.innerText += "\\nConnection closed."; };
   </script>
 </body>
 </html>`;
-    return new Response(html, {
-      status: 200,
-      headers: { "content-type": "text/html" },
-    });
-  }
-  // /stats/:map/:type
-  if (pathname.startsWith("/stats/")) {
-    const parts = pathname.split("/");
-    if (parts.length === 4) {
-      const mapName = parts[2];
-      const statType = parts[3];
-      const html = `<!DOCTYPE html>
+  send(html, { type: "text/html" });
+});
+
+// For /stats/:map/:type
+r.get("/stats/:map/:type", ({ params, send }) => {
+  const mapName = params.map;
+  const statType = params.type;
+  const html = `<!DOCTYPE html>
 <html>
-<head>
-  <title>Stats for ${mapName} (${statType})</title>
-</head>
+<head><title>Stats for ${mapName} (${statType})</title></head>
 <body>
   <h1>Stat Collection: ${statType} on ${mapName}</h1>
   <div id="progress">Connecting...</div>
@@ -299,15 +259,12 @@ Deno.serve(async (req) => {
     const ws = new WebSocket("wss://" + location.host + "/ws");
     const progressEl = document.getElementById("progress");
     const resultEl = document.getElementById("result");
-
     ws.onopen = () => {
       progressEl.innerText = "Connected. Starting stats fetch...";
       ws.send(JSON.stringify({ type: "getStats", mapName, statType }));
     };
-
     ws.onmessage = (event) => {
       const data = JSON.parse(event.data);
-
       if (data.type === "progress") {
         if (data.task === "filterGames") {
           progressEl.innerText = \`Map Progress: \${data.progress}% (\${data.currentCount}/\${data.total} checked, \${data.matchesCount} matches)\`;
@@ -317,7 +274,6 @@ Deno.serve(async (req) => {
           progressEl.innerText = \`Progress (\${data.task}): \${data.progress}% (\${data.currentCount} checked)\`;
         }
       }
-
       if (data.done) {
         progressEl.innerText = "Finished!";
         if (data.matches) {
@@ -328,111 +284,96 @@ Deno.serve(async (req) => {
           resultEl.innerText = "Done, but no results returned.";
         }
       }
-
       if (data.error) {
         progressEl.innerText = "Error: " + data.error;
       }
     };
-
-    ws.onerror = () => {
-      progressEl.innerText = "WebSocket error.";
-    };
-
-    ws.onclose = () => {
-      progressEl.innerText += "\\nConnection closed.";
-    };
+    ws.onerror = () => { progressEl.innerText = "WebSocket error."; };
+    ws.onclose = () => { progressEl.innerText += "\\nConnection closed."; };
   </script>
 </body>
 </html>`;
-      return new Response(html, {
-        status: 200,
-        headers: { "content-type": "text/html" },
-      });
-    }
-  }
-  if (pathname === "/ws") {
+  send(html, { type: "text/html" });
+});
 
-  const { socket, response } = Deno.upgradeWebSocket(req);
-
+// WebSocket handler
+r.ws("/ws", (socket) => {
   socket.onopen = () => {
     console.log("WebSocket opened");
     socket.send(JSON.stringify({ message: "WebSocket connection established" }));
   };
 
   socket.onmessage = async (event) => {
-    console.log("Received WebSocket message:", event.data);
-  try {
-    const data = JSON.parse(event.data);
+    console.log(event)
+    try {
+      const data = JSON.parse(event.data);
 
-    if (!data.mapName) {
-      socket.send(JSON.stringify({ error: "Missing mapName" }));
-      return;
-    }
-    const matches = await getMap(data.mapName, socket)
-    if (data.type === "getMap") {
-      socket.send(JSON.stringify({ done: true, matches }));
-      return;
-    }
+      if (!data.mapName) {
+        socket.send(JSON.stringify({ error: "Missing mapName" }));
+        return;
+      }
 
-    // STEP 2: Handle stats
-    if (data.type === "getStats") {
-      const stats = {};
-      let totalIntents = 0;
-      stats[data.statType] = []
-      if (data.statType === "spawns") stats[data.statType] = new Map()
-      for (let i = 0; i < matches.length; i++) {
-        const id = matches[i];
-        try {
-          const game = await fetch(`https://api.openfront.io/game/${id}`).then(r => r.json())
-          
-          for (const turn of game.turns ?? []) {
-            for (const intent of turn.intents ?? []) {
-              totalIntents++;
+      const matches = await getMap(data.mapName, socket);
 
-              if (data.statType === "spawns" && intent.type === "spawn") {
-                intent.tile = await getCordsFromTile(data.mapName, intent.tile)
-                stats[data.statType].set(intent.clientID, { ...intent, gameId: id });
-              }
+      if (data.type === "getMap") {
+        socket.send(JSON.stringify({ done: true, matches }));
+        return;
+      }
 
-              // You can expand here for other statTypes
-              // if (data.statType === "moves" && intent.type === "move") { ... }
+      if (data.type === "getStats") {
+        const stats = {};
+        let totalIntents = 0;
+        stats[data.statType] = [];
+        if (data.statType === "spawns") stats[data.statType] = new Map();
 
-              if (totalIntents % 100 === 0) {
-                let statType = data.statType
-                socket.send(JSON.stringify({
-                  type: "progress",
-                  task: "getStats",
-                  statType,
-                  currentGame: i + 1,
-                  totalGames: matches.length,
-                  currentIntents: totalIntents,
-                  tracked: Object.keys(stats).length,
-                }));
+        for (let i = 0; i < matches.length; i++) {
+          const id = matches[i];
+          try {
+            const game = await fetch(`https://api.openfront.io/game/${id}`).then(r => r.json());
+
+            for (const turn of game.turns ?? []) {
+              for (const intent of turn.intents ?? []) {
+                totalIntents++;
+
+                if (data.statType === "spawns" && intent.type === "spawn") {
+                  intent.tile = await getCordsFromTile(data.mapName, intent.tile);
+                  stats[data.statType].set(intent.clientID, { ...intent, gameId: id });
+                }
+
+                // You can add more statType logic here
+
+                if (totalIntents % 100 === 0) {
+                  socket.send(JSON.stringify({
+                    type: "progress",
+                    task: "getStats",
+                    statType: data.statType,
+                    currentGame: i + 1,
+                    totalGames: matches.length,
+                    currentIntents: totalIntents,
+                    tracked: Object.keys(stats).length,
+                  }));
+                }
               }
             }
-          }
-        } catch {}
-      }
-      if (data.statType === "spawns") stats[data.statType] = stats[data.statType].values().toArray()
-      socket.send(JSON.stringify({ done: true, stats }));
-      return
-    }
+          } catch {}
+        }
 
-  } catch (e) {
-    socket.send(JSON.stringify({ error: e.message }));
-  }
-};
+        if (data.statType === "spawns") stats[data.statType] = Array.from(stats[data.statType].values());
+
+        socket.send(JSON.stringify({ done: true, stats }));
+        return;
+      }
+
+    } catch (e) {
+      socket.send(JSON.stringify({ error: e.message }));
+    }
+  };
 
   socket.onerror = (e) => console.error("WebSocket error:", e);
   socket.onclose = () => console.log("WebSocket closed");
+});
 
-  return response;
-  }
-  // Try static file fallback
-  try {
-    const fileResponse = await serveStaticFile(req, pathname);
-    if (fileResponse.status !== 404) return fileResponse;
-  } catch {}
+// Final fallback to static file
+// This will be handled by router's useStatic
 
-  return new Response("Not Found", { status: 404 });
-}, { port: 8080 });
+Deno.serve((req) => r.handle(req), { port: 8080 });
