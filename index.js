@@ -8,6 +8,7 @@ import { setHelpers, mapHelpers, getGameIds, getAllGameIds, getRangeGameIds, get
 import { findGameWebSocket, findPublicLobby, getPlayer, getGame } from './fetchers.js'
 import config from './config.js'
 import router from "./router.js";
+import heatmap from 'heatmap.js'
 const __dirname = path.resolve();
 const kv = await Deno.openKv();
 function getContentType(Path) {
@@ -178,26 +179,17 @@ r.get("/data/gameIds/:start{-:end}", async ({ params, send }) => {
     send(`Error: ${e.message}`, { status: 500 });
   }
 });
-
-// For /map/:name
-r.get("/map/:name", ({ params, send }) => {
-  const mapName = params.name;
-  const html = `<!DOCTYPE html>
-<html>
-<head><title>Map Search Progress - ${mapName}</title></head>
-<body>
-  <h1>Searching for map: ${mapName}</h1>
-  <div id="progress">Connecting...</div>
-  <pre id="result"></pre>
+function createScript(startingWsSend, inputVars, progressElm = "progress", resultElm = "result") {
+  let code = `
   <script>
-    const mapName = ${JSON.stringify(mapName)};
+    ${inputVars}
     const ws = new WebSocket("wss://" + location.host + "/ws");
-    const progressEl = document.getElementById("progress");
-    const resultEl = document.getElementById("result");
+    const progressEl = document.getElementById(${JSON.stringify(progressElm)});
+    const resultEl = document.getElementById(${JSON.stringify(resultElm)});
     ws.onopen = () => {
       progressEl.innerText = "Connected. Starting stats fetch...";
-      ws.send(JSON.stringify({ type: "getMap", mapName }));
-    };
+      ws.send(${startingWsSend});
+    }
     ws.onmessage = (event) => {
       const data = JSON.parse(event.data);
       if (data.type === "progress") {
@@ -226,6 +218,19 @@ r.get("/map/:name", ({ params, send }) => {
     ws.onerror = () => { progressEl.innerText = "WebSocket error."; };
     ws.onclose = () => { progressEl.innerText += "\\nConnection closed."; };
   </script>
+  `
+}
+// For /map/:name
+r.get("/map/:name", ({ params, send }) => {
+  const mapName = params.name;
+  const html = `<!DOCTYPE html>
+<html>
+<head><title>Map Search Progress - ${mapName}</title></head>
+<body>
+  <h1>Searching for map: ${mapName}</h1>
+  <div id="progress">Connecting...</div>
+  <pre id="result"></pre>
+  ${createScript('JSON.stringify({ type: "getMap", mapName })', `const mapName = ${JSON.stringify(${mapName})};`)}
 </body>
 </html>`;
   send(html, { type: "text/html" });
@@ -243,46 +248,8 @@ r.get("/stats/:map/:type{/:display}", ({ params, send }) => {
   <h1>Stat Collection: ${statType} on ${mapName}</h1>
   <div id="progress">Connecting...</div>
   <pre id="result"></pre>
-  <script>
-    const mapName = ${JSON.stringify(mapName)};
-    const statType = ${JSON.stringify(statType)};
-    const display = ${JSON.stringify(display)};
-    const ws = new WebSocket("wss://" + location.host + "/ws");
-    const progressEl = document.getElementById("progress");
-    const resultEl = document.getElementById("result");
-    ws.onopen = () => {
-      progressEl.innerText = "Connected. Starting stats fetch...";
-      ws.send(JSON.stringify({ type: "getStats", mapName, statType, display }));
-    };
-    ws.onmessage = (event) => {
-      const data = JSON.parse(event.data);
-      if (data.type === "progress") {
-        if (data.task === "filterGames") {
-          progressEl.innerText = \`Map Progress: \${data.progress}% (\${data.currentCount}/\${data.total} checked, \${data.matchesCount} matches)\`;
-        } else if (data.task === "getStats") {
-          progressEl.innerText = \`\${data.statType.charAt(0).toUpperCase() + data.statType.slice(1).toLowerCase()} Stat Progress: Game \${data.currentGame}/\${data.totalGames}, Intents processed: \${data.currentIntents}, Tracked entries: \${data.tracked}\`;
-        } else {
-          progressEl.innerText = \`Progress (\${data.task}): \${data.progress}% (\${data.currentCount} checked)\`;
-        }
-      }
-      if (data.done) {
-        progressEl.innerText = "Finished!";
-        if (data.matches) {
-          resultEl.innerText = JSON.stringify(data.matches, null, 2);
-        } else if (data.stats) {
-          resultEl.innerText = JSON.stringify(data.stats, null, 2);
-        } else {
-          resultEl.innerText = "Done, but no results returned.";
-        }
-      }
-      if (data.error) {
-        progressEl.innerText = "Error: " + data.error;
-      }
-    };
-    ws.onerror = () => { progressEl.innerText = "WebSocket error."; };
-    ws.onclose = () => { progressEl.innerText += "\\nConnection closed."; };
-  </script>
-</body>
+  ${createScript('JSON.stringify({ type: "getMap", mapName })', `const mapName = ${JSON.stringify(${mapName})}; const statType = ${JSON.stringify(statType)}; const display = ${JSON.stringify(display)};`)}
+  </body>
 </html>`;
   send(html, { type: "text/html" });
 });
