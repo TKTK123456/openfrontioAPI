@@ -166,6 +166,7 @@ r.get("/data/gameIds/:param", async ({ params, send }) => {
   try {
     if (param === "all") {
       gameIds = await getAllGameIds();
+      console.log(gameIds)
     } else if (param.includes("-")) {
       const [start, end] = param.split("-");
       const startDate = stringToDate(start);
