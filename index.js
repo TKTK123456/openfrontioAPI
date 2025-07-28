@@ -212,7 +212,21 @@ async function collectStats(matches, data, socket = null) {
   return { stats, heatmaps };
 }
 
+function encodeHeatmapToBase64(raw, width, height) {
+  const canvas = new OffscreenCanvas(width, height);
+  const ctx = canvas.getContext("2d");
+  const imageData = ctx.createImageData(width, height);
+  imageData.data.set(raw); // raw should be a Uint8ClampedArray or compatible
+  ctx.putImageData(imageData, 0, 0);
 
+  return canvas.convertToBlob().then(blob => {
+    return new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.onloadend = () => resolve(reader.result.split(",")[1]); // remove data:image/png;base64,
+      reader.readAsDataURL(blob);
+    });
+  });
+}
 
 const r = router();
 
@@ -294,33 +308,19 @@ function createScript(startingDataExpr, inputVars, progressElm = "progress", res
 
       if (data.done) {
         progressEl.innerText = "Finished!";
-        
-        if (data.display === "heatmap" && data.heatmap && data.heatmap.raw && data.heatmap.width && data.heatmap.height) {
-          const canvas = document.createElement("canvas");
-          canvas.width = data.heatmap.width;
-          canvas.height = data.heatmap.height;
-          const ctx = canvas.getContext("2d");
-
-          // Convert base64 or array to Uint8ClampedArray
-          let raw;
-          if (typeof data.heatmap.raw === "string") {
-            // If base64 encoded
-            const binary = atob(data.heatmap.raw);
-            const len = binary.length;
-            raw = new Uint8ClampedArray(len);
-            for (let i = 0; i < len; i++) {
-              raw[i] = binary.charCodeAt(i);
-            }
-          } else if (Array.isArray(data.heatmap.raw)) {
-            raw = new Uint8ClampedArray(data.heatmap.raw);
-          }
-
-          const imageData = new ImageData(raw, data.heatmap.width, data.heatmap.height);
-          ctx.putImageData(imageData, 0, 0);
-
-          resultEl.innerHTML = "";
-          resultEl.appendChild(canvas);
-        } 
+        if (data.display === "heatmap" && data.heatmap) {
+        const canvas = document.createElement("canvas");
+        canvas.width = data.heatmap.width;
+        canvas.height = data.heatmap.height;
+        const ctx = canvas.getContext("2d");
+        const img = new Image();
+        img.onload = () => {
+ctx.drawImage(img, 0, 0);
+    resultEl.innerText = ""; // clear old text if any
+    resultEl.appendChild(canvas);
+  };
+  img.src = "data:image/png;base64," + data.heatmap.base64;
+}
         // Fallback display
         else if (data.matches) {
           resultEl.innerText = JSON.stringify(data.matches, null, 2);
@@ -418,8 +418,8 @@ r.ws("/ws", (socket) => {
         const { stats, heatmap } = await collectStats(matches, data, socket)
 
         if (data.statType === "spawns") stats[data.statType] = Array.from(stats[data.statType].values());
-
-        socket.send(JSON.stringify({ done: true, stats, display: data.display, heatmap }));
+        const base64 = await encodeHeatmapToBase64(heatmap.raw, heatmap.width, heatmap.height);
+        socket.send(JSON.stringify({ done: true, stats, display: data.display, heatmap: { width: heatmap.width, height: heatmap.height, base64: base64 } }));
 
         return;
       }
