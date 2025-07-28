@@ -212,22 +212,6 @@ async function collectStats(matches, data, socket = null) {
   return { stats, heatmaps };
 }
 
-function encodeHeatmapToBase64(raw, width, height) {
-  const canvas = new OffscreenCanvas(width, height);
-  const ctx = canvas.getContext("2d");
-  const imageData = ctx.createImageData(width, height);
-  imageData.data.set(raw); // raw should be a Uint8ClampedArray or compatible
-  ctx.putImageData(imageData, 0, 0);
-
-  return canvas.convertToBlob().then(blob => {
-    return new Promise((resolve) => {
-      const reader = new FileReader();
-      reader.onloadend = () => resolve(reader.result.split(",")[1]); // remove data:image/png;base64,
-      reader.readAsDataURL(blob);
-    });
-  });
-}
-
 const r = router();
 
 r.useStatic(__dirname); // or your static directory
@@ -417,8 +401,7 @@ r.ws("/ws", (socket) => {
       if (data.type === "getStats") {
         const { stats, heatmaps } = await collectStats(matches, data, socket);
         const heatmap = heatmaps[data.mapName ?? data.statType];
-        const base64 = await encodeHeatmapToBase64(heatmap.raw, heatmap.width, heatmap.height);
-        socket.send(JSON.stringify({ done: true, stats, display: data.display, heatmap: { width: heatmap.width, height: heatmap.height, base64: base64 } }));
+        socket.send(JSON.stringify({ done: true, stats, display: data.display, heatmap: { width: heatmap.width, height: heatmap.height, raw: Array.from(heatmap.raw) } }));
 
         return;
       }
