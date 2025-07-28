@@ -1,4 +1,3 @@
-// router.js
 class Router {
   constructor() {
     this.routes = [];
@@ -13,6 +12,10 @@ class Router {
     this.routes.push({ method: "POST", path, handler });
   }
 
+  ws(path, handler) {
+    this.routes.push({ method: "WS", path, handler });
+  }
+
   useStatic(dir) {
     this.staticDir = dir;
   }
@@ -20,55 +23,59 @@ class Router {
   async handle(req) {
     const url = new URL(req.url);
     const { pathname } = url;
-    const method = req.method;
+    const isWS = req.headers.get("upgrade")?.toLowerCase() === "websocket";
+    const method = isWS ? "WS" : req.method;
 
     for (const route of this.routes) {
       if (route.method !== method) continue;
 
       const match = this.#matchRoute(pathname, route.path);
-      if (match) {
-        const query = Object.fromEntries(url.searchParams.entries());
-        const contentType = req.headers.get("content-type") || "";
-        let body = null;
+      if (!match) continue;
 
-        if (contentType.includes("application/json")) {
-          body = await req.json();
-        } else if (contentType.includes("application/x-www-form-urlencoded")) {
-          body = Object.fromEntries(await req.formData());
-        } else if (contentType.includes("text/plain")) {
-          body = await req.text();
-        }
-
-        const ctx = {
-          req,
-          res: null,
-          path: pathname,
-          method,
-          query,
-          params: match.params,
-          body,
-          send: (data, opts = {}) => {
-            const isText = typeof data === "string";
-            ctx.res = new Response(isText ? data : JSON.stringify(data), {
-              status: opts.status || 200,
-              headers: {
-                "content-type": opts.type || (isText ? "text/plain" : "application/json"),
-                ...opts.headers,
-              },
-            });
-          },
-        };
-
-        await route.handler(ctx);
-        return ctx.res || new Response("No response", { status: 500 });
+      if (isWS) {
+        const { response, socket } = Deno.upgradeWebSocket(req);
+        route.handler(socket, match.params);
+        return response;
       }
+
+      const query = Object.fromEntries(url.searchParams.entries());
+      const contentType = req.headers.get("content-type") || "";
+      let body = null;
+
+      if (contentType.includes("application/json")) {
+        body = await req.json().catch(() => null);
+      } else if (contentType.includes("application/x-www-form-urlencoded")) {
+        body = Object.fromEntries(await req.formData());
+      } else if (contentType.includes("text/plain")) {
+        body = await req.text();
+      }
+
+      const ctx = {
+        req,
+        res: null,
+        path: pathname,
+        method,
+        query,
+        params: match.params,
+        body,
+        send: (data, opts = {}) => {
+          const isText = typeof data === "string";
+          ctx.res = new Response(isText ? data : JSON.stringify(data), {
+            status: opts.status || 200,
+            headers: {
+              "content-type": opts.type || (isText ? "text/plain" : "application/json"),
+              ...opts.headers,
+            },
+          });
+        },
+      };
+
+      await route.handler(ctx);
+      return ctx.res || new Response("No response", { status: 500 });
     }
 
-    // fallback to static
-    if (this.staticDir) {
-      return await this.#tryStatic(pathname);
-    }
-
+    // static fallback
+    if (this.staticDir) return await this.#tryStatic(pathname);
     return new Response("Not Found", { status: 404 });
   }
 
@@ -83,22 +90,17 @@ class Router {
       const routePart = routeParts[i];
       const pathPart = pathParts[i];
 
-      // advanced :start{-:end} support
       if (routePart.includes("{")) {
         const [main, group] = routePart.split("{");
         const groupContent = group.slice(0, -1);
-
         const paramRegex = (main + groupContent).replace(/:([\w]+)/g, (_, name) => `(?<${name}>[^/]+)`);
         const fullRegex = new RegExp(`^${paramRegex}$`);
         const match = pathPart.match(fullRegex);
         if (!match?.groups) return null;
-
         Object.assign(params, match.groups);
-      }
-      else if (routePart.startsWith(":")) {
+      } else if (routePart.startsWith(":")) {
         params[routePart.slice(1)] = decodeURIComponent(pathPart);
-      }
-      else if (routePart !== pathPart) {
+      } else if (routePart !== pathPart) {
         return null;
       }
     }
@@ -134,6 +136,7 @@ class Router {
     })[ext] || "application/octet-stream";
   }
 }
+
 export default function router() {
-  return new Router()
+  return new Router();
 }
