@@ -93,44 +93,81 @@ class Router {
   }
 
   #matchRoute(pathname, routePath) {
-    const escapeRegex = str =>
-      str.replace(/([.+*?=^!:${}()[\]|/\\])/g, "\\$1");
+  const escapeRegex = str =>
+    str.replace(/([.+*?=^!:${}()[\]|/\\])/g, "\\$1");
 
-    const paramNames = [];
+  const paramNames = [];
 
-    let pattern = routePath
-      .split("/")
-      .filter(Boolean)
-      .map(part => {
-        if (part.startsWith(":")) {
-          const match = part.match(/^:([a-zA-Z0-9_]+)(\(([^)]+)\))?(\?)?$/);
-          if (!match) return escapeRegex(part);
+  // Split routePath into parts and convert each to regex segment
+  let pattern = routePath
+    .split("/")
+    .filter(Boolean)
+    .map(part => {
+      // Check if this part contains optional group syntax {...}
+      if (part.includes("{") && part.includes("}")) {
+        // e.g. ":start{-:end}"
+        const [mainPart, groupPart] = part.split("{");
+        const groupContent = groupPart.slice(0, -1); // remove trailing "}"
 
-          const [, name, , regex, optional] = match;
-          paramNames.push(name);
-          const capture = regex || "[^/]+";
-          return optional ? `(?:/(${capture}))?` : `/(${capture})`;
-        } else if (part === "*") {
-          paramNames.push("wildcard");
-          return "/(.*)";
-        } else {
-          return "/" + escapeRegex(part);
-        }
-      })
-      .join("");
+        // Find param names inside mainPart and groupContent
+        const collectParams = str => {
+          const params = [];
+          const paramRegex = /:([a-zA-Z0-9_]+)/g;
+          let m;
+          while ((m = paramRegex.exec(str))) {
+            params.push(m[1]);
+          }
+          return params;
+        };
 
-    const fullPattern = "^" + pattern + "/?$";
-    const regex = new RegExp(fullPattern);
-    const match = pathname.match(regex);
-    if (!match) return null;
+        const mainParams = collectParams(mainPart);
+        const groupParams = collectParams(groupContent);
 
-    const params = {};
-    paramNames.forEach((name, i) => {
-      params[name] = decodeURIComponent(match[i + 1] || "");
-    });
+        paramNames.push(...mainParams, ...groupParams);
 
-    return { params };
-  }
+        // Replace params with capture groups in mainPart and groupContent
+        // Use [^-]+ for mainPart params to avoid including dash (separator)
+        const mainRegex = mainPart.replace(/:([a-zA-Z0-9_]+)/g, (_, name) => `([^-/]+)`);
+        // groupContent includes the dash literal (e.g. "-:end"), so keep dash
+        const groupRegex = groupContent.replace(/:([a-zA-Z0-9_]+)/g, (_, name) => `([^/]+)`);
+
+        // The entire group is optional: wrap in ( ... )?
+        return `/${mainRegex}(?:${groupRegex})?`;
+
+      } else if (part.startsWith(":")) {
+        // Simple param, optionally with regex and optional marker (e.g. :id(\d+)?, :name?)
+        const match = part.match(/^:([a-zA-Z0-9_]+)(\(([^)]+)\))?(\?)?$/);
+        if (!match) return "/" + escapeRegex(part);
+
+        const [, name, , regex, optional] = match;
+        paramNames.push(name);
+        const capture = regex || "[^/]+";
+        return optional ? `/(?:${capture})?` : `/${capture}`;
+
+      } else if (part === "*") {
+        paramNames.push("wildcard");
+        return "/(.*)";
+
+      } else {
+        return "/" + escapeRegex(part);
+      }
+    })
+    .join("");
+
+  const fullPattern = "^" + pattern + "/?$";
+  const regex = new RegExp(fullPattern);
+  const match = pathname.match(regex);
+  if (!match) return null;
+
+  const params = {};
+  paramNames.forEach((name, i) => {
+    params[name] = match[i + 1] ? decodeURIComponent(match[i + 1]) : undefined;
+  });
+
+  return { params };
+}
+
+  
 
   async #tryStatic(pathname) {
     try {
