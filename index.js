@@ -120,6 +120,7 @@ async function getMap(name, socket = null) {
           matchesCount: matches.length,
         })
       );
+    }    );
     }
   }
 
@@ -128,9 +129,9 @@ async function getMap(name, socket = null) {
 
 const r = router();
 
-r.useStatic(__direname); // or your static directory
+r.useStatic(__dirname); // or your static directory
 
-r.get("/", async ({ send }) => {
+r.get("/", async ({ send }) = {
   const response = await serveStaticFile(null, "/index.html");
   send(await response.text(), { type: "text/html" });
 });
