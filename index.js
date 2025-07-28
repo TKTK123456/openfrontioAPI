@@ -388,7 +388,8 @@ r.ws("/ws", (socket) => {
 
         if (data.statType === "spawns") stats[data.statType] = Array.from(stats[data.statType].values());
 
-        socket.send(JSON.stringify({ done: true, stats, data.display, heatmap }));
+        socket.send(JSON.stringify({ done: true, stats, display: data.display, heatmap }));
+
         return;
       }
 
