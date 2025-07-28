@@ -179,17 +179,19 @@ r.get("/data/gameIds/:start{-:end}", async ({ params, send }) => {
     send(`Error: ${e.message}`, { status: 500 });
   }
 });
-function createScript(startingWsSend, inputVars, progressElm = "progress", resultElm = "result") {
-  let code = `
+function createScript(startingDataExpr, inputVars, progressElm = "progress", resultElm = "result") {
+  return `
   <script>
     ${inputVars}
     const ws = new WebSocket("wss://" + location.host + "/ws");
     const progressEl = document.getElementById(${JSON.stringify(progressElm)});
     const resultEl = document.getElementById(${JSON.stringify(resultElm)});
+    
     ws.onopen = () => {
       progressEl.innerText = "Connected. Starting stats fetch...";
-      ws.send(${startingWsSend});
-    }
+      ws.send(${startingDataExpr});
+    };
+
     ws.onmessage = (event) => {
       const data = JSON.parse(event.data);
       if (data.type === "progress") {
@@ -215,11 +217,17 @@ function createScript(startingWsSend, inputVars, progressElm = "progress", resul
         progressEl.innerText = "Error: " + data.error;
       }
     };
-    ws.onerror = () => { progressEl.innerText = "WebSocket error."; };
-    ws.onclose = () => { progressEl.innerText += "\\nConnection closed."; };
+
+    ws.onerror = () => {
+      progressEl.innerText = "WebSocket error.";
+    };
+    ws.onclose = () => {
+      progressEl.innerText += "\\nConnection closed.";
+    };
   </script>
-  `
+  `;
 }
+
 // For /map/:name
 r.get("/map/:name", ({ params, send }) => {
   const mapName = params.name;
@@ -230,17 +238,21 @@ r.get("/map/:name", ({ params, send }) => {
   <h1>Searching for map: ${mapName}</h1>
   <div id="progress">Connecting...</div>
   <pre id="result"></pre>
-  ${createScript('JSON.stringify({ type: "getMap", mapName })', `const mapName = ${JSON.stringify(mapName)};`)}
+  ${createScript(
+    `JSON.stringify({ type: "getMap", mapName })`,
+    `const mapName = ${JSON.stringify(mapName)};`
+  )}
 </body>
 </html>`;
   send(html, { type: "text/html" });
-})
+});
 
-// For /stats/:map/:type
+// For /stats/:map/:type{/:display}
 r.get("/stats/:map/:type{/:display}", ({ params, send }) => {
-  const display = params.display
+  const display = params.display ?? null;
   const mapName = params.map;
   const statType = params.type;
+
   const html = `<!DOCTYPE html>
 <html>
 <head><title>Stats for ${mapName} (${statType})</title></head>
@@ -248,8 +260,15 @@ r.get("/stats/:map/:type{/:display}", ({ params, send }) => {
   <h1>Stat Collection: ${statType} on ${mapName}</h1>
   <div id="progress">Connecting...</div>
   <pre id="result"></pre>
-  ${createScript('JSON.stringify({ type: "getMap", mapName })', `const mapName = ${JSON.stringify(mapName)}; const statType = ${JSON.stringify(statType)}; const display = ${JSON.stringify(display)};`)}
-  </body>
+  ${createScript(
+    `JSON.stringify({ type: "getStats", mapName, statType, display })`,
+    `
+      const mapName = ${JSON.stringify(mapName)};
+      const statType = ${JSON.stringify(statType)};
+      const display = ${JSON.stringify(display)};
+    `
+  )}
+</body>
 </html>`;
   send(html, { type: "text/html" });
 });
