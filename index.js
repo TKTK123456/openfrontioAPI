@@ -234,7 +234,7 @@ r.get("/map/:name", ({ params, send }) => {
 })
 
 // For /stats/:map/:type
-r.get("/stats/:map/:type", ({ params, send }) => {
+r.get("/stats/:map/:type{/:display}", ({ params, send }) => {
   const mapName = params.map;
   const statType = params.type;
   const html = `<!DOCTYPE html>
@@ -286,9 +286,6 @@ r.get("/stats/:map/:type", ({ params, send }) => {
 </html>`;
   send(html, { type: "text/html" });
 });
-r.get("/test/:a{-:b}", ({ params, send }) => {
-  send(JSON.stringify(params))
-})
 // WebSocket handler
 r.ws("/ws", (socket) => {
   socket.onopen = () => {
