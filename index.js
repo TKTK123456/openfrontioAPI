@@ -131,6 +131,7 @@ const r = router();
 r.useStatic(__dirname); // or your static directory
 
 r.get("/", async ({ send }) => {
+  console.log("/")
   const response = await serveStaticFile(null, "/index.html");
   send(await response.text(), { type: "text/html" });
 });
