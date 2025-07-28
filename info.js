@@ -374,6 +374,7 @@ export async function updateGameInfo(autoSetNextRun = true, { type = "auto", log
         let existingEntries = await loadOrCreateFile(dateStr);
         existingEntries.push(...newEntries)
         existingEntries = new Set(existingEntries)
+        console.log(existingEntries)
         existingEntries = existingEntries.values().toArray()
         await saveFile(dateStr, existingEntries);
       }
