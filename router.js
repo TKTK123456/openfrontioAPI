@@ -80,33 +80,38 @@ class Router {
   }
 
   #matchRoute(pathname, routePath) {
-    const pathParts = pathname.split("/").filter(Boolean);
-    const routeParts = routePath.split("/").filter(Boolean);
-      if (pathParts.length !== routeParts.length) return null;
+  const pathParts = pathname.split("/").filter(Boolean);
+  const routeParts = routePath.split("/").filter(Boolean);
+  if (pathParts.length > routeParts.length) return null;
 
-    const params = {};
+  const params = {};
 
-    for (let i = 0; i < routeParts.length; i++) {
-      const routePart = routeParts[i];
-      const pathPart = pathParts[i];
+  for (let i = 0; i < routeParts.length; i++) {
+    const routePart = routeParts[i];
+    const pathPart = pathParts[i];
 
-      if (routePart.includes("{")) {
-        const [main, group] = routePart.split("{");
-        const groupContent = group.slice(0, -1);
-        const paramRegex = (main + groupContent).replace(/:([\w]+)/g, (_, name) => `(?<${name}>[^/]+)`);
-        const fullRegex = new RegExp(`^${paramRegex}$`);
-        const match = pathPart.match(fullRegex);
-        if (!match?.groups) continue;
-        Object.assign(params, match.groups);
-      } else if (routePart.startsWith(":")) {
-        params[routePart.slice(1)] = decodeURIComponent(pathPart);
-      } else if (routePart !== pathPart) {
-        return null;
-      }
+    if (routePart?.includes("{")) {
+      const [main, group] = routePart.split("{");
+      const groupContent = group.slice(0, -1); // remove the closing }
+      
+      const paramRegex = (main + groupContent).replace(/:([\w]+)/g, (_, name) => `(?<${name}>[^/]+)`);
+      
+      const fullRegex = new RegExp(`^${main}(?:${groupContent.replace(/:([\w]+)/g, (_, name) => `(?<${name}>[^/]+)`)})?$`);
+      const match = pathPart?.match(fullRegex);
+      
+      if (!match?.groups) continue;
+      Object.assign(params, match.groups);
+    } else if (routePart.startsWith(":")) {
+      if (pathPart === undefined) return null;
+      params[routePart.slice(1)] = decodeURIComponent(pathPart);
+    } else {
+      if (routePart !== pathPart) return null;
     }
-
-    return { params };
   }
+
+  return { params };
+  }
+  
 
   async #tryStatic(pathname) {
     try {
