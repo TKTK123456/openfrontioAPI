@@ -191,6 +191,8 @@ async function collectStats(matches, data, socket = null) {
     stats[data.statType] = Array.from(stats[data.statType].values());
   }
 
+  
+
   // Generate heatmap for the collected points
   // Make sure you have width and height defined, e.g. from your data or config
   const width = data.width || 1000;  // example default width
@@ -381,46 +383,11 @@ r.ws("/ws", (socket) => {
       }
 
       if (data.type === "getStats") {
-        const stats = {};
-        let totalIntents = 0;
-        stats[data.statType] = [];
-        if (data.statType === "spawns") stats[data.statType] = new Map();
-
-        for (let i = 0; i < matches.length; i++) {
-          const id = matches[i];
-          try {
-            const game = await fetch(`https://api.openfront.io/game/${id}`).then(r => r.json());
-
-            for (const turn of game.turns ?? []) {
-              for (const intent of turn.intents ?? []) {
-                totalIntents++;
-
-                if (data.statType === "spawns" && intent.type === "spawn") {
-                  intent.tile = await getCordsFromTile(data.mapName, intent.tile);
-                  stats[data.statType].set(intent.clientID, { ...intent, gameId: id });
-                }
-
-                // You can add more statType logic here
-
-                if (totalIntents % 100 === 0) {
-                  socket.send(JSON.stringify({
-                    type: "progress",
-                    task: "getStats",
-                    statType: data.statType,
-                    currentGame: i + 1,
-                    totalGames: matches.length,
-                    currentIntents: totalIntents,
-                    tracked: Object.keys(stats).length,
-                  }));
-                }
-              }
-            }
-          } catch {}
-        }
+        const { stats, heatmap } = await collectStats(matches, data, socket)
 
         if (data.statType === "spawns") stats[data.statType] = Array.from(stats[data.statType].values());
 
-        socket.send(JSON.stringify({ done: true, stats }));
+        socket.send(JSON.stringify({ done: true, stats, data.display, heatmap }));
         return;
       }
 
