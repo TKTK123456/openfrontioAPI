@@ -120,7 +120,7 @@ async function getMap(name, socket = null) {
           matchesCount: matches.length,
         })
       );
-    }    );
+    }  
     }
   }
 
