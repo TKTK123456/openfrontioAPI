@@ -167,7 +167,7 @@ r.get("/data/gameIds/:start{-:end}", async ({ params, send }) => {
       gameIds = await getAllGameIds();
     } else if (param.end) {
       const startDate = stringToDate(params.start);
-      const endDate = stringToDate(end.end);
+      const endDate = stringToDate(params.end);
       gameIds = await getRangeGameIds(startDate, endDate);
     } else {
       const startDate = stringToDate(param.start);
