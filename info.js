@@ -277,9 +277,7 @@ export async function updateGameInfo(autoSetNextRun = true, { type = "auto", log
         let existingEntries = await loadOrCreateFile(dateStr);
         existingEntries.push(...newEntries.flat(Infinity))
         existingEntries = new Set(existingEntries.flat(Infinity).map((i) => JSON.stringify(i)))
-        console.log(existingEntries)
         existingEntries = existingEntries.values().toArray().map((i) => JSON.parse(i))
-        existingEntries
         await saveFile(dateStr, existingEntries);
       }
 
@@ -376,9 +374,7 @@ export async function updateGameInfo(autoSetNextRun = true, { type = "auto", log
         let existingEntries = await loadOrCreateFile(dateStr);
         existingEntries.push(...newEntries.flat(Infinity))
         existingEntries = new Set(existingEntries.flat(Infinity).map((i) => JSON.stringify(i)))
-        console.log(existingEntries)
         existingEntries = existingEntries.values().toArray().map((i) => JSON.parse(i))
-        existingEntries
         await saveFile(dateStr, existingEntries);
       }
 
