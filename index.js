@@ -128,55 +128,89 @@ async function getMap(name, socket = null) {
 }
 
 async function collectStats(matches, data, socket = null) {
-  const stats = {};
-  let totalIntents = 0;
-  const heatmaps = {}
-  if (data.statType === "spawns") {
-    stats[data.statType] = new Map();
-  } else {
-    stats[data.statType] = [];
-  }
+  const stats = {};
+  let totalIntents = 0;
+  const heatmaps = {}; // key: mapName or statType -> raw buffer
 
-  for (let i = 0; i < matches.length; i++) {
-    const id = matches[i];
-    try {
-      const game = await fetch(`https://api.openfront.io/game/${id}`).then(r => r.json());
+  if (data.statType === "spawns") {
+    stats[data.statType] = new Map();
+  } else {
+    stats[data.statType] = [];
+  }
 
-      for (const turn of game.turns ?? []) {
-        for (const intent of turn.intents ?? []) {
-          totalIntents++;
+  // Collect heatmap points here
+  const heatmapPoints = [];
 
-          if (data.statType === "spawns" && intent.type === "spawn") {
-            intent.tile = await getCordsFromTile(data.mapName, intent.tile);
-            stats[data.statType].set(intent.clientID, { ...intent, gameId: id });
-          }
+  for (let i = 0; i < matches.length; i++) {
+    const id = matches[i];
+    try {
+      const game = await fetch(`https://api.openfront.io/game/${id}`).then(r => r.json());
 
-          if (socket && totalIntents % 100 === 0) {
-            socket.send(JSON.stringify({
-              type: "progress",
-              task: "getStats",
-              statType: data.statType,
-              currentGame: i + 1,
-              totalGames: matches.length,
-              currentIntents: totalIntents,
-              tracked: data.statType === "spawns"
-                ? stats[data.statType].size
-                : stats[data.statType].length,
-            }));
-          }
-        }
-      }
-    } catch (err) {
-      console.warn(`Failed to fetch game ${id}:`, err);
-    }
-  }
+      for (const turn of game.turns ?? []) {
+        for (const intent of turn.intents ?? []) {
+          totalIntents++;
 
-  if (data.statType === "spawns") {
-    stats[data.statType] = Array.from(stats[data.statType].values());
-  }
+          if (data.statType === "spawns" && intent.type === "spawn") {
+            intent.tile = await getCordsFromTile(data.mapName, intent.tile);
 
-  return {stats, heatmap};
+            // Save intent stats
+            stats[data.statType].set(intent.clientID, { ...intent, gameId: id });
+
+            // Also add to heatmap points
+            heatmapPoints.push({
+              x: intent.tile.x,
+              y: intent.tile.y,
+              value: 1 // or use some weighting if you want
+            });
+          }
+
+          // Handle other statTypes if you want heatmaps from them similarly
+
+          if (socket && totalIntents % 100 === 0) {
+            socket.send(JSON.stringify({
+              type: "progress",
+              task: "getStats",
+              statType: data.statType,
+              currentGame: i + 1,
+              totalGames: matches.length,
+              currentIntents: totalIntents,
+              tracked: data.statType === "spawns"
+                ? stats[data.statType].size
+                : stats[data.statType].length,
+            }));
+          }
+        }
+      }
+    } catch (err) {
+      console.warn(`Failed to fetch game ${id}:`, err);
+    }
+  }
+
+  // Convert Map to Array for spawns
+  if (data.statType === "spawns") {
+    stats[data.statType] = Array.from(stats[data.statType].values());
+  }
+
+  // Generate heatmap for the collected points
+  // Make sure you have width and height defined, e.g. from your data or config
+  const width = data.width || 1000;  // example default width
+  const height = data.height || 1000; // example default height
+
+  // Call your heatmap generator (assuming generateHeatmapRaw is in scope)
+  const heatmapRaw = generateHeatmapRaw(width, height, heatmapPoints, { radius: 20 });
+
+  // Store it in heatmaps object with a suitable key (e.g. mapName or statType)
+  heatmaps[data.mapName ?? data.statType] = {
+    width,
+    height,
+    raw: heatmapRaw,
+  };
+
+  return { stats, heatmaps };
 }
+
+
+
 const r = router();
 
 r.useStatic(__dirname); // or your static directory
