@@ -415,9 +415,8 @@ r.ws("/ws", (socket) => {
       }
 
       if (data.type === "getStats") {
-        const { stats, heatmap } = await collectStats(matches, data, socket)
-
-        if (data.statType === "spawns") stats[data.statType] = Array.from(stats[data.statType].values());
+        const { stats, heatmaps } = await collectStats(matches, data, socket);
+        const heatmap = heatmaps[data.mapName ?? data.statType];
         const base64 = await encodeHeatmapToBase64(heatmap.raw, heatmap.width, heatmap.height);
         socket.send(JSON.stringify({ done: true, stats, display: data.display, heatmap: { width: heatmap.width, height: heatmap.height, base64: base64 } }));
 
