@@ -127,6 +127,56 @@ async function getMap(name, socket = null) {
   return matches;
 }
 
+async function collectStats(matches, data, socket = null) {
+  const stats = {};
+  let totalIntents = 0;
+  const heatmaps = {}
+  if (data.statType === "spawns") {
+    stats[data.statType] = new Map();
+  } else {
+    stats[data.statType] = [];
+  }
+
+  for (let i = 0; i < matches.length; i++) {
+    const id = matches[i];
+    try {
+      const game = await fetch(`https://api.openfront.io/game/${id}`).then(r => r.json());
+
+      for (const turn of game.turns ?? []) {
+        for (const intent of turn.intents ?? []) {
+          totalIntents++;
+
+          if (data.statType === "spawns" && intent.type === "spawn") {
+            intent.tile = await getCordsFromTile(data.mapName, intent.tile);
+            stats[data.statType].set(intent.clientID, { ...intent, gameId: id });
+          }
+
+          if (socket && totalIntents % 100 === 0) {
+            socket.send(JSON.stringify({
+              type: "progress",
+              task: "getStats",
+              statType: data.statType,
+              currentGame: i + 1,
+              totalGames: matches.length,
+              currentIntents: totalIntents,
+              tracked: data.statType === "spawns"
+                ? stats[data.statType].size
+                : stats[data.statType].length,
+            }));
+          }
+        }
+      }
+    } catch (err) {
+      console.warn(`Failed to fetch game ${id}:`, err);
+    }
+  }
+
+  if (data.statType === "spawns") {
+    stats[data.statType] = Array.from(stats[data.statType].values());
+  }
+
+  return {stats, heatmap};
+}
 const r = router();
 
 r.useStatic(__dirname); // or your static directory
