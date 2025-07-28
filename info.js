@@ -85,7 +85,6 @@ function getDateRange(startDate, endDate) {
 
 export async function getRangeGameIds(start, end) {
   let dates = getDateRange(start, end)
-  console.log(dates)
   let allGameIds = []
   await Promise.all(dates.map(async (i) => {
     let gameIds = await getGameIds(new Date(i))
