@@ -10,7 +10,8 @@ const supabase = createClient(
 async function saveFile(dateStr, entries) {
   const filename = `${dateStr}.ndjson`;
   const content = entries.map(JSON.stringify).join("\n"); // true NDJSON format
-
+  console.log(filename, content)
+  /*
   const { error } = await supabase.storage
     .from("logs")
     .upload(filename, new Blob([content]), {
@@ -22,7 +23,7 @@ async function saveFile(dateStr, entries) {
     console.error(`Error uploading log file ${filename}:`, error);
   } else {
     console.log(`Uploaded: ${filename}`);
-  }
+  }*/
 }
 
 async function readFile(filename) {
