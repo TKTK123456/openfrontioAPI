@@ -36,5 +36,13 @@ async function readFile(filename) {
     })
     .filter(Boolean);
 
-  console.log(arr);
+  const dateMap = new Map();
+arr.forEach(([date, entry]) => {
+  if (!dateMap.has(date)) {
+    dateMap.set(date, []);
+  }
+  dateMap.get(date).push(entry);
+});
+
+console.log(dateMap);
 })();
