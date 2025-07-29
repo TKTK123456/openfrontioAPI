@@ -58,7 +58,7 @@ export const mapHelpers = {
 }
 export async function getGameIds(date) {
   let dateStr = date.toISOString().slice(0, 10)
-  const filename = `${dateStr}.ndjson`;
+  const filename = `${dateStr}.json`;
   const folder = "logs";
   const { data: list, error: listErr } = await supabase.storage.from(folder).list("", {
     search: filename
