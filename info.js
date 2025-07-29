@@ -370,7 +370,7 @@ export async function updateGameInfo(autoSetNextRun = true, { type = "auto", log
       }
 
       for (const [dateStr, newEntries] of dateToNewEntries.entries()) {
-        logger(`Adding ${newEntries.length} games with mapType to ${dateStr}.ndjson`);
+        logger(`Adding ${newEntries.map(i=>JSON.stringify(i)).join(", ")} to ${dateStr}.ndjson`);
         let existingEntries = await loadOrCreateFile(dateStr);
         existingEntries.push(...newEntries.flat(Infinity))
         existingEntries = new Set(existingEntries.flat(Infinity).map((i) => JSON.stringify(i)))
