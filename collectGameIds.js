@@ -1,7 +1,18 @@
 import path from "node:path";
 
 const __dirname = path.resolve();
-
+async function saveFile(dateStr, entries) {
+    const filename = `${dateStr}.ndjson`;
+    // Save JSON lines (ndjson) format, each entry stringified on separate line
+    const content = JSON.stringify(entries.flat(Infinity))
+    const { error } = await supabase.storage.from("logs").upload(filename, new Blob([content]), {
+      upsert: true,
+      contentType: "application/x-ndjson",
+    });
+    if (error) {
+      console.error(`Error uploading log file ${filename}:`, error);
+    }
+}
 async function readFile(filename) {
   try {
     const fullPath = path.join(__dirname, filename);
@@ -41,5 +52,4 @@ arr.forEach(([date, entry]) => {
   if (!grouped[date]) grouped[date] = [];
   grouped[date].push(entry);
 });
-console.log(dateMap);
 })();
