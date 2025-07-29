@@ -323,7 +323,6 @@ function createScript(startingDataExpr, inputVars, progressElm = "progress", res
           progressEl.innerText = \`Progress (\${data.task}): \${data.progress}% (\${data.currentCount} checked)\`;
         }
       }
-      `
       if (data.done) {
         progressEl.innerText = "Finished!";
         if (data.display === "heatmap" && data.heatmap) {
