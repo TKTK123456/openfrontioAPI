@@ -1,6 +1,7 @@
 import path from "node:path";
 
 const __dirname = path.resolve();
+const supabase = createClient("https://ebnqhovfhgfrfxzexdxj.supabase.co", process.env.SUPABASE_TOKEN)
 async function saveFile(dateStr, entries) {
     const filename = `${dateStr}.ndjson`;
     // Save JSON lines (ndjson) format, each entry stringified on separate line
