@@ -135,7 +135,7 @@ async function collectStats(matches, data, socket = null) {
   let totalIntents = 0;
   const heatmaps = {}; // key: mapName or statType -> { width, height, raw }
 
-  if (data.statType === "spawns") {
+  if (data.statType === "spawns"||data.statType === "winnerSpawns") {
     stats[data.statType] = new Map();
   } else {
     stats[data.statType] = [];
@@ -164,6 +164,13 @@ async function collectStats(matches, data, socket = null) {
         }
         continue;
       }
+      let winnerClientIds = []
+      if (game.info.winner[0] === "player") {
+        winnerClientIds.push(...game.info.winner.slice(1))
+      }
+      if (game.info.winner[0] === "team") {
+        winnerClientIds.push(...game.info.winner.slice(2))
+      }
       for (const turn of game.turns ?? []) {
         for (const intent of turn.intents ?? []) {
           totalIntents++;
@@ -180,7 +187,18 @@ async function collectStats(matches, data, socket = null) {
               y: intent.tile.y
             });
           }
+          if (data.statType === "winnerSpawns" && intent.type === "spawn" && winnerClientIds.includes(intent.clientID)) {
+            intent.tile = await getCordsFromTile(data.mapName, intent.tile);
 
+            // Save intent stats
+            stats[data.statType].set(intent.clientID, { ...intent, gameId: id });
+
+            // Also add to heatmap points
+            heatmapPoints.push({
+              x: intent.tile.x,
+              y: intent.tile.y
+            });
+          }
           // Handle other statTypes if you want heatmaps from them similarly
 
           if (socket && totalIntents % 100 === 0) {
@@ -204,7 +222,7 @@ async function collectStats(matches, data, socket = null) {
   }
 
   // Convert Map to Array for spawns
-  if (data.statType === "spawns") {
+  if (data.statType === "spawns"||data.statType === "winnerSpawns") {
     stats[data.statType] = Array.from(stats[data.statType].values());
   }
 
