@@ -29,7 +29,7 @@ async function readFile(filename) {
     .map(line => {
       const parts = line.split(",");
       if (parts.length < 6) return null;
-      const date = parts[5]?.slice(0, 10);
+      const date = parts[5]?.slice(1, 11);
       const gameId = parts[0];
       const mapType = parts[1];
       return [date, { gameId, mapType }];
