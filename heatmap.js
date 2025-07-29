@@ -107,7 +107,7 @@ export function generateHeatmapRaw(width, height, points, options = {}) {
  */
 export async function generateHeatmapWithMapBackgroundRaw(mapName, points, options = {}) {
   const radius = options.radius ?? 20;
-  const base = `https://cdn.jsdelivr.net/gh/openfrontio/OpenFrontIO/resources/maps/${mapName.toLowerCase()}`;
+  const base = `https://cdn.jsdelivr.net/gh/openfrontio/OpenFrontIO/resources/maps/${mapName.toLowerCase().replace(/\s+/g, "")}`;
 
   // Get manifest from local or remote (must return map: { width, height })
   const manifest = await getMapManifest(mapName);
