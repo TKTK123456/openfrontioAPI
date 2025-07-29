@@ -129,6 +129,7 @@ async function getMap(name, socket = null) {
 
 async function collectStats(matches, data, socket = null) {
   if (!data.gameModes) data.gameModes = ["FFA","Team"];
+  data.gameModes = Array.isArray(data.gameModes) ? data.gameModes : [data.gameModes]
   console.log(["FFA","Team"], data.gameModes)
   data.gameModes = data.gameModes.map(i => i === "FFA" ? "Free For All" : i)
   const stats = {};
