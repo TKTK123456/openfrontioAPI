@@ -77,6 +77,8 @@ async function writeJsonFile(filename, data) {
 }
 
 async function getMap(name, socket = null, gameModes = null) {
+  if (!gameModes) gameModes = ["FFA","Team"];
+  gameModes = gameModes.map(i => i === "FFA" ? "Free For All" : i === "Team" ? "Team" : i)
   const games = await getAllGameIds();
   const total = games.length;
   const matches = [];
