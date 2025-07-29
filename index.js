@@ -321,7 +321,7 @@ function createScript(startingDataExpr, inputVars, progressElm = "progress", res
 // For /map/:name
 r.get("/map/:name", ({ params, send, query }) => {
   const mapName = params.name;
-  const gameModes = query?.gameModes
+  const gameModes = query.gameModes ?? null
   const html = `<!DOCTYPE html>
 <html>
 <head><title>Map Search Progress - ${mapName}</title></head>
@@ -330,8 +330,11 @@ r.get("/map/:name", ({ params, send, query }) => {
   <div id="progress">Connecting...</div>
   <pre id="result"></pre>
   ${createScript(
-    `JSON.stringify({ type: "getMap", mapName })`,
-    `const mapName = ${JSON.stringify(mapName)};`
+    `JSON.stringify({ type: "getMap", mapName, gameModes })`,
+    `
+    const mapName = ${JSON.stringify(mapName)};
+    const gameModes = ${JSON.stringify(gameModes)};
+    `
   )}
 </body>
 </html>`;
@@ -343,7 +346,7 @@ r.get("/stats/:map/:type{/:display}", ({ params, send, query }) => {
   const display = params.display ?? null;
   const mapName = params.map;
   const statType = params.type;
-
+  const gameModes = query.gameModes ?? null
   const html = `<!DOCTYPE html>
 <html>
 <head><title>Stats for ${mapName} (${statType})</title></head>
@@ -352,11 +355,12 @@ r.get("/stats/:map/:type{/:display}", ({ params, send, query }) => {
   <div id="progress">Connecting...</div>
   <pre id="result"></pre>
   ${createScript(
-    `JSON.stringify({ type: "getStats", mapName, statType, display })`,
+    `JSON.stringify({ type: "getStats", mapName, statType, display, gameModes })`,
     `
       const mapName = ${JSON.stringify(mapName)};
       const statType = ${JSON.stringify(statType)};
       const display = ${JSON.stringify(display)};
+      const gameModes = ${JSON.stringify(gameModes)};
     `
   )}
 </body>
