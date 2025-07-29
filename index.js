@@ -289,24 +289,20 @@ function createScript(startingDataExpr, inputVars, progressElm = "progress", res
           progressEl.innerText = \`Progress (\${data.task}): \${data.progress}% (\${data.currentCount} checked)\`;
         }
       }
-
+      `
       if (data.done) {
         progressEl.innerText = "Finished!";
         if (data.display === "heatmap" && data.heatmap) {
-        const canvas = document.createElement("canvas");
-        canvas.width = data.heatmap.width;
-        canvas.height = data.heatmap.height;
-        const ctx = canvas.getContext("2d");
-        const img = new Image();
-        img.onload = () => {
-ctx.drawImage(img, 0, 0);
-    resultEl.innerText = ""; // clear old text if any
-    resultEl.appendChild(canvas);
-  };
-  img.src = "data:image/png;base64," + data.heatmap.base64;
-}
-        // Fallback display
-        else if (data.matches) {
+          const canvas = document.createElement("canvas");
+          canvas.width = data.heatmap.width;
+          canvas.height = data.heatmap.height;
+          const ctx = canvas.getContext("2d");
+          const imageData = ctx.createImageData(data.heatmap.width, data.heatmap.height);
+          imageData.data.set(new Uint8ClampedArray(data.heatmap.raw));
+          ctx.putImageData(imageData, 0, 0);
+          resultEl.innerText = "";
+          resultEl.appendChild(canvas);
+        } else if (data.matches) {
           resultEl.innerText = JSON.stringify(data.matches, null, 2);
         } else if (data.stats) {
           resultEl.innerText = JSON.stringify(data.stats, null, 2);
@@ -314,7 +310,6 @@ ctx.drawImage(img, 0, 0);
           resultEl.innerText = "Done, but no results returned.";
         }
       }
-
       if (data.error) {
         progressEl.innerText = "Error: " + data.error;
       }
