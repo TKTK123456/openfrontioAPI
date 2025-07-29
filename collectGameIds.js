@@ -14,6 +14,12 @@ async function readFile(filename) {
 }
 (async () => {
   let arr = await readFile("data-1753801035109.csv")
-  arr = arr.split("\n").slice(1).map(i => i.split(",").slice(0, 2)).map(i => ({gameId: i[0], mapType: i[1]}))
+  arr = arr.split("\n").slice(1).map(i => [i.split(",")[5].slice(0, 10), [i.split(",").slice(0, 2)]]).map(i => ([i[0], {gameId: i[1][0], mapType: i[1][1]}]))
+  /*let dateMap = new Map()
+  arr.forEach((i) => {
+    if (!dateMap.has(i[0])) {
+      dateMap.set(i[0])
+    }
+  })*/
   console.log(arr)
 })()
