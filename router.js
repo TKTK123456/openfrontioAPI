@@ -26,6 +26,14 @@ class Router {
     const isWS = req.headers.get("upgrade")?.toLowerCase() === "websocket";
     const method = isWS ? "WS" : req.method;
 
+    // Handle CORS preflight
+    if (req.method === "OPTIONS") {
+      return new Response(null, {
+        status: 204,
+        headers: this.#corsHeaders(),
+      });
+    }
+
     for (const route of this.routes) {
       if (route.method !== method) continue;
 
@@ -33,12 +41,13 @@ class Router {
       if (!match) continue;
 
       if (isWS) {
-        const { response, socket } = Deno.upgradeWebSocket(req);
+        const { response, socket } = Deno.upgradeWebSocket(req, {
+          headers: this.#corsHeaders(),
+        });
         route.handler(socket, match.params);
         return response;
       }
 
-      // Build query object with support for repeated keys
       const query = {};
       for (const [key, value] of url.searchParams.entries()) {
         if (query[key]) {
@@ -73,6 +82,7 @@ class Router {
             status: opts.status || 200,
             headers: {
               "content-type": opts.type || (isText ? "text/plain" : "application/json"),
+              ...this.#corsHeaders(),
               ...opts.headers,
             },
           });
@@ -80,12 +90,18 @@ class Router {
       };
 
       await route.handler(ctx);
-      return ctx.res || new Response("No response", { status: 500 });
+      return ctx.res || new Response("No response", {
+        status: 500,
+        headers: this.#corsHeaders(),
+      });
     }
 
     // static fallback
     if (this.staticDir) return await this.#tryStatic(pathname);
-    return new Response("Not Found", { status: 404 });
+    return new Response("Not Found", {
+      status: 404,
+      headers: this.#corsHeaders(),
+    });
   }
 
   #normalizePath(path) {
@@ -95,33 +111,29 @@ class Router {
   #matchRoute(pathname, routePath) {
     const escapeRegex = str => str.replace(/([.+*?=^!:${}()[\]|/\\])/g, "\\$1");
 
-  const paramNames = [];
+    const paramNames = [];
+    const segments = [];
+    let buffer = "";
+    let inGroup = 0;
 
-  // Step 1: Custom split that respects {...} groups
-  const segments = [];
-  let buffer = "";
-  let inGroup = 0;
-
-  for (const char of routePath) {
-    if (char === "{") inGroup++;
-    if (char === "}") inGroup--;
-
-    if (char === "/" && inGroup === 0) {
-      if (buffer) {
-        segments.push(buffer);
-        buffer = "";
+    for (const char of routePath) {
+      if (char === "{") inGroup++;
+      if (char === "}") inGroup--;
+      if (char === "/" && inGroup === 0) {
+        if (buffer) {
+          segments.push(buffer);
+          buffer = "";
+        }
+      } else {
+        buffer += char;
       }
-    } else {
-      buffer += char;
     }
-  }
-  if (buffer) segments.push(buffer);
+    if (buffer) segments.push(buffer);
 
-  // Step 2: Convert to regex pattern
-  let pattern = segments.map(part => {
-    if (part.includes("{") && part.includes("}")) {
+    let pattern = segments.map(part => {
+      if (part.includes("{") && part.includes("}")) {
         const [mainPart, groupPart] = part.split("{");
-        const groupContent = groupPart.slice(0, -1); // remove '}'
+        const groupContent = groupPart.slice(0, -1);
 
         const collectParams = str => {
           const matches = [...str.matchAll(/:([a-zA-Z0-9_]+)/g)];
@@ -137,7 +149,6 @@ class Router {
         return `/${mainRegex}(?:${groupRegex})?`;
       }
 
-      // 2. Handle single param with optionality or regex e.g. :id(\d+)? or :id?
       const match = part.match(/^:([a-zA-Z0-9_]+)(\(([^)]+)\))?(\?)?$/);
       if (match) {
         const [, name, , regex, optional] = match;
@@ -146,39 +157,42 @@ class Router {
         return optional ? `(?:/(${capture}))?` : `/(${capture})`;
       }
 
-      // 3. Wildcard param
       if (part === "*") {
         paramNames.push("wildcard");
         return "/(.*)";
       }
 
-      // 4. Static path
       return "/" + escapeRegex(part);
-    })
-    .join("");
+    }).join("");
 
-  // Step 3: Final match
-  const fullPattern = "^" + pattern + "/?$";
-  const regex = new RegExp(fullPattern);
-  const match = pathname.match(regex);
-  if (!match) return null;
+    const fullPattern = "^" + pattern + "/?$";
+    const regex = new RegExp(fullPattern);
+    const match = pathname.match(regex);
+    if (!match) return null;
 
-  const params = {};
-  paramNames.forEach((name, i) => {
-    params[name] = match[i + 1] ? decodeURIComponent(match[i + 1]) : null;
-  });
+    const params = {};
+    paramNames.forEach((name, i) => {
+      params[name] = match[i + 1] ? decodeURIComponent(match[i + 1]) : null;
+    });
 
-  return { params };
-}
+    return { params };
+  }
+
   async #tryStatic(pathname) {
     try {
       const filepath = this.staticDir + decodeURIComponent(pathname);
       const file = await Deno.readFile(filepath);
       return new Response(file, {
-        headers: { "content-type": this.#mime(filepath) },
+        headers: {
+          "content-type": this.#mime(filepath),
+          ...this.#corsHeaders(),
+        },
       });
     } catch {
-      return new Response("Not Found", { status: 404 });
+      return new Response("Not Found", {
+        status: 404,
+        headers: this.#corsHeaders(),
+      });
     }
   }
 
@@ -196,6 +210,14 @@ class Router {
       svg: "image/svg+xml",
       ico: "image/x-icon",
     }[ext] || "application/octet-stream";
+  }
+
+  #corsHeaders() {
+    return {
+      "Access-Control-Allow-Origin": "*",
+      "Access-Control-Allow-Methods": "GET,POST,PUT,DELETE,OPTIONS",
+      "Access-Control-Allow-Headers": "*",
+    };
   }
 }
 
