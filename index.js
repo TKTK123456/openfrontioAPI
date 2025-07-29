@@ -201,7 +201,7 @@ async function collectStats(matches, data, socket = null) {
   const height = manifest.map.height;
 
   // Use new heatmap with background map overlay
-  const heatmapWithBg = await generateHeatmapWithMapBackgroundRaw(data.mapName, heatmapPoints, { radius: 20 });
+  const heatmapWithBg = await generateHeatmapWithMapBackgroundRaw(data.mapName, heatmapPoints);
 
   heatmaps[data.mapName ?? data.statType] = heatmapWithBg;
 
