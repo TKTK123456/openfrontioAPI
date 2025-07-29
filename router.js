@@ -50,12 +50,20 @@ class Router {
 
       const query = {};
       for (const [key, value] of url.searchParams.entries()) {
+        const splitValue = value.includes(",") ? value.split(",") : value;
+
         if (query[key]) {
-          query[key] = Array.isArray(query[key]) ? [...query[key], value] : [query[key], value];
-        } else {
-          query[key] = value;
-        }
-      }
+          if (Array.isArray(query[key])) {
+            query[key] = query[key].concat(splitValue);
+    } else {
+      query[key] = [query[key]].concat(splitValue);
+    }
+  } else {
+    query[key] = splitValue;
+  }
+}
+
+
 
       const contentType = req.headers.get("content-type") || "";
       let body = null;
