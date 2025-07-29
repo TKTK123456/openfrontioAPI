@@ -8,7 +8,7 @@ import { setHelpers, mapHelpers, getGameIds, getAllGameIds, getRangeGameIds, get
 import { findGameWebSocket, findPublicLobby, getPlayer, getGame } from './fetchers.js'
 import config from './config.js'
 import router from "./router.js";
-import { generateHeatmapRaw } from './heatmap.js'
+import { generateHeatmapRaw, generateHeatmapWithMapBackgroundRaw } from './heatmap.js'
 const __dirname = path.resolve();
 const kv = await Deno.openKv();
 function getContentType(Path) {
@@ -130,7 +130,7 @@ async function getMap(name, socket = null) {
 async function collectStats(matches, data, socket = null) {
   const stats = {};
   let totalIntents = 0;
-  const heatmaps = {}; // key: mapName or statType -> raw buffer
+  const heatmaps = {}; // key: mapName or statType -> { width, height, raw }
 
   if (data.statType === "spawns") {
     stats[data.statType] = new Map();
@@ -191,6 +191,7 @@ async function collectStats(matches, data, socket = null) {
     stats[data.statType] = Array.from(stats[data.statType].values());
   }
 
+  // Get map manifest for dimensions
   const manifest = await getMapManifest(data.mapName);
   if (!manifest?.map?.width || !manifest?.map?.height) {
     throw new Error(`Invalid map manifest for ${data.mapName}`);
@@ -198,20 +199,14 @@ async function collectStats(matches, data, socket = null) {
 
   const width = manifest.map.width;
   const height = manifest.map.height;
-  
-  // Call your heatmap generator (assuming generateHeatmapRaw is in scope)
-  const heatmapRaw = generateHeatmapRaw(width, height, heatmapPoints, { radius: 20 });
 
-  // Store it in heatmaps object with a suitable key (e.g. mapName or statType)
-  heatmaps[data.mapName ?? data.statType] = {
-    width,
-    height,
-    raw: heatmapRaw,
-  };
+  // Use new heatmap with background map overlay
+  const heatmapWithBg = await generateHeatmapWithMapBackgroundRaw(data.mapName, heatmapPoints, { radius: 20 });
+
+  heatmaps[data.mapName ?? data.statType] = heatmapWithBg;
 
   return { stats, heatmaps };
 }
-
 const r = router();
 
 r.useStatic(__dirname); // or your static directory
