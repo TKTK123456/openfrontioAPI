@@ -1,3 +1,4 @@
+import getMapManifest from "./info.js";
 /**
  * Generate heatmap raw RGBA buffer (Uint8ClampedArray)
  * @param {number} width - image width
@@ -97,7 +98,7 @@ export function generateHeatmapRaw(width, height, points, options = {}) {
   return buffer;
 }
 /**
- * Load a grayscale map.bin image and overlay heatmap on top.
+ * Load grayscale map.bin and overlay heatmap.
  * @param {string} mapName - OpenFront.io map name (e.g. "World", "Italia")
  * @param {Array<{x:number,y:number,value?:number}>} points - Heatmap points
  * @param {object} [options]
@@ -108,15 +109,17 @@ export async function generateHeatmapWithMapBackgroundRaw(mapName, points, optio
   const radius = options.radius ?? 20;
   const base = `https://cdn.jsdelivr.net/gh/openfrontio/OpenFrontIO/resources/maps/${mapName.toLowerCase()}`;
 
-  // Get manifest (for width/height)
-  const manifest = await fetch(`${base}/manifest.json`).then(r => r.json());
-  const { width, height } = manifest;
+  // Get manifest from local or remote (must return map: { width, height })
+  const manifest = await getMapManifest(mapName);
+  const { width, height } = manifest.map;
 
-  // Fetch grayscale map.bin data
+  // Fetch grayscale image
   const gray = new Uint8Array(await fetch(`${base}/map.bin`).then(r => r.arrayBuffer()));
-  if (gray.length !== width * height) throw new Error("map.bin size mismatch");
+  if (gray.length !== width * height) {
+    throw new Error(`map.bin size mismatch: expected ${width * height}, got ${gray.length}`);
+  }
 
-  // Create RGBA buffer from grayscale
+  // Grayscale to RGBA buffer
   const background = new Uint8ClampedArray(width * height * 4);
   for (let i = 0; i < gray.length; i++) {
     const v = gray[i];
@@ -127,24 +130,26 @@ export async function generateHeatmapWithMapBackgroundRaw(mapName, points, optio
     background[j + 3] = 255;
   }
 
-  // Generate heatmap buffer using your function
+  // Generate heatmap
   const heatmap = generateHeatmapRaw(width, height, points, { radius });
 
-  // Composite heatmap onto background with alpha blending
+  // Composite with alpha blending
   for (let i = 0; i < heatmap.length; i += 4) {
-    const hr = heatmap[i];
-    const hg = heatmap[i + 1];
-    const hb = heatmap[i + 2];
     const ha = heatmap[i + 3] / 255;
+    if (ha === 0) continue;
 
-    const br = background[i];
-    const bg = background[i + 1];
-    const bb = background[i + 2];
+    const j = i;
+    const hr = heatmap[j];
+    const hg = heatmap[j + 1];
+    const hb = heatmap[j + 2];
 
-    background[i]     = Math.round(hr * ha + br * (1 - ha));
-    background[i + 1] = Math.round(hg * ha + bg * (1 - ha));
-    background[i + 2] = Math.round(hb * ha + bb * (1 - ha));
-    // keep alpha = 255
+    const br = background[j];
+    const bg = background[j + 1];
+    const bb = background[j + 2];
+
+    background[j]     = Math.round(hr * ha + br * (1 - ha));
+    background[j + 1] = Math.round(hg * ha + bg * (1 - ha));
+    background[j + 2] = Math.round(hb * ha + bb * (1 - ha));
   }
 
   return {
