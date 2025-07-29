@@ -165,11 +165,15 @@ async function collectStats(matches, data, socket = null) {
         continue;
       }
       let winnerClientIds = []
-      if (game.info.winner[0] === "player") {
-        winnerClientIds.push(...game.info.winner.slice(1))
-      }
-      if (game.info.winner[0] === "team") {
-        winnerClientIds.push(...game.info.winner.slice(2))
+      if (game?.info?.winner) {
+        if (game.info.winner[0] === "player") {
+          winnerClientIds.push(...game.info.winner.slice(1))
+        }
+        if (game.info.winner[0] === "team") {
+          winnerClientIds.push(...game.info.winner.slice(2))
+        } 
+      } else if (data.statType === "winnerSpawns") {
+        continue
       }
       for (const turn of game.turns ?? []) {
         for (const intent of turn.intents ?? []) {
