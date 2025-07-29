@@ -1,4 +1,4 @@
-import getMapManifest from "./info.js";
+import { getMapManifest } from "./info.js";
 /**
  * Generate heatmap raw RGBA buffer (Uint8ClampedArray)
  * @param {number} width - image width
