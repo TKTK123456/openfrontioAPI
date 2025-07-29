@@ -23,18 +23,18 @@ async function readFile(filename) {
   }
 
   arr = arr
-    .split("\n")
-    .slice(1)
-    .filter(Boolean)
-    .map(line => {
-      const parts = line.split(",");
-      if (parts.length < 6) return null;
-      const date = parts[5]?.slice(1, 11);
-      const gameId = parts[0];
-      const mapType = parts[1];
-      return [date, { gameId, mapType }];
-    })
-    .filter(Boolean);
+  .split("\n")
+  .slice(1)
+  .filter(Boolean)
+  .map(line => {
+    const parts = line.split(",");
+    if (parts.length < 6) return null;
+    const date = parts[5].slice(0, 10).replace(/^"|"$/g, "");
+    const gameId = parts[0].replace(/^"|"$/g, "");
+    const mapType = parts[1].replace(/^"|"$/g, "");
+    return [date, { gameId, mapType }];
+  })
+  .filter(Boolean);
 
   const dateMap = new Map();
 arr.forEach(([date, entry]) => {
