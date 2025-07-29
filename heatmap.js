@@ -9,7 +9,7 @@ import { getMapManifest } from "./info.js";
  * @returns {Uint8ClampedArray} - length = width * height * 4, RGBA pixels
  */
 export function generateHeatmapRaw(width, height, points, options = {}) {
-  const radius = options.radius ?? 10;
+  const radius = options.radius ?? 20;
   const radiusSq = radius * radius;
 
   // Create alpha heat buffer (float array for accumulation)
@@ -106,7 +106,7 @@ export function generateHeatmapRaw(width, height, points, options = {}) {
  * @returns {{ width: number, height: number, raw: Uint8ClampedArray }}
  */
 export async function generateHeatmapWithMapBackgroundRaw(mapName, points, options = {}) {
-  const radius = options.radius ?? 10;
+  const radius = options.radius ?? 20;
   const base = `https://cdn.jsdelivr.net/gh/openfrontio/OpenFrontIO/resources/maps/${mapName.toLowerCase()}`;
 
   // Get manifest from local or remote (must return map: { width, height })
