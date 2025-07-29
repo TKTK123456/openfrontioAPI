@@ -159,8 +159,7 @@ async function collectStats(matches, data, socket = null) {
             // Also add to heatmap points
             heatmapPoints.push({
               x: intent.tile.x,
-              y: intent.tile.y,
-              value: 1 // or use some weighting if you want
+              y: intent.tile.y
             });
           }
 
