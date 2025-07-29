@@ -74,33 +74,45 @@ export async function getGameIds(date) {
 }
 function getDateRange(startDate, endDate) {
   const dates = [];
-  let currentDate = new Date(startDate); // Create a new Date object from the start date
-  do {
-    dates.push(new Date(currentDate)); // Push a copy of the current date to the array
-    currentDate.setDate(currentDate.getDate() + 1); // Increment the date by one day
-  } while (currentDate <= endDate) 
-
+  let currentDate = new Date(startDate);
+  while (currentDate <= endDate) {
+    dates.push(new Date(currentDate));
+    currentDate.setUTCDate(currentDate.getUTCDate() + 1); // Use UTC for consistency
+  }
   return dates;
 }
 
 export async function getRangeGameIds(start, end) {
-  let dates = getDateRange(start, end)
-  let allGameIds = []
-  await Promise.all(dates.map(async (i) => {
-    let gameIds = await getGameIds(new Date(i))
-    allGameIds.push(...gameIds)
-  }))
-  return allGameIds
+  const dates = getDateRange(start, end);
+
+  // Map dates to promises returning arrays of gameIds
+  const gameIdArrays = await Promise.all(
+    dates.map(date => getGameIds(date))
+  );
+
+  // Flatten all arrays into one
+  const allGameIds = gameIdArrays.flat();
+
+  return allGameIds;
 }
+
 export async function getAllGameIds(mapType = true) {
-  let startDate = new Date(1753574400001)
-  let endDate = new Date();
-  let allGames = await getRangeGameIds(startDate, endDate)
+  const startDateStr = "2025-07-06";
+  const startDate = new Date(startDateStr);
+
+  // UTC midnight today
+  const now = new Date();
+  const endDate = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
+
+  let allGames = await getRangeGameIds(startDate, endDate);
+
   if (!mapType) {
-    allGames = allGames.map((i) => i.gameId)
+    allGames = allGames.map(i => i.gameId);
   }
-  return allGames
+
+  return allGames;
 }
+
 export async function getCordsFromTile(name, tile) {
   const manifest = await getMapManifest(name);
   if (!manifest || !manifest.map || typeof manifest.map.width !== 'number') {
