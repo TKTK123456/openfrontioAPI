@@ -378,7 +378,7 @@ r.ws("/ws", (socket) => {
     //console.log(event)
     try {
       const data = JSON.parse(event.data);
-
+      console.log(data.gameModes)
       if (!data.mapName) {
         socket.send(JSON.stringify({ error: "Missing mapName" }));
         return;
