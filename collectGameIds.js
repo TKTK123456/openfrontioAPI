@@ -36,13 +36,10 @@ async function readFile(filename) {
   })
   .filter(Boolean);
 
-  const dateMap = new Map();
+  const grouped = {};
 arr.forEach(([date, entry]) => {
-  if (!dateMap.has(date)) {
-    dateMap.set(date, []);
-  }
-  dateMap.get(date).push(entry);
+  if (!grouped[date]) grouped[date] = [];
+  grouped[date].push(entry);
 });
-
 console.log(dateMap);
 })();
