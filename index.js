@@ -333,7 +333,7 @@ function createScript(startingDataExpr, inputVars, progressElm = "progress", res
           const imageData = ctx.createImageData(data.heatmap.width, data.heatmap.height);
           imageData.data.set(new Uint8ClampedArray(data.heatmap.raw));
           ctx.putImageData(imageData, 0, 0);
-          resultEl.innerText = data.stats.matchingGameModes + "\n";
+          resultEl.innerText = "";
           resultEl.appendChild(canvas);
         } else if (data.matches) {
           resultEl.innerText = JSON.stringify(data.matches, null, 2);
