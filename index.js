@@ -319,8 +319,9 @@ function createScript(startingDataExpr, inputVars, progressElm = "progress", res
 }
 
 // For /map/:name
-r.get("/map/:name", ({ params, send }) => {
+r.get("/map/:name", ({ params, send, query }) => {
   const mapName = params.name;
+  const gameModes = query?.gameModes
   const html = `<!DOCTYPE html>
 <html>
 <head><title>Map Search Progress - ${mapName}</title></head>
@@ -338,7 +339,7 @@ r.get("/map/:name", ({ params, send }) => {
 });
 
 // For /stats/:map/:type{/:display}
-r.get("/stats/:map/:type{/:display}", ({ params, send }) => {
+r.get("/stats/:map/:type{/:display}", ({ params, send, query }) => {
   const display = params.display ?? null;
   const mapName = params.map;
   const statType = params.type;
