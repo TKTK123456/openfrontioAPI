@@ -173,6 +173,7 @@ async function collectStats(matches, data, socket = null) {
           winnerClientIds.push(...game.info.winner.slice(2))
         } 
       } else if (data.statType === "winnerSpawns") {
+        stats.matchingGameModes--
         continue
       }
       for (const turn of game.turns ?? []) {
@@ -339,7 +340,7 @@ function createScript(startingDataExpr, inputVars, progressElm = "progress", res
 
           // Add stats as a <div> above the canvas
           const statsDiv = document.createElement("div");
-          statsDiv.innerText = data.stats.matchingGameModes;
+          statsDiv.innerText = \`\${data.stats.matchingGameModes} games with valid data\`;
           statsDiv.style.marginBottom = "10px";
           statsDiv.style.fontWeight = "bold";
 
