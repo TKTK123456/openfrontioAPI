@@ -10,7 +10,7 @@ const kv = await Deno.openKv();
 //await kv.set(["default", "clientsToTime"], 571.428571429)
 export const setHelpers = {
   folder: "storage",
-  filename: "sets.ndjson",
+  filename: "sets.json",
   keyParser: function(key) {
     return key.join("/")
   },
@@ -48,7 +48,7 @@ export const setHelpers = {
     fileJSON = JSON.stringify(fileJSON)
     const { error } = await supabase.storage.from(this.folder).upload(this.filename, new Blob([fileJSON]), {
       upsert: true,
-      contentType: "application/x-ndjson",
+      contentType: "application/x-json",
     });
     if (error) {
       console.error(error)
@@ -63,7 +63,7 @@ export const setHelpers = {
 }
 export const mapHelpers = {
   folder: "storage",
-  filename: "maps.ndjson",
+  filename: "maps.json",
   keyParser: function(key) {
     return key.join("/")
   },
@@ -105,7 +105,7 @@ export const mapHelpers = {
     fileJSON = JSON.stringify(fileJSON)
     const { error } = await supabase.storage.from(this.folder).upload(this.filename, new Blob([fileJSON]), {
       upsert: true,
-      contentType: "application/x-ndjson",
+      contentType: "application/x-json",
     });
     if (error) {
       console.error(error)
@@ -150,7 +150,7 @@ async function getAvrgTimeRaito(currentClientsToTime = false) {
 let updatingGameInfo = false
 export async function updateGameInfo(autoSetNextRun = true, { type = "auto", log = true, autoSetNextRunType = type } = {}) {
   async function loadOrCreateFile(dateStr) {
-    const filename = `${dateStr}.ndjson`;
+    const filename = `${dateStr}.json`;
     const folder = "logs";
 
     // Check if file exists
@@ -163,7 +163,7 @@ export async function updateGameInfo(autoSetNextRun = true, { type = "auto", log
     if (!fileExists) {
       const { error } = await supabase.storage.from(folder).upload(filename, new Blob([""]), {
         upsert: true,
-        contentType: "application/x-ndjson",
+        contentType: "application/x-json",
       });
       if (error) console.error(error);
     }
@@ -177,12 +177,12 @@ export async function updateGameInfo(autoSetNextRun = true, { type = "auto", log
   }
 
   async function saveFile(dateStr, entries) {
-    const filename = `${dateStr}.ndjson`;
-    // Save JSON lines (ndjson) format, each entry stringified on separate line
+    const filename = `${dateStr}.json`;
+    // Save JSON lines (json) format, each entry stringified on separate line
     const content = JSON.stringify(entries.flat(Infinity))
     const { error } = await supabase.storage.from("logs").upload(filename, new Blob([content]), {
       upsert: true,
-      contentType: "application/x-ndjson",
+      contentType: "application/x-json",
     });
     if (error) {
       console.error(`Error uploading log file ${filename}:`, error);
@@ -273,7 +273,7 @@ export async function updateGameInfo(autoSetNextRun = true, { type = "auto", log
       }
 
       for (const [dateStr, newEntries] of dateToNewEntries.entries()) {
-        logger(`Adding ${newEntries.length} games with mapType to ${dateStr}.ndjson`);
+        logger(`Adding ${newEntries.length} games with mapType to ${dateStr}.json`);
         let existingEntries = await loadOrCreateFile(dateStr);
         existingEntries.push(...newEntries.flat(Infinity))
         existingEntries = new Set(existingEntries.flat(Infinity).map((i) => JSON.stringify(i)))
@@ -374,7 +374,7 @@ export async function updateGameInfo(autoSetNextRun = true, { type = "auto", log
         existingEntries.push(...newEntries.flat(Infinity))
         existingEntries = new Set(existingEntries.flat(Infinity).map((i) => JSON.stringify(i)))
         existingEntries = existingEntries.values().toArray().map((i) => JSON.parse(i))
-        logger(`Adding Game IDs ${newEntries.map(i=>`${i.gameId} with map: ${i.mapType}`).join(", ")} to ${dateStr}.ndjson`);
+        logger(`Adding Game IDs ${newEntries.map(i=>`${i.gameId} with map: ${i.mapType}`).join(", ")} to ${dateStr}.json`);
         await saveFile(dateStr, existingEntries);
       }
 
