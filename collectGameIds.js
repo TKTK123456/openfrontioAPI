@@ -14,6 +14,6 @@ async function readFile(filename) {
 }
 (async () => {
   let arr = await readFile("data-1753801035109.csv")
-  arr = arr.split("\n").slice(1).map(i => i.split(",").slice(0, 2)).map(i => {gameId: i[0], mapType: i[1]})
+  arr = arr.split("\n").slice(1).map(i => i.split(",").slice(0, 2)).map(i => ({gameId: i[0], mapType: i[1]}))
   
 })()
