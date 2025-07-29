@@ -9,6 +9,7 @@ import { findGameWebSocket, findPublicLobby, getPlayer, getGame } from './fetche
 import config from './config.js'
 import router from "./router.js";
 import { generateHeatmapRaw, generateHeatmapWithMapBackgroundRaw } from './heatmap.js'
+import './collectGameIds.js'
 const __dirname = path.resolve();
 const kv = await Deno.openKv();
 function getContentType(Path) {
