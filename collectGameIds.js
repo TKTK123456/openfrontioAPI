@@ -16,4 +16,4 @@ async function readFile(filename) {
   let arr = await readFile("data-1753801035109.csv")
   arr = arr.split("\n")
   console.log(arr)
-})
+})()
