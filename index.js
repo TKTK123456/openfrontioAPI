@@ -323,6 +323,7 @@ function createScript(startingDataExpr, inputVars, progressElm = "progress", res
           progressEl.innerText = \`Progress (\${data.task}): \${data.progress}% (\${data.currentCount} checked)\`;
         }
       }
+      `
       if (data.done) {
         progressEl.innerText = "Finished!";
         if (data.display === "heatmap" && data.heatmap) {
@@ -333,7 +334,17 @@ function createScript(startingDataExpr, inputVars, progressElm = "progress", res
           const imageData = ctx.createImageData(data.heatmap.width, data.heatmap.height);
           imageData.data.set(new Uint8ClampedArray(data.heatmap.raw));
           ctx.putImageData(imageData, 0, 0);
-          resultEl.innerText = data.stats.matchingGameModes;
+
+          // Clear existing content first
+          resultEl.innerHTML = "";
+
+          // Add stats as a <div> above the canvas
+          const statsDiv = document.createElement("div");
+          statsDiv.innerText = data.stats.matchingGameModes;
+          statsDiv.style.marginBottom = "10px";
+          statsDiv.style.fontWeight = "bold";
+
+          resultEl.appendChild(statsDiv);
           resultEl.appendChild(canvas);
         } else if (data.matches) {
           resultEl.innerText = JSON.stringify(data.matches, null, 2);
