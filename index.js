@@ -140,7 +140,7 @@ async function collectStats(matches, data, socket = null) {
   } else {
     stats[data.statType] = [];
   }
-
+  stats.matchingGameModes = 0
   // Collect heatmap points here
   const heatmapPoints = [];
 
@@ -163,7 +163,7 @@ async function collectStats(matches, data, socket = null) {
             }));
         }
         continue;
-      }
+      } else stats.matchingGameModes++
       let winnerClientIds = []
       if (game?.info?.winner) {
         if (game.info.winner[0] === "player") {
@@ -333,7 +333,7 @@ function createScript(startingDataExpr, inputVars, progressElm = "progress", res
           const imageData = ctx.createImageData(data.heatmap.width, data.heatmap.height);
           imageData.data.set(new Uint8ClampedArray(data.heatmap.raw));
           ctx.putImageData(imageData, 0, 0);
-          resultEl.innerText = "";
+          resultEl.innerText = data.stats.matchingGameModes + "\n";
           resultEl.appendChild(canvas);
         } else if (data.matches) {
           resultEl.innerText = JSON.stringify(data.matches, null, 2);
