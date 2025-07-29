@@ -76,9 +76,7 @@ async function writeJsonFile(filename, data) {
   await Deno.writeFile(fullPath, encoded);
 }
 
-async function getMap(name, socket = null, gameModes = null) {
-  if (!gameModes) gameModes = ["FFA","Team"];
-  gameModes = gameModes.map(i => i === "FFA" ? "Free For All" : i === "Team" ? "Team" : i)
+async function getMap(name, socket = null) {
   const games = await getAllGameIds();
   const total = games.length;
   const matches = [];
@@ -130,6 +128,8 @@ async function getMap(name, socket = null, gameModes = null) {
 }
 
 async function collectStats(matches, data, socket = null) {
+  if (!data.gameModes) data.gameModes = ["FFA","Team"];
+  data.gameModes = data.gameModes.map(i => i === "FFA" ? "Free For All" : i)
   const stats = {};
   let totalIntents = 0;
   const heatmaps = {}; // key: mapName or statType -> { width, height, raw }
@@ -147,7 +147,22 @@ async function collectStats(matches, data, socket = null) {
     const id = matches[i];
     try {
       const game = await fetch(`https://api.openfront.io/game/${id}`).then(r => r.json());
-
+      if (!data.gameModes.includes(game.info.config.gameMode)) {
+        if (socket && totalIntents % 100 === 0) {
+            socket.send(JSON.stringify({
+              type: "progress",
+              task: "getStats",
+              statType: data.statType,
+              currentGame: i + 1,
+              totalGames: matches.length,
+              currentIntents: totalIntents,
+              tracked: data.statType === "spawns"
+                ? stats[data.statType].size
+                : stats[data.statType].length,
+            }));
+        }
+        continue;
+      }
       for (const turn of game.turns ?? []) {
         for (const intent of turn.intents ?? []) {
           totalIntents++;
@@ -321,9 +336,8 @@ function createScript(startingDataExpr, inputVars, progressElm = "progress", res
 }
 
 // For /map/:name
-r.get("/map/:name", ({ params, send, query }) => {
+r.get("/map/:name", ({ params, send }) => {
   const mapName = params.name;
-  const gameModes = query.gameModes ?? null
   const html = `<!DOCTYPE html>
 <html>
 <head><title>Map Search Progress - ${mapName}</title></head>
@@ -332,10 +346,9 @@ r.get("/map/:name", ({ params, send, query }) => {
   <div id="progress">Connecting...</div>
   <pre id="result"></pre>
   ${createScript(
-    `JSON.stringify({ type: "getMap", mapName, gameModes })`,
+    `JSON.stringify({ type: "getMap", mapName })`,
     `
     const mapName = ${JSON.stringify(mapName)};
-    const gameModes = ${JSON.stringify(gameModes)};
     `
   )}
 </body>
@@ -380,13 +393,12 @@ r.ws("/ws", (socket) => {
     //console.log(event)
     try {
       const data = JSON.parse(event.data);
-      console.log(data.gameModes)
       if (!data.mapName) {
         socket.send(JSON.stringify({ error: "Missing mapName" }));
         return;
       }
 
-      const matches = await getMap(data.mapName, socket);
+      const matches = await getMap(data.mapName, socket, data.gameModes);
 
       if (data.type === "getMap") {
         socket.send(JSON.stringify({ done: true, matches }));
