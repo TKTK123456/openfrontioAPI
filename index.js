@@ -213,7 +213,7 @@ async function collectStats(matches, data, socket = null) {
               currentGame: i + 1,
               totalGames: matches.length,
               currentIntents: totalIntents,
-              tracked: data.statType === "spawns"
+              tracked: (data.statType === "spawns"||data.statType === "winnerSpawns")
                 ? stats[data.statType].size
                 : stats[data.statType].length,
             }));
