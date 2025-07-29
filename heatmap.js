@@ -96,4 +96,60 @@ export function generateHeatmapRaw(width, height, points, options = {}) {
 
   return buffer;
 }
-  
+/**
+ * Load a grayscale map.bin image and overlay heatmap on top.
+ * @param {string} mapName - OpenFront.io map name (e.g. "World", "Italia")
+ * @param {Array<{x:number,y:number,value?:number}>} points - Heatmap points
+ * @param {object} [options]
+ *        radius: number - radius of heat point (default 20)
+ * @returns {{ width: number, height: number, raw: Uint8ClampedArray }}
+ */
+export async function generateHeatmapWithMapBackgroundRaw(mapName, points, options = {}) {
+  const radius = options.radius ?? 20;
+  const base = `https://cdn.jsdelivr.net/gh/openfrontio/OpenFrontIO/resources/maps/${mapName.toLowerCase()}`;
+
+  // Get manifest (for width/height)
+  const manifest = await fetch(`${base}/manifest.json`).then(r => r.json());
+  const { width, height } = manifest;
+
+  // Fetch grayscale map.bin data
+  const gray = new Uint8Array(await fetch(`${base}/map.bin`).then(r => r.arrayBuffer()));
+  if (gray.length !== width * height) throw new Error("map.bin size mismatch");
+
+  // Create RGBA buffer from grayscale
+  const background = new Uint8ClampedArray(width * height * 4);
+  for (let i = 0; i < gray.length; i++) {
+    const v = gray[i];
+    const j = i * 4;
+    background[j] = v;
+    background[j + 1] = v;
+    background[j + 2] = v;
+    background[j + 3] = 255;
+  }
+
+  // Generate heatmap buffer using your function
+  const heatmap = generateHeatmapRaw(width, height, points, { radius });
+
+  // Composite heatmap onto background with alpha blending
+  for (let i = 0; i < heatmap.length; i += 4) {
+    const hr = heatmap[i];
+    const hg = heatmap[i + 1];
+    const hb = heatmap[i + 2];
+    const ha = heatmap[i + 3] / 255;
+
+    const br = background[i];
+    const bg = background[i + 1];
+    const bb = background[i + 2];
+
+    background[i]     = Math.round(hr * ha + br * (1 - ha));
+    background[i + 1] = Math.round(hg * ha + bg * (1 - ha));
+    background[i + 2] = Math.round(hb * ha + bb * (1 - ha));
+    // keep alpha = 255
+  }
+
+  return {
+    width,
+    height,
+    raw: background,
+  };
+}
