@@ -76,7 +76,7 @@ async function writeJsonFile(filename, data) {
   await Deno.writeFile(fullPath, encoded);
 }
 
-async function getMap(name, socket = null) {
+async function getMap(name, socket = null, gameModes = null) {
   const games = await getAllGameIds();
   const total = games.length;
   const matches = [];
