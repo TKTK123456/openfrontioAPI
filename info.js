@@ -66,7 +66,7 @@ export async function getGameIds(date) {
   const fileExists = list.some(f => f.name === filename);
   if (!fileExists) {
     console.error(`Could not find ${dateStr}`)
-    return
+    return []
   }
   const { data, error } = await supabase.storage.from(folder).download(filename);
   const text = await data.text();
