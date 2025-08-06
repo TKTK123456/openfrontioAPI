@@ -169,7 +169,7 @@ export async function updateGameInfo(autoSetNextRun = true, { type = "auto", log
     }
 
     // Download the file
-    const { data, error } = file supabase.storage.from(folder).download(filename);
+    const { data, error } = await supabase.storage.from(folder).download(filename);
     if (error) throw new Error(`Failed to download ${filename}: ${JSON.stringify(error)}`);
 
     const text = await data.text();
