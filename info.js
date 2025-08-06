@@ -394,5 +394,5 @@ export async function updateGameInfo(autoSetNextRun = true, { type = "auto", log
     }
   }
 }
-await updateGameInfo(true, {type:"selfFetch"})
+await updateGameInfo(true, {type:"openfront.pro"})
 Deno.serve(() => new Response("selfFetch, world!"));
