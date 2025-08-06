@@ -169,7 +169,7 @@ export async function updateGameInfo(autoSetNextRun = true, { type = "auto", log
     }
 
     // Download the file
-    const { data, error } = await supabase.storage.from(folder).download(filename);
+    const { data, error } = file supabase.storage.from(folder).download(filename);
     if (error) throw new Error(`Failed to download ${filename}: ${JSON.stringify(error)}`);
 
     const text = await data.text();
@@ -394,5 +394,5 @@ export async function updateGameInfo(autoSetNextRun = true, { type = "auto", log
     }
   }
 }
-await updateGameInfo(true)
-Deno.serve(() => new Response("Hello, world!"));
+await updateGameInfo(true, {auto:"selfFetch"})
+Deno.serve(() => new Response("selfFetch, world!"));
