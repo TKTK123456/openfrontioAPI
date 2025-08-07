@@ -141,7 +141,7 @@ export async function getMapManifest(name) {
     return null;
   }
 }
-Deno.cron("Reminder to work", "*/3 * * * *", () => {
+Deno.cron("Reminder to work", "*/1 * * * *", () => {
   fetch("https://tktk123456-openfrontio-50.deno.dev/")
 });
 Deno.cron("keep-bot-alive", "*/14 * * * *", async () => {
