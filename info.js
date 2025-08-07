@@ -395,4 +395,4 @@ export async function updateGameInfo(autoSetNextRun = true, { type = "auto", log
   }
 }
 await updateGameInfo(true)
-Deno.serve(() => new Response("selfFetch, world!"));
+Deno.serve(() => new Response("Hello, world!"));
