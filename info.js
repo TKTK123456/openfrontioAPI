@@ -141,10 +141,10 @@ export async function getMapManifest(name) {
     return null;
   }
 }
-Deno.cron("Reminder to work", "*/1 * * * *", () => {
+Deno.cron("Reminder to work", "*/3 * * * *", () => {
   fetch("https://tktk123456-openfrontio-50.deno.dev/")
 });
-Deno.cron("keep-bot-alive", "*/14 * * * *", async () => {
-  const res = await fetch("https://openfrontapidiscordbots.onrender.com/ping");
-  console.log("Pinged bot:", res.status);
-});
+//Deno.cron("keep-bot-alive", "*/14 * * * *", async () => {
+//  const res = await fetch("https://openfrontapidiscordbots.onrender.com/ping");
+//  console.log("Pinged bot:", res.status);
+//});
