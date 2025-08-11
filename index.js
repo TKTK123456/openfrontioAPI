@@ -142,7 +142,7 @@ async function collectStats(matches, data, socket = null) {
   const stats = {};
   let totalIntents = 0;
   const points = [];
-
+  const distances = []
   if (data.statType === "spawns" || data.statType === "winnerSpawns" || data.statType === "winnerFirstAttack") {
     stats[data.statType] = new Map();
   } else {
@@ -259,7 +259,7 @@ async function collectStats(matches, data, socket = null) {
   const heatmaps = {};
   heatmaps[data.mapName ?? data.statType] = heatmapWithBg;
   const arvgDistances = {}
-  arvgDistances[data.mapName ?? data.statType] = (distance ?? null) ? getAvrg(distance) : null
+  arvgDistances[data.mapName ?? data.statType] = distances ? getAvrg(distances) : null
   return { stats, heatmaps, arvgDistances };
 }
 const r = router();
