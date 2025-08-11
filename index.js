@@ -201,6 +201,7 @@ async function collectStats(matches, data, socket = null) {
                 ...intent
               }
               if (idx === 2) setIdx.targetPos = allLocalSpawns.get(intent.targetID).tile
+              console.log(setIdx)
               current[idx] = setIdx
             }
           }
@@ -255,6 +256,7 @@ async function collectStats(matches, data, socket = null) {
   // Map manifest for dimensions
   if (data.statType.slice(6,7).toLowerCase() + data.statType.slice(7) === "firstAttack") {
     stats[data.statType].forEach((item) => {
+      console.log(item)
       distances.push(Math.abs(item[1].tile.x-item[2].targetPos.x)+Math.abs(item[1].tile.y-item[2].targetPos.y))
     })
   }
