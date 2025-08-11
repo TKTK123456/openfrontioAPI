@@ -143,7 +143,7 @@ async function collectStats(matches, data, socket = null) {
   let totalIntents = 0;
   const points = [];
 
-  if (data.statType === "spawns" || data.statType === "winnerSpawns") {
+  if (data.statType === "spawns" || data.statType === "winnerSpawns" || data.statType === "winnerFirstAttack") {
     stats[data.statType] = new Map();
   } else {
     stats[data.statType] = [];
@@ -169,7 +169,7 @@ async function collectStats(matches, data, socket = null) {
           if (game.info.winner[0] === "team") {
             winnerClientIds.push(...game.info.winner.slice(2));
           }
-        } else if (data.statType === "winnerSpawns") {
+        } else if (data.statType === "winnerSpawns" || data.statType === "winnerFirstAttack") {
           // If no winner info and statType is winnerSpawns, skip
           return { skip: true, index, decrementMatchingGameModes: true };
         }
@@ -181,13 +181,13 @@ async function collectStats(matches, data, socket = null) {
         for (const turn of game.turns ?? []) {
           for (const intent of turn.intents ?? []) {
             localIntentsCount++;
-
+            if (data.statType.startsWith("winner")&&!winnerClientIds.includes(intent.clientID)) continue
             if (data.statType === "spawns" && intent.type === "spawn") {
               intent.tile = await getCordsFromTile(data.mapName, intent.tile);
               localStatsUpdates.set(intent.clientID, { ...intent, gameId: id });
               localPoints.push({ x: intent.tile.x, y: intent.tile.y });
             }
-            if (data.statType === "winnerSpawns" && intent.type === "spawn" && winnerClientIds.includes(intent.clientID)) {
+            if (data.statType === "winnerSpawns" && intent.type === "spawn") {
               intent.tile = await getCordsFromTile(data.mapName, intent.tile);
               localStatsUpdates.set(intent.clientID, { ...intent, gameId: id });
               localPoints.push({ x: intent.tile.x, y: intent.tile.y });
@@ -246,7 +246,6 @@ async function collectStats(matches, data, socket = null) {
   // Convert Map to Array for spawns
   if (data.statType === "spawns" || data.statType === "winnerSpawns") {
     stats[data.statType] = Array.from(stats[data.statType].values());
-    
   }
 
   // Map manifest for dimensions
@@ -259,7 +258,9 @@ async function collectStats(matches, data, socket = null) {
   const heatmapWithBg = await generateHeatmapWithMapBackgroundRaw(data.mapName, points);
   const heatmaps = {};
   heatmaps[data.mapName ?? data.statType] = heatmapWithBg;
-  return { stats, heatmaps };
+  const arvgDistances = {}
+  arvgDistances[data.mapName ?? data.statType] = distance ? getAvrg(distance) : null
+  return { stats, heatmaps, arvgDistances };
 }
 const r = router();
 
