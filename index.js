@@ -181,17 +181,22 @@ async function collectStats(matches, data, socket = null) {
         for (const turn of game.turns ?? []) {
           for (const intent of turn.intents ?? []) {
             localIntentsCount++;
-            if (data.statType.startsWith("winner")&&!winnerClientIds.includes(intent.clientID)) continue
-            if (data.statType === "spawns" && intent.type === "spawn") {
+            let statType = data.statType
+            if (statType.startsWith("winner")) {
+              if (winnerClientIds.includes(intent.clientID)) {
+                statType = statType.slice(6)
+              } else continue
+            }
+            if (statType === "spawns" && intent.type === "spawn") {
               intent.tile = await getCordsFromTile(data.mapName, intent.tile);
               localStatsUpdates.set(intent.clientID, { ...intent, gameId: id });
               localPoints.push({ x: intent.tile.x, y: intent.tile.y });
             }
-            if (data.statType === "winnerSpawns" && intent.type === "spawn") {
+            /*if (statType === "winnerSpawns" && intent.type === "spawn") {
               intent.tile = await getCordsFromTile(data.mapName, intent.tile);
               localStatsUpdates.set(intent.clientID, { ...intent, gameId: id });
               localPoints.push({ x: intent.tile.x, y: intent.tile.y });
-            }
+            }*/
           }
         }
 
