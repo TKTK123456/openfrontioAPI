@@ -188,7 +188,7 @@ async function collectStats(matches, data, socket = null) {
               localStatsUpdates.set(intent.clientID, { ...intent, gameId: id });
               localPoints.push({ x: intent.tile.x, y: intent.tile.y });
             }
-            if (statType === "")
+            if (statType === "firstAttack") {}
         }
 
         return {
@@ -236,12 +236,7 @@ async function collectStats(matches, data, socket = null) {
       }
     }
   }
-
-  // Convert Map to Array for spawns
-  if (data.statType === "spawns" || data.statType === "winnerSpawns") {
-    stats[data.statType] = Array.from(stats[data.statType].values());
-  }
-
+  stats[data.statType] = Array.from(stats[data.statType].values());
   // Map manifest for dimensions
   const manifest = await getMapManifest(data.mapName);
   if (!manifest?.map?.width || !manifest?.map?.height) {
