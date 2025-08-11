@@ -259,7 +259,7 @@ async function collectStats(matches, data, socket = null) {
   const heatmaps = {};
   heatmaps[data.mapName ?? data.statType] = heatmapWithBg;
   const arvgDistances = {}
-  arvgDistances[data.mapName ?? data.statType] = distance ? getAvrg(distance) : null
+  arvgDistances[data.mapName ?? data.statType] = (distance ?? null) ? getAvrg(distance) : null
   return { stats, heatmaps, arvgDistances };
 }
 const r = router();
