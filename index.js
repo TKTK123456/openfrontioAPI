@@ -143,11 +143,7 @@ async function collectStats(matches, data, socket = null) {
   let totalIntents = 0;
   const points = [];
   const distances = []
-  if (data.statType === "spawns" || data.statType === "winnerSpawns" || data.statType === "winnerFirstAttack") {
-    stats[data.statType] = new Map();
-  } else {
-    stats[data.statType] = [];
-  }
+  stats[data.statType] = new Map();
   stats.matchingGameModes = 0;
 
   const concurrencyLimit = 10; // adjust this as needed
@@ -184,7 +180,7 @@ async function collectStats(matches, data, socket = null) {
             let statType = data.statType
             if (statType.startsWith("winner")) {
               if (winnerClientIds.includes(intent.clientID)) {
-                statType = statType.slice(6)
+                statType = statType.slice(6,7).toLowerCase() + statType.slice(7)
               } else continue
             }
             if (statType === "spawns" && intent.type === "spawn") {
@@ -192,12 +188,7 @@ async function collectStats(matches, data, socket = null) {
               localStatsUpdates.set(intent.clientID, { ...intent, gameId: id });
               localPoints.push({ x: intent.tile.x, y: intent.tile.y });
             }
-            /*if (statType === "winnerSpawns" && intent.type === "spawn") {
-              intent.tile = await getCordsFromTile(data.mapName, intent.tile);
-              localStatsUpdates.set(intent.clientID, { ...intent, gameId: id });
-              localPoints.push({ x: intent.tile.x, y: intent.tile.y });
-            }*/
-          }
+            if (statType === "")
         }
 
         return {
@@ -240,9 +231,7 @@ async function collectStats(matches, data, socket = null) {
           currentGame: res.index + 1,
           totalGames: matches.length,
           currentIntents: totalIntents,
-          tracked: (data.statType === "spawns" || data.statType === "winnerSpawns")
-            ? stats[data.statType].size
-            : stats[data.statType].length,
+          tracked: stats[data.statType].size ?? stats[data.statType].length
         }));
       }
     }
