@@ -254,7 +254,7 @@ async function collectStats(matches, data, socket = null) {
 
   return { stats, heatmaps };
 }
-asyncnst r = router();
+const r = router();
 
 r.useStatic(__dirname); // or your static directory
 
