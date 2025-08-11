@@ -178,7 +178,7 @@ async function collectStats(matches, data, socket = null) {
             localIntentsCount++;
             let statType = data.statType
             if (intent.type === "spawn") {
-              if (intent.x ?? null && intent.y ?? null) {
+              if ((intent.x ?? null) && (intent.y ?? null)) {
                 intent.tile = {
                   x:intent.x,
                   y:intent.y
