@@ -156,7 +156,7 @@ async function collectStats(matches, data, socket = null) {
       } else {
         // Track locally only here
         let localMatchingGameModes = 1;
-
+        let allLocalSpawns = new Map()
         let winnerClientIds = [];
         if (game?.info?.winner) {
           if (game.info.winner[0] === "player") {
@@ -173,22 +173,36 @@ async function collectStats(matches, data, socket = null) {
         let localIntentsCount = 0;
         const localPoints = [];
         const localStatsUpdates = new Map();
-
         for (const turn of game.turns ?? []) {
           for (const intent of turn.intents ?? []) {
             localIntentsCount++;
             let statType = data.statType
+            if (intent.type === "spawn") {
+              intent.tile = await getCordsFromTile(data.mapName, intent.tile);
+              allLocalSpawns.set(intent.clientID, {...intent});
+            }
             if (statType.startsWith("winner")) {
               if (winnerClientIds.includes(intent.clientID)) {
                 statType = statType.slice(6,7).toLowerCase() + statType.slice(7)
               } else continue
             }
             if (statType === "spawns" && intent.type === "spawn") {
-              intent.tile = await getCordsFromTile(data.mapName, intent.tile);
               localStatsUpdates.set(intent.clientID, { ...intent, gameId: id });
               localPoints.push({ x: intent.tile.x, y: intent.tile.y });
             }
-            if (statType === "firstAttack") {}
+            if (statType === "firstAttack" && (intent.type === "spawn" || (intent.type === "attack" && intent.targetID&&allLocalSpawns.has(intent.targetID)))) {
+              const idx = intent.type === "spawn" ? 1 : 2
+              if (!localStatsUpdates.has(intent.clientID)) localStatsUpdates.set(intent.clientID, [gameId: id, null, null])
+              const current = localStatsUpdates.get(intent.clientID)
+              if (current[2]) {
+                continue
+              }
+              const setIdx = {
+                ...intent
+              }
+              if (idx === 2) setIdx.targetPos = allLocalSpawns.get(intent.targetID).tile
+              current[idx] = setIdx
+            }
           }
         }
 
@@ -239,6 +253,11 @@ async function collectStats(matches, data, socket = null) {
   }
   stats[data.statType] = Array.from(stats[data.statType].values());
   // Map manifest for dimensions
+  if (data.statType.slice(6,7).toLowerCase() + data.statType.slice(7) === "firstAttack") {
+    stats[data.statType].forEach((item) => {
+      distances.push(Math.abs(item[1].tile.x-item[2].targetPos.x)+Math.abs(item[1].tile.y-item[2].targetPos.y))
+    })
+  }
   const manifest = await getMapManifest(data.mapName);
   if (!manifest?.map?.width || !manifest?.map?.height) {
     throw new Error(`Invalid map manifest for ${data.mapName}`);
@@ -249,7 +268,7 @@ async function collectStats(matches, data, socket = null) {
   const heatmaps = {};
   heatmaps[data.mapName ?? data.statType] = heatmapWithBg;
   const arvgDistances = {}
-  arvgDistances[data.mapName ?? data.statType] = distances ? getAvrg(distances) : null
+  arvgDistances[data.mapName ?? data.statType] = distances.length ? getAvrg(distances) : null
   return { stats, heatmaps, arvgDistances };
 }
 const r = router();
