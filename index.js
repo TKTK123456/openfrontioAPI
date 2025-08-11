@@ -75,7 +75,14 @@ async function writeJsonFile(filename, data) {
 
   await Deno.writeFile(fullPath, encoded);
 }
-
+function getAvrg(...arr) {
+  arr = arr.flat(Infinity)
+  const sum = arr.reduce((accumulator, current) => {
+    current = parseFloat(current)
+    return accumulator+current
+  }, 0)
+  return sum/arr.length
+}
 async function getMap(name, socket = null) {
   const games = await getAllGameIds();
   const total = games.length;
@@ -134,7 +141,7 @@ async function collectStats(matches, data, socket = null) {
 
   const stats = {};
   let totalIntents = 0;
-  const heatmapPoints = [];
+  const points = [];
 
   if (data.statType === "spawns" || data.statType === "winnerSpawns") {
     stats[data.statType] = new Map();
@@ -168,7 +175,7 @@ async function collectStats(matches, data, socket = null) {
         }
 
         let localIntentsCount = 0;
-        const localHeatmapPoints = [];
+        const localPoints = [];
         const localStatsUpdates = new Map();
 
         for (const turn of game.turns ?? []) {
@@ -178,12 +185,12 @@ async function collectStats(matches, data, socket = null) {
             if (data.statType === "spawns" && intent.type === "spawn") {
               intent.tile = await getCordsFromTile(data.mapName, intent.tile);
               localStatsUpdates.set(intent.clientID, { ...intent, gameId: id });
-              localHeatmapPoints.push({ x: intent.tile.x, y: intent.tile.y });
+              localPoints.push({ x: intent.tile.x, y: intent.tile.y });
             }
             if (data.statType === "winnerSpawns" && intent.type === "spawn" && winnerClientIds.includes(intent.clientID)) {
               intent.tile = await getCordsFromTile(data.mapName, intent.tile);
               localStatsUpdates.set(intent.clientID, { ...intent, gameId: id });
-              localHeatmapPoints.push({ x: intent.tile.x, y: intent.tile.y });
+              localPoints.push({ x: intent.tile.x, y: intent.tile.y });
             }
           }
         }
@@ -193,7 +200,7 @@ async function collectStats(matches, data, socket = null) {
           index,
           localMatchingGameModes,
           localIntentsCount,
-          localHeatmapPoints,
+          localPoints,
           localStatsUpdates,
         };
       }
@@ -215,7 +222,7 @@ async function collectStats(matches, data, socket = null) {
 
       stats.matchingGameModes += res.localMatchingGameModes;
       totalIntents += res.localIntentsCount;
-      heatmapPoints.push(...res.localHeatmapPoints);
+      points.push(...res.localPoints);
       for (const [clientID, intent] of res.localStatsUpdates.entries()) {
         stats[data.statType].set(clientID, intent);
       }
@@ -239,6 +246,7 @@ async function collectStats(matches, data, socket = null) {
   // Convert Map to Array for spawns
   if (data.statType === "spawns" || data.statType === "winnerSpawns") {
     stats[data.statType] = Array.from(stats[data.statType].values());
+    
   }
 
   // Map manifest for dimensions
@@ -248,10 +256,9 @@ async function collectStats(matches, data, socket = null) {
   }
 
   // Generate heatmap
-  const heatmapWithBg = await generateHeatmapWithMapBackgroundRaw(data.mapName, heatmapPoints);
+  const heatmapWithBg = await generateHeatmapWithMapBackgroundRaw(data.mapName, points);
   const heatmaps = {};
   heatmaps[data.mapName ?? data.statType] = heatmapWithBg;
-
   return { stats, heatmaps };
 }
 const r = router();
