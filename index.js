@@ -464,9 +464,10 @@ r.ws("/ws", (socket) => {
       }
 
       if (data.type === "getStats") {
-        const { stats, heatmaps } = await collectStats(matches, data, socket);
+        const { stats, heatmaps, arvgDistances } = await collectStats(matches, data, socket);
         const heatmap = heatmaps[data.mapName ?? data.statType];
-        socket.send(JSON.stringify({ done: true, stats, display: data.display, heatmap: { width: heatmap.width, height: heatmap.height, raw: Array.from(heatmap.raw) } }));
+        const arvgDistance = arvgDistances[data.mapName ?? data.statType];
+        socket.send(JSON.stringify({ done: true, stats, display: data.display, heatmap: { width: heatmap.width, height: heatmap.height, raw: Array.from(heatmap.raw) }, arvgDistance }));
 
         return;
       }
