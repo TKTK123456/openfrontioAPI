@@ -267,9 +267,9 @@ async function collectStats(matches, data, socket = null) {
   const heatmapWithBg = await generateHeatmapWithMapBackgroundRaw(data.mapName, points);
   const heatmaps = {};
   heatmaps[data.mapName ?? data.statType] = heatmapWithBg;
-  const arvgDistances = {}
-  arvgDistances[data.mapName ?? data.statType] = distances.length ? getAvrg(distances) : null
-  return { stats, heatmaps, arvgDistances };
+  const avrgDistances = {}
+  avrgDistances[data.mapName ?? data.statType] = distances.length ? getAvrg(distances) : null
+  return { stats, heatmaps, avrgDistances };
 }
 const r = router();
 
@@ -370,6 +370,8 @@ function createScript(startingDataExpr, inputVars, progressElm = "progress", res
 
           resultEl.appendChild(statsDiv);
           resultEl.appendChild(canvas);
+        } else if (data.display === "avrgDistance"&&data.avrgDistance) {
+          resultEl.innerText = \`The average distance is \${data.avrgDistance}\`
         } else if (data.matches) {
           resultEl.innerText = JSON.stringify(data.matches, null, 2);
         } else if (data.stats) {
@@ -464,10 +466,10 @@ r.ws("/ws", (socket) => {
       }
 
       if (data.type === "getStats") {
-        const { stats, heatmaps, arvgDistances } = await collectStats(matches, data, socket);
+        const { stats, heatmaps, avrgDistances } = await collectStats(matches, data, socket);
         const heatmap = heatmaps[data.mapName ?? data.statType];
-        const arvgDistance = arvgDistances[data.mapName ?? data.statType];
-        socket.send(JSON.stringify({ done: true, stats, display: data.display, heatmap: { width: heatmap.width, height: heatmap.height, raw: Array.from(heatmap.raw) }, arvgDistance }));
+        const avrgDistance = avrgDistances[data.mapName ?? data.statType];
+        socket.send(JSON.stringify({ done: true, stats, display: data.display, heatmap: { width: heatmap.width, height: heatmap.height, raw: Array.from(heatmap.raw) }, avrgDistance }));
 
         return;
       }
