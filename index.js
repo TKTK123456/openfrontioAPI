@@ -192,7 +192,7 @@ async function collectStats(matches, data, socket = null) {
             }
             if (statType === "firstAttack" && (intent.type === "spawn" || (intent.type === "attack" && intent.targetID&&allLocalSpawns.has(intent.targetID)))) {
               const idx = intent.type === "spawn" ? 1 : 2
-              if (!localStatsUpdates.has(intent.clientID)) localStatsUpdates.set(intent.clientID, [gameId: id, null, null])
+              if (!localStatsUpdates.has(intent.clientID)) localStatsUpdates.set(intent.clientID, [id, null, null])
               const current = localStatsUpdates.get(intent.clientID)
               if (current[2]) {
                 continue
