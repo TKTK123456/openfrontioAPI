@@ -195,7 +195,7 @@ async function collectStats(matches, data, socket = null) {
               localStatsUpdates.set(intent.clientID, { ...intent, gameId: id });
               localPoints.push({ x: intent.tile.x, y: intent.tile.y });
             }
-            if (statType === "firstAttack" && (intent.type === "spawn" || (intent.type === "attack" && intent.targetID/*&&allLocalSpawns.has(intent.targetID)*/))) {
+            if (statType === "firstAttack" && (intent.type === "spawn" || (intent.type === "attack" && intent.targetID&&allLocalSpawns.has(intent.targetID)))) {
               const idx = intent.type === "spawn" ? 1 : 2
               if (!localStatsUpdates.has(intent.clientID)) localStatsUpdates.set(intent.clientID, [id, null, null])
               const current = localStatsUpdates.get(intent.clientID)
@@ -206,8 +206,10 @@ async function collectStats(matches, data, socket = null) {
               const setIdx = {
                 ...intent
               }
-              if (idx === 2) setIdx.targetPos = allLocalSpawns.get(intent.targetID).tile
-              //console.log(setIdx)
+              if (idx === 2) {
+                setIdx.targetPos = allLocalSpawns.get(intent.targetID).tile
+                console.log(setIdx)
+              }
               current[idx] = setIdx
             }
           }
