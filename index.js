@@ -178,7 +178,12 @@ async function collectStats(matches, data, socket = null) {
             localIntentsCount++;
             let statType = data.statType
             if (intent.type === "spawn") {
-              intent.tile = await getCordsFromTile(data.mapName, intent.tile);
+              if (intent.x ?? null && intent.y ?? null) {
+                intent.tile = {
+                  x:intent.x,
+                  y:intent.y
+                }
+              } else intent.tile = await getCordsFromTile(data.mapName, intent.tile);
               allLocalSpawns.set(intent.clientID, {...intent});
             }
             if (statType.startsWith("winner")) {
@@ -195,13 +200,14 @@ async function collectStats(matches, data, socket = null) {
               if (!localStatsUpdates.has(intent.clientID)) localStatsUpdates.set(intent.clientID, [id, null, null])
               const current = localStatsUpdates.get(intent.clientID)
               if (current[2]) {
+                console.log(current)
                 continue
               }
               const setIdx = {
                 ...intent
               }
               if (idx === 2) setIdx.targetPos = allLocalSpawns.get(intent.targetID).tile
-              console.log(setIdx)
+              //console.log(setIdx)
               current[idx] = setIdx
             }
           }
