@@ -128,126 +128,133 @@ async function getMap(name, socket = null) {
 }
 
 async function collectStats(matches, data, socket = null) {
-  if (!data.gameModes) data.gameModes = ["FFA","Team"];
-  data.gameModes = Array.isArray(data.gameModes) ? data.gameModes : [data.gameModes]
-  data.gameModes = data.gameModes.map(i => i === "FFA" ? "Free For All" : i)
+  if (!data.gameModes) data.gameModes = ["FFA", "Team"];
+  data.gameModes = Array.isArray(data.gameModes) ? data.gameModes : [data.gameModes];
+  data.gameModes = data.gameModes.map(i => i === "FFA" ? "Free For All" : i);
+
   const stats = {};
   let totalIntents = 0;
-  const heatmaps = {}; // key: mapName or statType -> { width, height, raw }
+  const heatmapPoints = [];
 
-  if (data.statType === "spawns"||data.statType === "winnerSpawns") {
+  if (data.statType === "spawns" || data.statType === "winnerSpawns") {
     stats[data.statType] = new Map();
   } else {
     stats[data.statType] = [];
   }
-  stats.matchingGameModes = 0
-  // Collect heatmap points here
-  const heatmapPoints = [];
+  stats.matchingGameModes = 0;
 
-  for (let i = 0; i < matches.length; i++) {
-    const id = matches[i];
+  const concurrencyLimit = 10; // adjust this as needed
+
+  async function processGame(id, index) {
     try {
       const game = await fetch(`https://api.openfront.io/game/${id}`).then(r => r.json());
       if (!data.gameModes.includes(game.info.config.gameMode)) {
-        if (socket && totalIntents % 100 === 0) {
-            socket.send(JSON.stringify({
-              type: "progress",
-              task: "getStats",
-              statType: data.statType,
-              currentGame: i + 1,
-              totalGames: matches.length,
-              currentIntents: totalIntents,
-              tracked: data.statType === "spawns"
-                ? stats[data.statType].size
-                : stats[data.statType].length,
-            }));
-        }
-        continue;
-      } else stats.matchingGameModes++
-      let winnerClientIds = []
-      if (game?.info?.winner) {
-        if (game.info.winner[0] === "player") {
-          winnerClientIds.push(...game.info.winner.slice(1))
-        }
-        if (game.info.winner[0] === "team") {
-          winnerClientIds.push(...game.info.winner.slice(2))
-        } 
-      } else if (data.statType === "winnerSpawns") {
-        stats.matchingGameModes--
-        continue
-      }
-      for (const turn of game.turns ?? []) {
-        for (const intent of turn.intents ?? []) {
-          totalIntents++;
+        return { skip: true, index };
+      } else {
+        // Track locally only here
+        let localMatchingGameModes = 1;
 
-          if (data.statType === "spawns" && intent.type === "spawn") {
-            intent.tile = await getCordsFromTile(data.mapName, intent.tile);
-
-            // Save intent stats
-            stats[data.statType].set(intent.clientID, { ...intent, gameId: id });
-
-            // Also add to heatmap points
-            heatmapPoints.push({
-              x: intent.tile.x,
-              y: intent.tile.y
-            });
+        let winnerClientIds = [];
+        if (game?.info?.winner) {
+          if (game.info.winner[0] === "player") {
+            winnerClientIds.push(...game.info.winner.slice(1));
           }
-          if (data.statType === "winnerSpawns" && intent.type === "spawn" && winnerClientIds.includes(intent.clientID)) {
-            intent.tile = await getCordsFromTile(data.mapName, intent.tile);
-
-            // Save intent stats
-            stats[data.statType].set(intent.clientID, { ...intent, gameId: id });
-
-            // Also add to heatmap points
-            heatmapPoints.push({
-              x: intent.tile.x,
-              y: intent.tile.y
-            });
+          if (game.info.winner[0] === "team") {
+            winnerClientIds.push(...game.info.winner.slice(2));
           }
-          // Handle other statTypes if you want heatmaps from them similarly
+        } else if (data.statType === "winnerSpawns") {
+          // If no winner info and statType is winnerSpawns, skip
+          return { skip: true, index, decrementMatchingGameModes: true };
+        }
 
-          if (socket && totalIntents % 100 === 0) {
-            socket.send(JSON.stringify({
-              type: "progress",
-              task: "getStats",
-              statType: data.statType,
-              currentGame: i + 1,
-              totalGames: matches.length,
-              currentIntents: totalIntents,
-              tracked: (data.statType === "spawns"||data.statType === "winnerSpawns")
-                ? stats[data.statType].size
-                : stats[data.statType].length,
-            }));
+        let localIntentsCount = 0;
+        const localHeatmapPoints = [];
+        const localStatsUpdates = new Map();
+
+        for (const turn of game.turns ?? []) {
+          for (const intent of turn.intents ?? []) {
+            localIntentsCount++;
+
+            if (data.statType === "spawns" && intent.type === "spawn") {
+              intent.tile = await getCordsFromTile(data.mapName, intent.tile);
+              localStatsUpdates.set(intent.clientID, { ...intent, gameId: id });
+              localHeatmapPoints.push({ x: intent.tile.x, y: intent.tile.y });
+            }
+            if (data.statType === "winnerSpawns" && intent.type === "spawn" && winnerClientIds.includes(intent.clientID)) {
+              intent.tile = await getCordsFromTile(data.mapName, intent.tile);
+              localStatsUpdates.set(intent.clientID, { ...intent, gameId: id });
+              localHeatmapPoints.push({ x: intent.tile.x, y: intent.tile.y });
+            }
           }
         }
+
+        return {
+          skip: false,
+          index,
+          localMatchingGameModes,
+          localIntentsCount,
+          localHeatmapPoints,
+          localStatsUpdates,
+        };
       }
     } catch (err) {
       console.warn(`Failed to fetch game ${id}:`, err);
+      return { skip: true, index };
+    }
+  }
+
+  for (let i = 0; i < matches.length; i += concurrencyLimit) {
+    const batch = matches.slice(i, i + concurrencyLimit).map((id, idx) => processGame(id, i + idx));
+    const results = await Promise.all(batch);
+
+    for (const res of results) {
+      if (res.skip) {
+        if (res.decrementMatchingGameModes) stats.matchingGameModes--;
+        continue;
+      }
+
+      stats.matchingGameModes += res.localMatchingGameModes;
+      totalIntents += res.localIntentsCount;
+      heatmapPoints.push(...res.localHeatmapPoints);
+      for (const [clientID, intent] of res.localStatsUpdates.entries()) {
+        stats[data.statType].set(clientID, intent);
+      }
+
+      if (socket && totalIntents % 100 === 0) {
+        socket.send(JSON.stringify({
+          type: "progress",
+          task: "getStats",
+          statType: data.statType,
+          currentGame: res.index + 1,
+          totalGames: matches.length,
+          currentIntents: totalIntents,
+          tracked: (data.statType === "spawns" || data.statType === "winnerSpawns")
+            ? stats[data.statType].size
+            : stats[data.statType].length,
+        }));
+      }
     }
   }
 
   // Convert Map to Array for spawns
-  if (data.statType === "spawns"||data.statType === "winnerSpawns") {
+  if (data.statType === "spawns" || data.statType === "winnerSpawns") {
     stats[data.statType] = Array.from(stats[data.statType].values());
   }
 
-  // Get map manifest for dimensions
+  // Map manifest for dimensions
   const manifest = await getMapManifest(data.mapName);
   if (!manifest?.map?.width || !manifest?.map?.height) {
     throw new Error(`Invalid map manifest for ${data.mapName}`);
   }
 
-  const width = manifest.map.width;
-  const height = manifest.map.height;
-
-  // Use new heatmap with background map overlay
+  // Generate heatmap
   const heatmapWithBg = await generateHeatmapWithMapBackgroundRaw(data.mapName, heatmapPoints);
-
+  const heatmaps = {};
   heatmaps[data.mapName ?? data.statType] = heatmapWithBg;
 
   return { stats, heatmaps };
 }
-const r = router();
+asyncnst r = router();
 
 r.useStatic(__dirname); // or your static directory
 
