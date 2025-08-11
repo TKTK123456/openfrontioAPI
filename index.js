@@ -189,6 +189,7 @@ async function collectStats(matches, data, socket = null) {
               localPoints.push({ x: intent.tile.x, y: intent.tile.y });
             }
             if (statType === "firstAttack") {}
+          }
         }
 
         return {
