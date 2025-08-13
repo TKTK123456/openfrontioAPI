@@ -59,15 +59,3 @@ async function fetchGameIds(timezoneOffset, options = {}) {
     return [];
   }
 }
-
-// Usage examples:
-
-// UTC+1, default today
-fetchGameIds(1).then(ids => console.log(ids));
-
-// UTC+1, specific date and time filter
-fetchGameIds(1, {
-  date: '2025-08-12',
-  startTime: '12:00:00',
-  endTime: '14:00:00'
-}).then(ids => console.log(ids));
