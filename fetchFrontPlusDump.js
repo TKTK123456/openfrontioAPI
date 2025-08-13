@@ -28,6 +28,3 @@ async function fetchGameIdsByTimezone(targetOffset = 0) {
     return null;
   }
 }
-
-));
-dsByTimezoneon
