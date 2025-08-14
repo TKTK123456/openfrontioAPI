@@ -143,6 +143,7 @@ async function getAvrgTimeRaito(currentClientsToTime = false) {
 }
 let updatingGameInfo = false
 export async function updateGameInfo(autoSetNextRun = true, { type = "auto", log = true, autoSetNextRunType = type } = {}) {
+  await remoteJsonStore.save()
   console.log(type)
   async function loadOrCreateFile(dateStr) {
     const filename = `${dateStr}.json`;
@@ -289,7 +290,7 @@ export async function updateGameInfo(autoSetNextRun = true, { type = "auto", log
       let waitTime = Math.min(...lobbiesTimesToStart);
 
       updatingGameInfo = false;
-
+      await remoteJsonStore.save()
       if (autoSetNextRun) {
         logger(`Running again in ${waitTime}ms`);
         await new Promise(() => setTimeout(updateGameInfo, waitTime, false, { type: autoSetNextRunType }));
@@ -369,7 +370,7 @@ export async function updateGameInfo(autoSetNextRun = true, { type = "auto", log
 
       let waitTime = 10000;
       updatingGameInfo = false;
-      remoteJsonStore.save()
+      await remoteJsonStore.save()
       if (autoSetNextRun) {
         logger(`Running again in ${waitTime}ms`);
         await new Promise(() => setTimeout(updateGameInfo, waitTime, false, { type: autoSetNextRunType }));
