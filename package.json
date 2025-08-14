@@ -8,7 +8,7 @@
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
-  "author": "",
+  "author": "TKTK1234567",
   "license": "MIT",
   "dependencies": {
     "@octokit/rest": "^22.0.0",
