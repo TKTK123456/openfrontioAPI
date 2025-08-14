@@ -182,6 +182,7 @@ export async function updateGameInfo(autoSetNextRun = true, { type = "auto", log
       console.error(`Error uploading log file ${filename}:`, error);
     }
   }
+   let logger = msg => { if (log) console.log(msg) };
   async function save() {
     let active = remoteVars.active
       const dateToNewEntries = new Map();
@@ -230,8 +231,6 @@ export async function updateGameInfo(autoSetNextRun = true, { type = "auto", log
       }
   }
 
-  let logger = msg => { if (log) console.log(msg) };
-
   if (type === "selfFetch" || type === "auto") {
     let startTime = Date.now();
     let publicLobbies;
@@ -248,7 +247,6 @@ export async function updateGameInfo(autoSetNextRun = true, { type = "auto", log
             return timeRemaining / lobby.numClients;
           })
         );
-
         let lobbiesTimesToStart = publicLobbies.map(lobby => [lobby.msUntilStart, (lobby.gameConfig.maxPlayers - lobby.numClients) * timePerClient]).flat();
         lobbiesTimesToStart = lobbiesTimesToStart.map(time => (time - timeTaken > 0 ? time - timeTaken : 500));
         let waitTime = Math.min(...lobbiesTimesToStart);
