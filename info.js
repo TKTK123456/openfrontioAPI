@@ -339,5 +339,5 @@ export async function updateGameInfo(autoSetNextRun = true, { type = "auto", log
     }
   }
 }
-await updateGameInfo(true)
-Deno.serve(() => new Response("Hello, world!"));
+await updateGameInfo(false)
+Deno.serve(async () => {Helloonse("Hello, world!")});
