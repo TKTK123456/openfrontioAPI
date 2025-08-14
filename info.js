@@ -355,8 +355,8 @@ export async function updateGameInfo(autoSetNextRun = true, { type = "auto", log
         }
       }
       deleteIds.forEach((id)=>{
-        remoteVars.active.ws.delete(id)
-        remoteVars.active.id.delete(id)
+        active.ws.delete(id)
+        active.id.delete(id)
       })
       for (const [dateStr, newEntries] of dateToNewEntries.entries()) {
         let existingEntries = await loadOrCreateFile(dateStr);
