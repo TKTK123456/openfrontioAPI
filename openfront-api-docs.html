@@ -1,0 +1,347 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>OpenFront API — Docs & Tester</title>
+<style>
+:root{
+  --bg:#0f1720; --panel:#0b1220; --muted:#9aa9bd; --text:#e6eef6; --accent:#6fd3ff; --ok:#6fe29a; --danger:#ff7b8a; --border:#13202b;
+}
+@media (prefers-color-scheme: light) {
+  :root{ --bg:#f6f8fb; --panel:#ffffff; --muted:#5b6b7a; --text:#0b1720; --accent:#0969da; --ok:#1a7f37; --danger:#d12c3f; --border:#e6edf3; }
+}
+*{box-sizing:border-box}
+body{margin:0;font-family:Inter,ui-sans-serif,system-ui,Segoe UI,Roboto,Helvetica,Arial; background:var(--bg); color:var(--text); line-height:1.5}
+.wrap{max-width:1100px;margin:26px auto;padding:20px}
+header{display:flex;align-items:center;gap:14px;margin-bottom:18px}
+h1{margin:0;font-size:22px}
+.badge{background:var(--panel);border:1px solid var(--border);padding:6px 10px;border-radius:999px;color:var(--muted);font-weight:600}
+.card{background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:16px}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+kbd{background:rgba(255,255,255,0.03);padding:4px 8px;border-radius:6px;border:1px solid rgba(255,255,255,0.03)}
+pre{background:rgba(0,0,0,0.25);padding:12px;border-radius:8px;overflow:auto}
+small{color:var(--muted)}
+section h2{margin-top:0}
+.details summary{cursor:pointer;padding:12px;border-radius:8px;font-weight:600;border:1px solid var(--border);background:linear-gradient(180deg, rgba(255,255,255,0.01), transparent)}
+.details .content{padding:12px;margin-top:8px}
+table{width:100%;border-collapse:collapse;margin-top:8px}
+th,td{border:1px solid var(--border);padding:8px;text-align:left}
+th{background:rgba(255,255,255,0.02)}
+.btn{padding:8px 12px;border-radius:8px;border:1px solid var(--border);background:linear-gradient(180deg, rgba(255,255,255,0.01), transparent);cursor:pointer}
+.input,textarea,select{width:100%;padding:8px;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--text)}
+.grid{display:grid;gap:12px}
+@media(min-width:900px){.grid{grid-template-columns:1fr 360px}}
+.log{background:rgba(0,0,0,0.2);padding:10px;border-radius:8px;height:260px;overflow:auto;font-family:ui-monospace, SFMono-Regular, Menlo, monospace}
+.preview-canvas{width:100%;height:auto;border:1px solid var(--border);border-radius:6px;background:linear-gradient(180deg, rgba(0,0,0,0.04), transparent)}
+.footer{color:var(--muted);text-align:center;margin-top:18px}
+a { color: var(--accent) }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div>
+      <h1>OpenFront — API Docs & Tester</h1>
+      <div class="row"><span class="badge">stats HTML endpoints</span><span class="badge">ws JSON API</span></div>
+    </div>
+    <div style="margin-left:auto; text-align:right">
+      <small>Extracted from your bot commands (getstats.js & mapsearch.js)</small>
+    </div>
+  </header>
+
+  <section class="card">
+    <h2>Quick summary</h2>
+    <p>The HTTP <strong>/stats</strong> endpoints return <em>HTML pages</em> (heatmap visualizations). The WebSocket at <kbd>wss://tktk123456-openfrontio-51.deno.dev/ws</kbd> is the JSON API used by the Discord bot for programmatic access (progress updates, stats, heatmap raw data, matches).</p>
+  </section>
+
+  <div class="grid">
+    <main class="card">
+      <details class="details" open>
+        <summary>📊 HTML Stats Endpoints (browser)</summary>
+        <div class="content">
+          <h3>Format</h3>
+          <pre>https://tktk123456-openfrontio-51.deno.dev/stats/{mapName}/{statType}/heatmap?gameModes={mode}</pre>
+          <h4>Params</h4>
+          <table>
+            <thead><tr><th>Param</th><th>Type</th><th>Notes</th></tr></thead>
+            <tbody>
+              <tr><td>mapName</td><td>string</td><td>e.g. <code>Italia</code> (case-insensitive typical)</td></tr>
+              <tr><td>statType</td><td>string</td><td>e.g. <code>winnerSpawns</code>, <code>kills</code>, etc.</td></tr>
+              <tr><td>gameModes</td><td>query</td><td>Either <code>FFA</code> or <code>Teams</code></td></tr>
+            </tbody>
+          </table>
+
+          <h4>Examples (open in browser)</h4>
+          <ul>
+            <li><a href="https://tktk123456-openfrontio-51.deno.dev/stats/Italia/winnerSpawns/heatmap?gameModes=FFA" target="_blank">Italia — winnerSpawns — FFA</a></li>
+            <li><a href="https://tktk123456-openfrontio-51.deno.dev/stats/Italia/winnerSpawns/heatmap?gameModes=Teams" target="_blank">Italia — winnerSpawns — Teams</a></li>
+          </ul>
+
+          <p><small>These endpoints return rendered HTML heatmap pages — they are intended for human viewing in a browser.</small></p>
+        </div>
+      </details>
+
+      <details class="details">
+        <summary>🔌 WebSocket JSON API (used by Discord bot)</summary>
+        <div class="content">
+          <h3>Base URL</h3>
+          <pre><code>wss://tktk123456-openfrontio-51.deno.dev/ws</code></pre>
+
+          <h3>Client → Server (requests)</h3>
+          <p>All requests are JSON encoded. The bot sends at least these types:</p>
+          <pre><code>{
+"type": "getMap",
+"mapName": "Italia",
+"gameModes": ["FFA"]         // optional
+}</code></pre>
+          <pre><code>{
+"type": "getStats",
+"mapName": "Italia",
+"statType": "winnerSpawns",
+"display": "heatmap",       // optional: display mode (bot echoes it)
+"gameModes": "FFA"         // optional
+}</code></pre>
+
+          <h3>Server → Client (messages)</h3>
+          <p>From the bot code we observed two classes of messages: <code>progress</code> updates and a final <code>done</code> payload (or an <code>error</code>).</p>
+
+          <h4><code>progress</code> (examples)</h4>
+          <pre><code>{
+  "type": "progress",
+  "task": "filterGames",      // or "getStats"
+  "progress": 42,            // percent for filter step
+  "currentCount": 123,
+  "total": 300,
+  "matchesCount": 5
+}</code></pre>
+
+          <pre><code>{
+  "type": "progress",
+  "task": "getStats",
+  "statType": "winnerSpawns",
+  "currentGame": 12,
+  "totalGames": 64,
+  "currentIntents": 512,
+  "tracked": 143
+}</code></pre>
+
+          <h4><code>done</code> (examples)</h4>
+          <p>When finished the server sends <code>done: true</code> plus one or more of the following keys.</p>
+
+          <pre><code>{
+  "done": true,
+  "matches": [ { /* match objects */ } ]      // returned for getMap
+}</code></pre>
+
+          <pre><code>{
+  "done": true,
+  "stats": { /* aggregated stats object */ },
+  "display": "heatmap",
+  "heatmap": {
+    "width": 250,
+    "height": 250,
+    "raw": [ /* flat array or typed array data */ ]
+  },
+  "avrgDistance": 15.7,
+  "stats": { "matchingGameModes": 42, ... }
+}</code></pre>
+
+          <h4><code>error</code></h4>
+          <pre><code>{
+  "error": "Missing mapName"
+}</code></pre>
+
+          <h3>Notes about <code>heatmap.raw</code></h3>
+          <ul>
+            <li>The bot (getstats.js) expects <code>heatmap.raw</code> to be either a JS Array or a TypedArray (ArrayBuffer view). It will attempt to convert to a Node <code>Buffer</code>.</li>
+            <li>If the length equals <code>width * height * 4</code> it's treated as RGBA bytes and can be displayed directly.</li>
+            <li>If the length equals <code>width * height</code> it's treated as scalar per-pixel values (grayscale) and will be expanded to RGBA for display.</li>
+          </ul>
+
+          <h3>Troubleshooting</h3>
+          <ul>
+            <li>If you see <code>{"error":"Missing mapName"}</code>, include <code>mapName</code> in the request.</li>
+            <li>Progress messages are throttled by the bot for channel edits — expect updates every ~1–5 seconds depending on command.</li>
+          </ul>
+        </div>
+      </details>
+
+      <details class="details">
+        <summary>🧰 How Discord bot uses the WS API (summary)</summary>
+        <div class="content">
+          <ol>
+            <li><strong>mapsearch</strong> sends <code>{type:"getMap", mapName}</code>, listens for <code>progress</code> messages and a final <code>done</code> with <code>matches</code>.</li>
+            <li><strong>getstats</strong> sends <code>{type:"getStats", mapName, statType, display, gameModes}</code>, listens for <code>progress</code> (filterGames/getStats) and final <code>done</code>. If <code>display === "heatmap"</code> and heatmap data is present the bot converts <code>raw</code> → PNG and uploads it to Discord.</li>
+          </ol>
+        </div>
+      </details>
+    </main>
+
+    <aside class="card">
+      <h3>Interactive Tester</h3>
+      <div class="row" style="margin-bottom:8px">
+        <input id="wsUrl" class="input" value="wss://tktk123456-openfrontio-51.deno.dev/ws" />
+      </div>
+      <div style="margin-bottom:8px" class="row">
+        <button id="connectBtn" class="btn">Connect</button>
+        <button id="closeBtn" class="btn">Close</button>
+      </div>
+
+      <label><small>Preset</small></label>
+      <select id="preset" class="input" style="margin-bottom:8px">
+        <option value="getMap">getMap (mapName)</option>
+        <option value="getStats">getStats (mapName,statType)</option>
+      </select>
+
+      <label><small>Payload (JSON)</small></label>
+      <textarea id="payload" class="input" rows="8">{ "type": "getStats", "mapName": "Italia", "statType": "winnerSpawns", "display": "heatmap", "gameModes": "FFA" }</textarea>
+
+      <div style="margin-top:8px" class="row">
+        <button id="sendBtn" class="btn">Send</button>
+        <button id="clearLog" class="btn">Clear</button>
+      </div>
+
+      <h4 style="margin-top:12px">Log</h4>
+      <div id="log" class="log"></div>
+
+      <h4 style="margin-top:12px">Heatmap preview</h4>
+      <canvas id="canvas" class="preview-canvas" width="250" height="250"></canvas>
+    </aside>
+  </div>
+
+  <div class="card">
+    <h3>Developer notes</h3>
+    <p>These message shapes and behaviors were inferred from some discord bot commands I created with AI (getstats.js and mapsearch.js). The important fields are:</p>
+    <ul>
+      <li><code>type</code> — the request type (getMap / getStats)</li>
+      <li><code>mapName</code>, <code>statType</code></li>
+      <li><code>progress</code> messages with task-specific metadata</li>
+      <li><code>done</code> message containing <code>matches</code>, <code>stats</code>, and/or <code>heatmap</code></li>
+    </ul>
+  </div>
+</div>
+
+<script>
+(() => {
+  const logEl = document.getElementById('log');
+  const canvas = document.getElementById('canvas');
+  const ctx = canvas.getContext('2d');
+
+  let ws = null;
+
+  function appendLog(msg, cls) {
+    const el = document.createElement('div');
+    el.textContent = msg;
+    if (cls === 'err') el.style.color = 'var(--danger)';
+    if (cls === 'ok') el.style.color = 'var(--ok)';
+    logEl.prepend(el);
+  }
+
+  function handleMessageData(obj) {
+    appendLog(JSON.stringify(obj, null, 2));
+    if (obj.done && obj.heatmap && obj.heatmap.raw) {
+      // Try to render heatmap.raw to canvas
+      try {
+        const { width, height, raw } = obj.heatmap;
+        canvas.width = width;
+        canvas.height = height;
+        let data;
+        if (raw && raw.data && Array.isArray(raw.data)) {
+          // sometimes typed array wrapped
+          data = new Uint8ClampedArray(raw.data);
+        } else if (Array.isArray(raw)) {
+          data = new Uint8ClampedArray(raw);
+        } else if (raw && raw.buffer && raw.byteLength) {
+          data = new Uint8ClampedArray(raw.buffer || raw);
+        } else {
+          appendLog('Heatmap raw format not recognized', 'err');
+          return;
+        }
+
+        // If scalar per-pixel (width*height), expand to RGBA
+        if (data.length === width * height) {
+          const rgba = new Uint8ClampedArray(width * height * 4);
+          for (let i=0;i<width*height;i++){
+            const v = data[i];
+            rgba[i*4+0] = v;
+            rgba[i*4+1] = v;
+            rgba[i*4+2] = v;
+            rgba[i*4+3] = 255;
+          }
+          ctx.putImageData(new ImageData(rgba, width, height), 0, 0);
+          appendLog('Rendered grayscale heatmap', 'ok');
+          return;
+        }
+
+        // If already RGBA (width*height*4)
+        if (data.length === width * height * 4) {
+          ctx.putImageData(new ImageData(data, width, height), 0, 0);
+          appendLog('Rendered RGBA heatmap', 'ok');
+          return;
+        }
+
+        appendLog(`Heatmap raw length mismatch: got ${data.length} expected ${width*height} or ${width*height*4}`, 'err');
+      } catch (e) {
+        appendLog('Failed to render heatmap: ' + e.message, 'err');
+      }
+    }
+  }
+
+  document.getElementById('connectBtn').addEventListener('click', () => {
+    const url = document.getElementById('wsUrl').value.trim();
+    if (!url) return;
+    if (ws && (ws.readyState === WebSocket.OPEN || ws.readyState === WebSocket.CONNECTING)) {
+      appendLog('Already connected', 'err');
+      return;
+    }
+    try {
+      ws = new WebSocket(url);
+    } catch (e) {
+      appendLog('Invalid WebSocket URL', 'err');
+      return;
+    }
+    ws.addEventListener('open', () => appendLog('Connected', 'ok'));
+    ws.addEventListener('message', (ev) => {
+      try {
+        const obj = JSON.parse(ev.data);
+        handleMessageData(obj);
+      } catch (e) {
+        appendLog('Non-JSON message: ' + ev.data);
+      }
+    });
+    ws.addEventListener('close', () => appendLog('Closed'));
+    ws.addEventListener('error', (e) => appendLog('Socket error'));
+  });
+
+  document.getElementById('closeBtn').addEventListener('click', () => {
+    if (ws) ws.close();
+  });
+
+  const preset = document.getElementById('preset');
+  preset.addEventListener('change', () => {
+    const p = preset.value;
+    if (p === 'getMap') {
+      document.getElementById('payload').value = JSON.stringify({ type: "getMap", mapName: "Italia" }, null, 2);
+    } else {
+      document.getElementById('payload').value = JSON.stringify({ type: "getStats", mapName: "Italia", statType: "winnerSpawns", display: "heatmap", gameModes: "FFA" }, null, 2);
+    }
+  });
+
+  document.getElementById('sendBtn').addEventListener('click', () => {
+    if (!ws || ws.readyState !== WebSocket.OPEN) { appendLog('Not connected', 'err'); return; }
+    let val = document.getElementById('payload').value;
+    try {
+      const json = JSON.parse(val);
+      ws.send(JSON.stringify(json));
+      appendLog('→ ' + JSON.stringify(json));
+    } catch (e) {
+      appendLog('Invalid JSON: ' + e.message, 'err');
+    }
+  });
+
+  document.getElementById('clearLog').addEventListener('click', () => logEl.textContent = '');
+})();
+</script>
+</body>
+</html>

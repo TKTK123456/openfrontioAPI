@@ -286,11 +286,13 @@ const r = router();
 r.useStatic(__dirname); // or your static directory
 
 r.get("/", async ({ send }) => {
-  console.log("/")
   const response = await serveStaticFile(null, "/index.html");
   send(await response.text(), { type: "text/html" });
 });
-
+r.get("/wsdocs", async ({ send }) => {
+  const response = await serveStaticFile(null, "/openfront-api-docs.html");
+  send(await response.text(), { type: "text/html" });
+})
 r.get("/player", async ({ query, send }) => {
   const id = query.id;
   if (!id) return send("Missing id parameter", { status: 400 });
