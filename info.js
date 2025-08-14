@@ -353,7 +353,6 @@ export async function updateGameInfo(autoSetNextRun = true, { type = "auto", log
             dateToNewEntries.set(dateStr, []);
           }
           dateToNewEntries.get(dateStr).push({ gameId: currentId, mapType });
-          console.log(remoteVars.active.ws)
           remoteVars.active.ws.delete(currentId)
           remoteVars.active.id.delete(currentId)
         }

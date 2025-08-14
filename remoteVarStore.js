@@ -96,29 +96,30 @@ export const remoteJsonStore = {
 
 
   },
+_wrapSet(set) {
+  const self = this;
+  return new Proxy(set, {
+    get(target, prop) {
+      const value = target[prop];
 
-  _wrapSet(set) {
-    const self = this;return new Proxy(set, {
-  get(target, prop) {
-    if (prop === "add" || prop === "delete" || prop === "clear") {
-      return (...args) => {
-        const result = target[prop](...args);
-        self._dirty = true;
-        return result;
-      };
+      if (typeof value === "function") {
+        // Wrap all functions so 'this' points to the original Set
+        return function (...args) {
+          const result = value.apply(target, args);
+
+          // Mark dirty only for modifying methods
+          if (["add", "delete", "clear"].includes(prop)) {
+            self._dirty = true;
+          }
+
+          return result;
+        };
+      }
+
+      return value;
     }
-
-    const value = target[prop];
-    // If it's a function, bind it to the target Set
-    if (typeof value === "function") {
-      return value.bind(target);
-    }
-    return value;
-  }
-});
-
-    
-  },
+  });
+},
 
   // ---- Load / Save ----
   async load(force = false) {
@@ -190,3 +191,5 @@ export const remoteVars = await remoteJsonStore.load();
 remoteVars.clientsToTime = 571.428571429
 delete remoteVars.info
 remoteJsonStore.save()*/
+remoteVars.active.ws.set("2xSAUEM0")
+await remoteJsonStore.save()
