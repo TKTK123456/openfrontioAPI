@@ -313,9 +313,8 @@ export async function updateGameInfo(autoSetNextRun = true, { type = "auto", log
         let gameID = game.game_id;
         remoteVars.active.ids.add(gameID)
         remoteVars.active.ws.set(gameID, "unknown")
-        remoteVars.lastCheckedTime = Date.now()
       }
-
+      remoteVars.lastCheckedTime = Date.now()
       updatingGameInfo = true;
       logger(`Updating gameIDs`);
 
