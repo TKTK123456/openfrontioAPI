@@ -1,4 +1,4 @@
-import { setHelpers, mapHelpers } from './info.js'
+import { remoteVars, remoteJsonStore } from './remoteVarStore.js'
 import config from './config.js'
 const kv = await Deno.openKv();
 //kv.delete(["info", "games", "active", "ws"])
@@ -7,8 +7,8 @@ export async function findGameWebSocket(id, webSocketAmount = 20) {
   for (let i = 0; i < webSocketAmount; i++) {
     const response = await fetch(`https://${config.prefixs.use}${config.domain}/w${i}/api/game/${id}`);
     if (response.status === 200) {
-      setHelpers.add(["info", "games", "active", "ids"], id)
-      mapHelpers.set(["info", "games", "active", "ws"], id, i)
+      remoteVars.active.ids.add(id)
+      remoteVars.active.ws.set(id, i)
       return i
     }
   }

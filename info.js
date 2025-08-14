@@ -24,14 +24,7 @@ export const setHelpers = {
   },
   getSet: async function(key) {
     key = this.keyParser(key)
-    let output = await this.getFile()
-    output = output[key]
-    if (output) {
-      output = new Set(output)
-    } else {
-      output = new Set();
-    }
-    return output;
+    return remoteVars[key];
   },
   delete: async function(key, setKey) {
     let fullSet = await this.getSet(key)
@@ -137,8 +130,8 @@ export const storageTxtHelper = {
     if (error) console.error(error)
   }
 }
-let defaultClientsToTime = await storageTxtHelper.get("clientsToTime") ?? 571.428571429
-defaultClientsToTime = parseInt(defaultClientsToTime)
+let defaultClientsToTime = await remoteVars.clientsToTime
+defaultClientsToTime = parseFloat(defaultClientsToTime)
 let clientsToTime = [defaultClientsToTime]
 async function getAvrgTimeRaito(currentClientsToTime = false) {
   if (currentClientsToTime) clientsToTime.push(...currentClientsToTime)
@@ -146,7 +139,6 @@ async function getAvrgTimeRaito(currentClientsToTime = false) {
   let totalTime = clientsToTime.reduce((accumulator, currentValue) => accumulator + currentValue, 0)
   let avrgTime = totalTime/clientsToTime.length
   defaultClientsToTime = avrgTime
-  storageTxtHelper.set("clientsToTime", defaultClientsToTime)
   return avrgTime
 }
 let updatingGameInfo = false
@@ -225,10 +217,7 @@ export async function updateGameInfo(autoSetNextRun = true, { type = "auto", log
       updatingGameInfo = true;
       logger(`Updating gameIDs`);
 
-      let active = {
-        ids: await setHelpers.getSet(["info", "games", "active", "ids"]),
-        ws: await mapHelpers.getMap(["info", "games", "active", "ws"]),
-      };
+      let active = remoteVars.active
 
       // Map date string => array of { gameId, mapType }
       const dateToNewEntries = new Map();
@@ -243,8 +232,8 @@ export async function updateGameInfo(autoSetNextRun = true, { type = "auto", log
           let endDateRaw = gameRecord?.info?.end;
           if (!endDateRaw) {
             console.warn(`Missing end date for archived game ${currentId}`);
-            await mapHelpers.delete(["info", "games", "active", "ws"], currentId);
-            await setHelpers.delete(["info", "games", "active", "ids"], currentId);
+            remoteVars.active.ws.delete(currentId)
+            remoteVars.active.id.delete(currentId)
             continue;
           }
           const endDate = new Date(endDateRaw);
@@ -261,15 +250,15 @@ export async function updateGameInfo(autoSetNextRun = true, { type = "auto", log
           }
           dateToNewEntries.get(dateStr).push({ gameId: currentId, mapType });
 
-          await mapHelpers.delete(["info", "games", "active", "ws"], currentId);
-          await setHelpers.delete(["info", "games", "active", "ids"], currentId);
+          remoteVars.active.ws.delete(currentId)
+          remoteVars.active.id.delete(currentId)
 
         } else {
           let game = await fetch(`https://${config.prefixs.use}${config.domain}/w${wsValue}/api/game/${currentId}`);
           game = await game.json();
           if (game.error === "Game not found") {
-            await mapHelpers.delete(["info", "games", "active", "ws"], currentId);
-            await setHelpers.delete(["info", "games", "active", "ids"], currentId);
+            remoteVars.active.ws.delete(currentId)
+            remoteVars.active.id.delete(currentId)
           }
         }
       }
@@ -322,17 +311,14 @@ export async function updateGameInfo(autoSetNextRun = true, { type = "auto", log
 
       for (let game of addGames) {
         let gameID = game.game_id;
-        setHelpers.add(["info", "games", "active", "ids"], gameID);
-        mapHelpers.set(["info", "games", "active", "ws"], gameID, "unknown");
+        remoteVars.active.ids.add(gameID)
+        remoteVars.active.ws.set(gameID, "unknown")
       }
 
       updatingGameInfo = true;
       logger(`Updating gameIDs`);
 
-      let active = {
-        ids: await setHelpers.getSet(["info", "games", "active", "ids"]),
-        ws: await mapHelpers.getMap(["info", "games", "active", "ws"]),
-      };
+      let active = remoteVars.active
 
       // Map date string => array of { gameId, mapType }
       const dateToNewEntries = new Map();
@@ -348,8 +334,8 @@ export async function updateGameInfo(autoSetNextRun = true, { type = "auto", log
           let endDateRaw = gameRecord?.info?.end;
           if (!endDateRaw) {
             console.warn(`Missing end date for archived game ${currentId}`);
-            await mapHelpers.delete(["info", "games", "active", "ws"], currentId);
-            await setHelpers.delete(["info", "games", "active", "ids"], currentId);
+            remoteVars.active.ws.delete(currentId)
+            remoteVars.active.id.delete(currentId)
             continue;
           }
           const endDate = new Date(endDateRaw);
@@ -366,8 +352,8 @@ export async function updateGameInfo(autoSetNextRun = true, { type = "auto", log
           }
           dateToNewEntries.get(dateStr).push({ gameId: currentId, mapType });
 
-          await mapHelpers.delete(["info", "games", "active", "ws"], currentId);
-          await setHelpers.delete(["info", "games", "active", "ids"], currentId);
+          remoteVars.active.ws.delete(currentId)
+          remoteVars.active.id.delete(currentId)
         }
       }
 
@@ -398,5 +384,5 @@ export async function updateGameInfo(autoSetNextRun = true, { type = "auto", log
 }
 await updateGameInfo(true)
 Deno.serve(() => new Response("Hello, world!"));
-Deno.cron("Fetch front plus game ids", "*/30 * * * *", () => {
-});
+//Deno.cron("Fetch front plus game ids", "*/30 * * * *", () => {
+//});
