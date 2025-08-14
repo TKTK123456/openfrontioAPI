@@ -1,6 +1,7 @@
 import fetchFPGameIds from './fetchFrontPlusDump.js'
 import { remoteVars, remoteJsonStore } from './remoteVarStore.js'
 export default async function getFPFetch() {
+  console.log("Getting FrontPlus dump.")
   const gameIds = await fetchFPGameIds(1, {startTime:new Date(remoteVars.lastFPFetch-60000)})
   gameIds.forEach((id) => {
     remoteVars.active.ids.add(id)
