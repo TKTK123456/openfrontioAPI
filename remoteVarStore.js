@@ -79,27 +79,21 @@ export const remoteJsonStore = {
     const self = this;
     return new Proxy(map, {
   get(target, prop) {
-    if (prop === "set") {
-      return (key, value) => {
-        const result = target.set(key, value);
-        self._dirty = true;
-        return result;
-      };
-    }
-    if (prop === "delete" || prop === "clear") {
-      return (...args) => {
-        const result = target[prop](...args);
-        self._dirty = true;
-        return result;
-      };
-    }
-
     const value = target[prop];
-    // Bind functions to the original Map to preserve correct "this"
-    if (typeof value === "function") return value.bind(target);
+    if (typeof value === "function") {
+      return function (...args) {
+        const result = value.apply(target, args); // bind to target
+        // mark dirty only for modifying methods
+        if (["set", "delete", "clear"].includes(prop)) {
+          self._dirty = true;
+        }
+        return result;
+      };
+    }
     return value;
   }
 });
+
 
   },
 
