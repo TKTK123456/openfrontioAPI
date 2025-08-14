@@ -331,5 +331,5 @@ export async function updateGameInfo(autoSetNextRun = true, { type = "auto", log
 await updateGameInfo(false)
 Deno.serve(async () => {
   await updateGameInfo(false)
-  retutn new Response("Updated")
+  return new Response("Updated")
 });
