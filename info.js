@@ -1,7 +1,7 @@
 import { findGameWebSocket, findPublicLobby, getPlayer, getGame } from './fetchers.js';
 import config from './config.js';
 import { createClient } from '@supabase/supabase-js';
-import fetchFPGameIds from 'fetchFrontPlusDump.js';
+import fetchFPGameIds from './fetchFrontPlusDump.js';
 import { remoteVars, remoteJsonStore } from './remoteVarStore.js';
 
 const supabase = createClient("https://ebnqhovfhgfrfxzexdxj.supabase.co", process.env.SUPABASE_TOKEN);
