@@ -223,7 +223,7 @@ export async function updateGameInfo(autoSetNextRun = true, { type = "auto", log
 
       // Map date string => array of { gameId, mapType }
       const dateToNewEntries = new Map();
-
+      const deleteIds = []
       for (const currentId of active.ids.values().toArray()) {
         const wsValue = active.ws.get(currentId);
         if (!wsValue) continue;
@@ -234,8 +234,7 @@ export async function updateGameInfo(autoSetNextRun = true, { type = "auto", log
           let endDateRaw = gameRecord?.info?.end;
           if (!endDateRaw) {
             console.warn(`Missing end date for archived game ${currentId}`);
-            remoteVars.active.ws.delete(currentId)
-            remoteVars.active.id.delete(currentId)
+            deleteIds.push(currentId)
             continue;
           }
           const endDate = new Date(endDateRaw);
@@ -252,19 +251,20 @@ export async function updateGameInfo(autoSetNextRun = true, { type = "auto", log
           }
           dateToNewEntries.get(dateStr).push({ gameId: currentId, mapType });
 
-          remoteVars.active.ws.delete(currentId)
-          remoteVars.active.id.delete(currentId)
+          deleteIds.push(currentId)
 
         } else {
           let game = await fetch(`https://${config.prefixs.use}${config.domain}/w${wsValue}/api/game/${currentId}`);
           game = await game.json();
           if (game.error === "Game not found") {
-            remoteVars.active.ws.delete(currentId)
-            remoteVars.active.id.delete(currentId)
+            deleteIds.push(currentId)
           }
         }
       }
-
+      deleteIds.forEach((id)=>{
+        remoteVars.active.ws.delete(id)
+        remoteVars.active.id.delete(id)
+      })
       for (const [dateStr, newEntries] of dateToNewEntries.entries()) {
         logger(`Adding ${newEntries.length} games with mapType to ${dateStr}.json`);
         let existingEntries = await loadOrCreateFile(dateStr);
@@ -273,7 +273,6 @@ export async function updateGameInfo(autoSetNextRun = true, { type = "auto", log
         existingEntries = existingEntries.values().toArray().map((i) => JSON.parse(i))
         await saveFile(dateStr, existingEntries);
       }
-
       let timeTaken = Date.now() - startTime;
       let timePerClient = await getAvrgTimeRaito(
         publicLobbies.map(lobby => {
@@ -324,7 +323,7 @@ export async function updateGameInfo(autoSetNextRun = true, { type = "auto", log
 
       // Map date string => array of { gameId, mapType }
       const dateToNewEntries = new Map();
-
+      const deleteIds = []
       for (const currentId of active.ids.values().toArray()) {
         const wsValue = active.ws.get(currentId);
         if (!wsValue) continue;
@@ -336,8 +335,7 @@ export async function updateGameInfo(autoSetNextRun = true, { type = "auto", log
           let endDateRaw = gameRecord?.info?.end;
           if (!endDateRaw) {
             console.warn(`Missing end date for archived game ${currentId}`);
-            remoteVars.active.ws.delete(currentId)
-            remoteVars.active.id.delete(currentId)
+            deleteIds.push(currentId)
             continue;
           }
           const endDate = new Date(endDateRaw);
@@ -353,11 +351,13 @@ export async function updateGameInfo(autoSetNextRun = true, { type = "auto", log
             dateToNewEntries.set(dateStr, []);
           }
           dateToNewEntries.get(dateStr).push({ gameId: currentId, mapType });
-          remoteVars.active.ws.delete(currentId)
-          remoteVars.active.id.delete(currentId)
+          deleteIds.push(currentId)
         }
       }
-
+      deleteIds.forEach((id)=>{
+        remoteVars.active.ws.delete(id)
+        remoteVars.active.id.delete(id)
+      })
       for (const [dateStr, newEntries] of dateToNewEntries.entries()) {
         let existingEntries = await loadOrCreateFile(dateStr);
         existingEntries.push(...newEntries.flat(Infinity))
