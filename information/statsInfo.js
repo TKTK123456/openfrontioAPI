@@ -29,8 +29,14 @@ export const intentHandlers = await importIntentHandlers()
  * @param {number} batchSize - Optional, number of turns to process concurrently
  * @returns {Promise<Array>} - Array of all processed intents
  */
-export async function processAllIntents(turns, processIntentFn, batchSize = 50, {name, manifest, types = []} = {}) {
-  const results = [];
+export async function processAllIntents(
+  turns,
+  intentHandlers,
+  batchSize = 50,
+  { name, manifest } = {}
+) {
+  // Object to store results per type
+  const resultsByType = {};
 
   for (let i = 0; i < turns.length; i += batchSize) {
     const batch = turns.slice(i, i + batchSize);
@@ -38,14 +44,20 @@ export async function processAllIntents(turns, processIntentFn, batchSize = 50, 
     // Process each batch of turns concurrently
     const batchResults = await Promise.all(
       batch.map(turn =>
-        // Process all intents in the turn concurrently
-        Promise.all(turn.intents.map(intent => intentHandlers[intent.type](intent, {name, manifest})))
+        Promise.all(
+          turn.intents.map(async intent => {
+            if (!intentHandlers[intent.type]) return null; // skip unknown types
+            const data = await intentHandlers[intent.type](intent, { name, manifest });
+            if (!resultsByType[intent.type]) resultsByType[intent.type] = [];
+            resultsByType[intent.type].push(data);
+            return { type: intent.type, data};
+          })
+        )
       )
     );
 
-    // Flatten and collect results
-    results.push(...batchResults.flat());
+    // Flatten and sort into type arrays
   }
 
-  return results;
+  return resultsByType;
 }
