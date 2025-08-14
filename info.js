@@ -8,6 +8,14 @@ import { createClient } from '@supabase/supabase-js'
 import fetchFPGameIds from './fetchFrontPlusDump.js'
 import { remoteVars, remoteJsonStore } from './remoteVarStore.js'
 const supabase = createClient("https://ebnqhovfhgfrfxzexdxj.supabase.co", process.env.SUPABASE_TOKEN)
+Deno.cron("Fetch front plus game ids", "*/30 * * * *", () => {
+  fetchFPGameIds(1, {startTime:new Date(Date.now-(35*60000))}).then(gameIds => {
+    gameIds.forEach((id) => {
+      remoteVars.active.ids.add(id)
+      remoteVars.active.ws.set(id, "unknown")
+    })
+  })
+});
 export const setHelpers = {
   folder: "storage",
   filename: "sets.json",
@@ -384,11 +392,3 @@ export async function updateGameInfo(autoSetNextRun = true, { type = "auto", log
 }
 await updateGameInfo(true)
 Deno.serve(() => new Response("Hello, world!"));
-Deno.cron("Fetch front plus game ids", "*/30 * * * *", () => {
-  fetchFPGameIds(1, {startTime:new Date(Date.now-(35*60000))}).then(gameIds => {
-    gameIds.forEach((id) => {
-      remoteVars.active.ids.add(id)
-      remoteVars.active.ws.set(id, "unknown")
-    })
-  })
-});
