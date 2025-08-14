@@ -35,18 +35,18 @@ export default async function fetchGameIds(timezoneOffset, options = {}) {
     const data = await response.json();
 
     // Convert all dates to target timezone
-    return data.map(entry => {
+    const includingGameIds = data.map(entry => {
       const entryDate = new Date(entry.date);
       const adjusted = new Date(entryDate.getTime() + offsetDiff * 60 * 60 * 1000);
       return { ...entry, date: adjusted };
     }).filter(entry => {
       if (!startTime && !endTime) return true;
-      const timeStr = entry.date.toTimeString().split(' ')[0]; // HH:MM:SS
-      if (startTime && timeStr < startTime) return false;
-      if (endTime && timeStr > endTime) return false;
+      if (startTime && entry.date < startTime) return false;
+      if (endTime && entry.date > endTime) return false;
       return true;
-    }).map(entry => entry.game_id);
-
+    });
+    if (!onlyGameIds) return includingGameIds
+    return includingGameIds.map(entry => entry.game_id);
   } catch (err) {
     console.error('Failed to fetch game IDs:', err);
     return [];
