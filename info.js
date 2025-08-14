@@ -9,14 +9,6 @@ import fetchFPGameIds from './fetchFrontPlusDump.js'
 import getFPFetch from './getFPFetch.js'
 import { remoteVars, remoteJsonStore } from './remoteVarStore.js'
 const supabase = createClient("https://ebnqhovfhgfrfxzexdxj.supabase.co", process.env.SUPABASE_TOKEN)
-Deno.cron("Fetch front plus game ids", "*/30 * * * *", () => {
-  fetchFPGameIds(1, {startTime:new Date(Date.now-(35*60000))}).then(gameIds => {
-    gameIds.forEach((id) => {
-      remoteVars.active.ids.add(id)
-      remoteVars.active.ws.set(id, "unknown")
-    })
-  })
-});
 export const setHelpers = {
   folder: "storage",
   filename: "sets.json",
@@ -151,9 +143,6 @@ async function getAvrgTimeRaito(currentClientsToTime = false) {
 let updatingGameInfo = false
 export async function updateGameInfo(autoSetNextRun = true, { type = "auto", log = true, autoSetNextRunType = type } = {}) {
   await remoteJsonStore.load(true);
-  if (parseInt(remoteVars.lastFPFetch)+30*60000<Date.now()) {
-    await getFPFetch()
-  }
   async function loadOrCreateFile(dateStr) {
     const filename = `${dateStr}.json`;
     const folder = "logs";
