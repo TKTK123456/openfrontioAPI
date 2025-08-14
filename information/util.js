@@ -1,3 +1,4 @@
+import { getMapManifest } from "../info.js"
 export async function getCordsFromTile(tile, {name, manifest } = {}) {
   manifest = manifest ?? await getMapManifest(name);
   if (!manifest || !manifest.map || typeof manifest.map.width !== 'number') {
