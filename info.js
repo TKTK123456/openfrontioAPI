@@ -6,8 +6,54 @@ import { Readable } from 'node:stream';
 import getDumpData from './getDumpData.js'
 import config from './config.js'
 import { createClient } from '@supabase/supabase-js'
+import { remoteVars, remoteJsonStore } from './remoteVarStore.js'
 const supabase = createClient("https://ebnqhovfhgfrfxzexdxj.supabase.co", process.env.SUPABASE_TOKEN)
 const kv = await Deno.openKv();
+export async function fetchFPGameIds(timezoneOffset = 1, options = {}) {
+  const { date = new Date(), startTime, endTime, onlyGameIds = true } = options;
+
+  // Ensure date is a Date object
+  const targetDate = typeof date === "string" ? new Date(date) : date;
+
+  // Local timezone offset in hours
+  const localOffset = -targetDate.getTimezoneOffset() / 60;
+
+  // Difference to target timezone
+  const offsetDiff = timezoneOffset - localOffset;
+
+  // Shift date to target timezone
+  const shiftedDate = new Date(targetDate.getTime() + offsetDiff * 60 * 60 * 1000);
+  // Format YYYY-MM-DD
+  const year = shiftedDate.getFullYear();
+  const month = String(shiftedDate.getMonth() + 1).padStart(2, '0');
+  const day = String(shiftedDate.getDate()).padStart(2, '0');
+  const dateStr = `${year}-${month}-${day}`;
+
+  const url = `https://frontplus.io/json/game_ids/${dateStr}.json`;
+
+  try {
+    const response = await fetch(url);
+    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+    const data = await response.json();
+
+    // Convert all dates to target timezone
+    const includingGameIds = data.map(entry => {
+      const entryDate = new Date(entry.date);
+      const adjusted = new Date(entryDate.getTime() + offsetDiff * 60 * 60 * 1000);
+      return { ...entry, date: adjusted };
+    }).filter(entry => {
+      if (!startTime && !endTime) return true;
+      if (startTime && entry.date < startTime) return false;
+      if (endTime && entry.date > endTime) return false;
+      return true;
+    });
+    if (!onlyGameIds) return includingGameIds
+    return includingGameIds.map(entry => entry.game_id);
+  } catch (err) {
+    console.error('Failed to fetch game IDs:', err);
+    return [];
+  }
+}
 export const setHelpers = {
   add: async function(key, value) {
     let fullSet = await this.getSet(key)
@@ -148,3 +194,12 @@ Deno.cron("Reminder to work", "*/3 * * * *", () => {
 //  const res = await fetch("https://openfrontapidiscordbots.onrender.com/ping");
 //  console.log("Pinged bot:", res.status);
 //});
+Deno.cron("Fetch front plus game ids", "*/30 * * * *",async () => {
+  fetchFPGameIds(1, {startTime:new Date(Date.now-(35*60000))}).then(async (gameIds) => {
+    gameIds.forEach((id) => {
+      remoteVars.active.ids.add(id)
+      remoteVars.active.ws.set(id, "unknown")
+    })
+    await remoteJsonStore.save()
+  })
+});
