@@ -284,7 +284,7 @@ export async function updateGameInfo(autoSetNextRun = true, { type = "auto", log
       await remoteJsonStore.save()
       if (autoSetNextRun) {
         logger(`Running again in ${waitTime}ms`);
-        await new Promise(() => setTimeout(updateGameInfo, waitTime, false, { type: autoSetNextRunType }));
+        await new Promise(() => setTimeout(updateGameInfo, waitTime, autoSetNextRun, { type: autoSetNextRunType }));
       } else {
         logger(`Suggested wait ${waitTime}ms`);
       }
@@ -292,7 +292,7 @@ export async function updateGameInfo(autoSetNextRun = true, { type = "auto", log
 
     } catch (error) {
       if (type === "auto") {
-        await updateGameInfo(true, { type: "openfront.pro", autoSetNextRunType: autoSetNextRunType });
+        await updateGameInfo(autoSetNextRun, { type: "openfront.pro", autoSetNextRunType: autoSetNextRunType });
       } else {
         console.error(error);
       }
@@ -317,7 +317,7 @@ export async function updateGameInfo(autoSetNextRun = true, { type = "auto", log
       await remoteJsonStore.save()
       if (autoSetNextRun) {
         logger(`Running again in ${waitTime}ms`);
-        await new Promise(() => setTimeout(updateGameInfo, waitTime, false, { type: autoSetNextRunType }));
+        await new Promise(() => setTimeout(updateGameInfo, waitTime, autoSetNextRun, { type: autoSetNextRunType }));
       } else {
         logger(`Suggested wait ${waitTime}ms`);
       }
