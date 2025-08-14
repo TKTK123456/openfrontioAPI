@@ -33,7 +33,7 @@ export async function processAllIntents(
   turns,
   intentHandlers,
   batchSize = 50,
-  { name, manifest } = {}
+  { name, manifest, winnerIds = null } = {}
 ) {
   // Object to store results per type
   const resultsByType = {};
@@ -46,7 +46,7 @@ export async function processAllIntents(
       batch.map(turn =>
         Promise.all(
           turn.intents.map(async intent => {
-            if (!intentHandlers[intent.type]) return null; // skip unknown types
+            if (!intentHandlers[intent.type]||!winnerCheck(winnerIds, intent.clientID)) return null; // skip unknown types
             const data = await intentHandlers[intent.type](intent, { name, manifest });
             if (!resultsByType[intent.type]) resultsByType[intent.type] = [];
             resultsByType[intent.type].push(data);
@@ -60,4 +60,8 @@ export async function processAllIntents(
   }
 
   return resultsByType;
+}
+export function winnerCheck(winnerIds, clientId) {
+  if (!winnerIds) return true;
+  return winnerIds.includes(clientId)
 }
