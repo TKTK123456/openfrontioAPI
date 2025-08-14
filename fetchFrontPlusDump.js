@@ -7,8 +7,8 @@
  * @param {string} [options.endTime] - Optional end time filter, format "HH:MM:SS"
  * @returns {Promise<Array<string>>} Array of game_ids matching criteria
  */
-async function fetchGameIds(timezoneOffset, options = {}) {
-  const { date = new Date(), startTime, endTime } = options;
+export default async function fetchGameIds(timezoneOffset, options = {}) {
+  const { date = new Date(), startTime, endTime, onlyGameIds = true } = options;
 
   // Ensure date is a Date object
   const targetDate = typeof date === "string" ? new Date(date) : date;
@@ -21,7 +21,6 @@ async function fetchGameIds(timezoneOffset, options = {}) {
 
   // Shift date to target timezone
   const shiftedDate = new Date(targetDate.getTime() + offsetDiff * 60 * 60 * 1000);
-
   // Format YYYY-MM-DD
   const year = shiftedDate.getFullYear();
   const month = String(shiftedDate.getMonth() + 1).padStart(2, '0');
@@ -36,23 +35,17 @@ async function fetchGameIds(timezoneOffset, options = {}) {
     const data = await response.json();
 
     // Convert all dates to target timezone
-    const mapped = data.map(entry => {
+    return data.map(entry => {
       const entryDate = new Date(entry.date);
       const adjusted = new Date(entryDate.getTime() + offsetDiff * 60 * 60 * 1000);
       return { ...entry, date: adjusted };
-    });
-
-    // Filter by time if startTime/endTime provided
-    const filtered = mapped.filter(entry => {
+    }).filter(entry => {
       if (!startTime && !endTime) return true;
       const timeStr = entry.date.toTimeString().split(' ')[0]; // HH:MM:SS
       if (startTime && timeStr < startTime) return false;
       if (endTime && timeStr > endTime) return false;
       return true;
-    });
-
-    // Return only game_ids
-    return filtered.map(entry => entry.game_id);
+    }).map(entry => entry.game_id);
 
   } catch (err) {
     console.error('Failed to fetch game IDs:', err);
