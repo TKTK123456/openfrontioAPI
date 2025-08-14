@@ -340,4 +340,7 @@ export async function updateGameInfo(autoSetNextRun = true, { type = "auto", log
   }
 }
 await updateGameInfo(false)
-Deno.serve(async () => {Helloonse("Hello, world!")});
+Deno.serve(async () => {
+  await updateGameInfo(false)
+  retutn new Response("Updated")
+});
