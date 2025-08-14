@@ -183,4 +183,4 @@ _wrapSet(set) {
 };
 
 // ---- Export a ready-to-use live object ----
-export const remoteVars = await remoteJsonStore.load();
+export let remoteVars = await remoteJsonStore.load();

@@ -149,8 +149,7 @@ async function getAvrgTimeRaito(currentClientsToTime = false) {
 }
 let updatingGameInfo = false
 export async function updateGameInfo(autoSetNextRun = true, { type = "auto", log = true, autoSetNextRunType = type } = {}) {
-  await remoteJsonStore.save()
-  console.log(type)
+  await remoteJsonStore.load(true);
   async function loadOrCreateFile(dateStr) {
     const filename = `${dateStr}.json`;
     const folder = "logs";
