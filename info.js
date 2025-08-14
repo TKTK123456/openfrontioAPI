@@ -8,8 +8,6 @@ import { createClient } from '@supabase/supabase-js'
 import fetchFPGameIds from './fetchFrontPlusDump.js'
 import { remoteVars, remoteJsonStore } from './remoteVarStore.js'
 const supabase = createClient("https://ebnqhovfhgfrfxzexdxj.supabase.co", process.env.SUPABASE_TOKEN)
-const kv = await Deno.openKv();
-//await kv.set(["default", "clientsToTime"], 571.428571429)
 export const setHelpers = {
   folder: "storage",
   filename: "sets.json",
@@ -263,7 +261,7 @@ export async function updateGameInfo(autoSetNextRun = true, { type = "auto", log
       }
       deleteIds.forEach((id)=>{
         remoteVars.active.ws.delete(id)
-        remoteVars.active.id.delete(id)
+        remoteVars.active.ids.delete(id)
       })
       for (const [dateStr, newEntries] of dateToNewEntries.entries()) {
         logger(`Adding ${newEntries.length} games with mapType to ${dateStr}.json`);
@@ -356,7 +354,7 @@ export async function updateGameInfo(autoSetNextRun = true, { type = "auto", log
       }
       deleteIds.forEach((id)=>{
         active.ws.delete(id)
-        active.id.delete(id)
+        active.ids.delete(id)
       })
       for (const [dateStr, newEntries] of dateToNewEntries.entries()) {
         let existingEntries = await loadOrCreateFile(dateStr);

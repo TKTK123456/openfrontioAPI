@@ -1,6 +1,5 @@
 import { remoteVars, remoteJsonStore } from './remoteVarStore.js'
 import config from './config.js'
-const kv = await Deno.openKv();
 //kv.delete(["info", "games", "active", "ws"])
 
 export async function findGameWebSocket(id, webSocketAmount = 20) {
