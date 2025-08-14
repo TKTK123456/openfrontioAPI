@@ -184,12 +184,3 @@ _wrapSet(set) {
 
 // ---- Export a ready-to-use live object ----
 export const remoteVars = await remoteJsonStore.load();
-/*remoteVars.active = {
-  ids: new Set(),
-  ws: new Map()
-}
-remoteVars.clientsToTime = 571.428571429
-delete remoteVars.info
-remoteJsonStore.save()*/
-remoteVars.active.ws.set("2xSAUEM0")
-await remoteJsonStore.save()

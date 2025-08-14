@@ -309,9 +309,11 @@ export async function updateGameInfo(autoSetNextRun = true, { type = "auto", log
       addGames = await addGames.json();
 
       for (let game of addGames) {
+        if (game.last_seen_unix_sec<remoteVars.lastCheckedTime) continue
         let gameID = game.game_id;
         remoteVars.active.ids.add(gameID)
         remoteVars.active.ws.set(gameID, "unknown")
+        remoteVars.lastCheckedTime = Date.now()
       }
 
       updatingGameInfo = true;
