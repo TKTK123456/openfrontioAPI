@@ -187,36 +187,91 @@ export async function updateGameInfo(autoSetNextRun = true, { type = "auto", log
     let active = remoteVars.active
       const dateToNewEntries = new Map();
       const deleteIds = []
-      for (const currentId of active.ids.values().toArray()) {
-        const wsValue = active.ws.get(currentId);
-        if (!wsValue) continue;
+      const idsArray = active.ids.values().toArray();
+const batchSize = 15; // adjust concurrency here
 
+let processedCount = 0; // track progress
+
+async function processId(currentId) {
+    const wsValue = active.ws.get(currentId);
+    if (!wsValue) return;
+
+    try {
         const res = await getGame(currentId);
         const gameRecord = await res.json();
 
-        if (!gameRecord?.error) {
-          let endDateRaw = gameRecord?.info?.end;
-          if (!endDateRaw) {
+        if (gameRecord?.error) return;
+
+        let endDateRaw = gameRecord?.info?.end;
+        if (!endDateRaw) {
             console.warn(`Missing end date for archived game ${currentId}`);
-            deleteIds.push(currentId)
-            continue;
-          }
-          const endDate = new Date(endDateRaw);
-          if (isNaN(endDate.getTime())) {
-            console.warn(`Invalid end date for archived game ${currentId}: ${endDateRaw}`);
-            continue;
-          }
-          const dateStr = endDate.toISOString().slice(0, 10);
-
-          const mapType = gameRecord?.info?.config?.gameMap || "unknown";
-
-          if (!dateToNewEntries.has(dateStr)) {
-            dateToNewEntries.set(dateStr, []);
-          }
-          dateToNewEntries.get(dateStr).push({ gameId: currentId, mapType });
-          deleteIds.push(currentId)
+            deleteIds.push(currentId);
+            return;
         }
-      }
+
+        const endDate = new Date(endDateRaw);
+        if (isNaN(endDate.getTime())) {
+            console.warn(`Invalid end date for archived game ${currentId}: ${endDateRaw}`);
+            return;
+        }
+
+        const dateStr = endDate.toISOString().slice(0, 10);
+        const mapType = gameRecord?.info?.config?.gameMap || "unknown";
+
+        if (!dateToNewEntries.has(dateStr)) {
+            dateToNewEntries.set(dateStr, []);
+        }
+        dateToNewEntries.get(dateStr).push({ gameId: currentId, mapType });
+        deleteIds.push(currentId);
+    } catch (err) {
+        console.error(`Error fetching game ${currentId}:`, err);
+    }
+}
+
+// Helper to split array into batches
+function chunkArray(array, size) {
+    const chunks = [];
+    for (let i = 0; i < array.length; i += size) {
+        chunks.push(array.slice(i, i + size));
+    }
+    return chunks;
+}
+
+// Convert seconds to MM:SS format
+function formatSeconds(seconds) {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}m ${secs}s`;
+}
+
+async function runBatches() {
+  console.log("Starting batch")
+    const batches = chunkArray(idsArray, batchSize);
+    const startTime = Date.now();
+
+    for (let i = 0; i < batches.length; i++) {
+        const batch = batches[i];
+        const batchStart = Date.now();
+
+        await Promise.allSettled(batch.map(id => processId(id)));
+
+        processedCount += batch.length;
+        const elapsedTime = Date.now() - startTime;
+        const avgTimePerBatch = elapsedTime / (i + 1);
+        const remainingBatches = batches.length - (i + 1);
+        const etaMs = remainingBatches * avgTimePerBatch;
+        const etaSeconds = Math.round(etaMs / 1000);
+
+        console.log(
+            `Processed ${processedCount}/${idsArray.length} games. ETA: ~${formatSeconds(etaSeconds)}, so far ${formatSeconds(Math.round(elapsedTime / 1000))} elapsed`
+        );
+    }
+}
+
+await runBatches();
+
+console.log("Done processing all games.");
+
       deleteIds.forEach((id)=>{
         remoteVars.active.ws.delete(id)
         remoteVars.active.ids.delete(id)
@@ -328,6 +383,6 @@ export async function updateGameInfo(autoSetNextRun = true, { type = "auto", log
 }
 await updateGameInfo(false)
 Deno.serve(async () => {
-  await updateGameInfo(false)
+  await updateGameInfo(false) 
   return new Response("Updated")
 });
