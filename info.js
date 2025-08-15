@@ -192,7 +192,7 @@ export async function getMapManifest(name) {
 //  console.log("Pinged bot:", res.status);
 //});
 Deno.cron("Fetch front plus game ids", "*/30 * * * *",async () => {
-  fetchFPGameIds(1, {startTime:new Date(Date.now-(35*60000))}).then(async (gameIds) => {
+  fetchFPGameIds(1, {startTime:new Date(Date.now()-(35*60000))}).then(async (gameIds) => {
     gameIds.forEach((id) => {
       remoteVars.active.ids.add(id)
       remoteVars.active.ws.set(id, "unknown")
