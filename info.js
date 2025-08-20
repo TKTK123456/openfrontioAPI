@@ -188,7 +188,7 @@ export async function updateGameInfo(autoSetNextRun = true, { type = "auto", log
       const dateToNewEntries = new Map();
       const deleteIds = []
       const idsArray = active.ids.values().toArray();
-const batchSize = 15; // adjust concurrency here
+const batchSize = 30; // adjust concurrency here
 
 let processedCount = 0; // track progress
 
