@@ -1,5 +1,5 @@
-export const info = { requiredIntents: ["spawn"] }
+export const info = { requiredIntents: ["spawn"], heatmap: true }
 
-export function heatmapPointsHandler(intents) {
+export function heatmapHandler(intents, heatmap) {
   
 }

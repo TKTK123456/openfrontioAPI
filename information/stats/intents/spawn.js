@@ -9,9 +9,5 @@ export default async function processIntent(intent, { name, manifest } = {}) {
 
   if (!intent.tile) return {};
 
-  return {
-    clientId: intent.clientID,
-    intent: deepCloneObj(intent),
-    location: deepCloneObj(intent.tile)
-  };
+  return deepCloneObj(intent)
 }
