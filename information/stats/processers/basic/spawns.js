@@ -1,4 +1,4 @@
-export const info = { requiredIntents: ["spawn"], dataTypes: ["heatmap", "avrg"] }
+export const info = { requiredIntent: "spawn", dataTypes: ["heatmap", "avrg"] }
 
 export async function heatmapHandler(intents, heatmap = []) {
   intents = intents[0]
@@ -14,7 +14,11 @@ export async function avrgHandler(intents, avrg = []) {
   }
   return avrg
 }
-export async function basicHandler(intents) {
+export async function handler(intents) {
   intents = intents[0]
-  
+  const results = new Map()
+  for (const intent of intents) {
+    results.set(intent.clientID, intent)
+  }
+  return results.values().toArray()
 }
